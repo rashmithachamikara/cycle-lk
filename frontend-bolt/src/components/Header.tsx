@@ -1,0 +1,247 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Bike, Menu, X, User, Bell, ChevronDown, Building, ShieldCheck } from 'lucide-react';
+
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+  
+  // Close the dashboard dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dashboardRef.current && !dashboardRef.current.contains(event.target as Node)) {
+        setIsDashboardOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <Bike className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Cycle.LK
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link 
+              to="/" 
+              className={`font-medium transition-colors ${
+                isActive('/') ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Home
+            </Link>
+            <Link 
+              to="/booking" 
+              className={`font-medium transition-colors ${
+                isActive('/booking') ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Book Now
+            </Link>
+            <Link 
+              to="/locations" 
+              className={`font-medium transition-colors ${
+                isActive('/locations') ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Locations
+            </Link>
+            <Link 
+              to="/partners" 
+              className={`font-medium transition-colors ${
+                isActive('/partners') ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Partners
+            </Link>
+            <Link 
+              to="/support" 
+              className={`font-medium transition-colors ${
+                isActive('/support') ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Support
+            </Link>
+            
+            <div className="flex items-center space-x-4">
+              <button className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  2
+                </span>
+              </button>
+
+              <div className="relative" ref={dashboardRef}>
+                <button 
+                  onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+                  className="flex items-center space-x-2 p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">Dashboard</span>
+                  <ChevronDown className={`h-4 w-4 transform transition-transform ${isDashboardOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isDashboardOpen && (
+                  <div className="absolute right-0 w-60 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                    <Link 
+                      to="/dashboard" 
+                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50"
+                      onClick={() => setIsDashboardOpen(false)}
+                    >
+                      <User className="h-5 w-5 text-emerald-600" />
+                      <div>
+                        <div className="font-medium">User Dashboard</div>
+                        <div className="text-xs text-gray-500">Manage your bookings</div>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/partner-dashboard" 
+                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
+                      onClick={() => setIsDashboardOpen(false)}
+                    >
+                      <Building className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <div className="font-medium">Partner Dashboard</div>
+                        <div className="text-xs text-gray-500">Manage your rental business</div>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/admin-dashboard" 
+                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
+                      onClick={() => setIsDashboardOpen(false)}
+                    >
+                      <ShieldCheck className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <div className="font-medium">Admin Dashboard</div>
+                        <div className="text-xs text-gray-500">System administration</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </nav>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-100">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                to="/" 
+                className={`font-medium transition-colors ${
+                  isActive('/') ? 'text-emerald-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link 
+                to="/booking" 
+                className={`font-medium transition-colors ${
+                  isActive('/booking') ? 'text-emerald-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Book Now
+              </Link>
+              <Link 
+                to="/locations" 
+                className={`font-medium transition-colors ${
+                  isActive('/locations') ? 'text-emerald-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Locations
+              </Link>
+              <Link 
+                to="/partners" 
+                className={`font-medium transition-colors ${
+                  isActive('/partners') ? 'text-emerald-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Partners
+              </Link>
+              <Link 
+                to="/support" 
+                className={`font-medium transition-colors ${
+                  isActive('/support') ? 'text-emerald-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Support
+              </Link>
+              <div className="pt-2 mt-2 border-t border-gray-100">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dashboards</h3>
+                <div className="space-y-4">
+                  <Link 
+                    to="/dashboard" 
+                    className={`flex items-center font-medium transition-colors ${
+                      isActive('/dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="h-5 w-5 mr-3" />
+                    User Dashboard
+                  </Link>
+                  
+                  <Link 
+                    to="/partner-dashboard" 
+                    className={`flex items-center font-medium transition-colors ${
+                      isActive('/partner-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Building className="h-5 w-5 mr-3" />
+                    Partner Dashboard
+                  </Link>
+                  
+                  <Link 
+                    to="/admin-dashboard" 
+                    className={`flex items-center font-medium transition-colors ${
+                      isActive('/admin-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <ShieldCheck className="h-5 w-5 mr-3" />
+                    Admin Dashboard
+                  </Link>
+                </div>
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default Header;

@@ -1,0 +1,471 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { 
+  MapPin, 
+  Star, 
+  Phone, 
+  Mail, 
+  Clock, 
+  Bike, 
+  Award,
+  Users,
+  Calendar,
+  CheckCircle,
+  ExternalLink,
+  MessageCircle,
+  Navigation,
+  Shield,
+  Heart,
+  Camera
+} from 'lucide-react';
+
+const PartnersPage = () => {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const partners = [
+    {
+      id: 1,
+      name: 'Colombo Bikes',
+      location: 'Colombo Central',
+      category: 'Premium',
+      rating: 4.9,
+      reviews: 234,
+      bikeCount: 25,
+      yearsActive: 5,
+      specialties: ['City Tours', 'Business Rentals', 'Airport Transfers'],
+      description: 'Leading bike rental service in Colombo with premium fleet and exceptional customer service.',
+      phone: '+94 77 123 4567',
+      email: 'info@colombobikes.lk',
+      hours: '6:00 AM - 10:00 PM',
+      address: 'No. 123, Galle Road, Colombo 03',
+      image: 'Modern bike shop storefront',
+      verified: true,
+      features: ['24/7 Support', 'Free Delivery', 'Insurance Included', 'GPS Tracking'],
+      gallery: [
+        'Shop interior with bikes',
+        'Professional staff',
+        'Maintenance workshop',
+        'Customer service area'
+      ]
+    },
+    {
+      id: 2,
+      name: 'Hill Country Cycles',
+      location: 'Kandy',
+      category: 'Adventure',
+      rating: 4.8,
+      reviews: 156,
+      bikeCount: 18,
+      yearsActive: 3,
+      specialties: ['Mountain Biking', 'Tea Plantation Tours', 'Cultural Routes'],
+      description: 'Specialized in mountain bikes and scenic routes through Kandy\'s beautiful hill country.',
+      phone: '+94 77 234 5678',
+      email: 'rides@hillcountrycycles.lk',
+      hours: '7:00 AM - 7:00 PM',
+      address: 'Temple Street, Kandy',
+      image: 'Mountain bike shop with hills backdrop',
+      verified: true,
+      features: ['Route Planning', 'Guide Services', 'Equipment Rental', 'Emergency Support'],
+      gallery: [
+        'Mountain bikes display',
+        'Scenic route maps',
+        'Safety equipment',
+        'Local guides'
+      ]
+    },
+    {
+      id: 3,
+      name: 'Coastal Bikes',
+      location: 'Galle',
+      category: 'Beach',
+      rating: 4.7,
+      reviews: 189,
+      bikeCount: 22,
+      yearsActive: 4,
+      specialties: ['Beach Cruising', 'Fort Tours', 'Sunset Rides'],
+      description: 'Perfect for exploring Galle Fort and coastal areas with comfortable beach cruisers.',
+      phone: '+94 77 345 6789',
+      email: 'hello@coastalbikes.lk',
+      hours: '6:30 AM - 8:00 PM',
+      address: 'Fort Road, Galle Fort',
+      image: 'Beach bikes near historic fort',
+      verified: true,
+      features: ['Beach Accessories', 'Fort Passes', 'Photography Tips', 'Sunset Tours'],
+      gallery: [
+        'Beach cruiser collection',
+        'Galle Fort views',
+        'Sunset cycling',
+        'Coastal routes'
+      ]
+    },
+    {
+      id: 4,
+      name: 'Mountain View Rentals',
+      location: 'Ella',
+      category: 'Eco',
+      rating: 4.6,
+      reviews: 98,
+      bikeCount: 15,
+      yearsActive: 2,
+      specialties: ['Eco Tours', 'Tea Estate Visits', 'Nature Photography'],
+      description: 'Eco-friendly bike rentals focusing on sustainable tourism and nature experiences.',
+      phone: '+94 77 456 7890',
+      email: 'eco@mountainviewrentals.lk',
+      hours: '6:00 AM - 6:00 PM',
+      address: 'Main Street, Ella',
+      image: 'Eco-friendly shop with mountain views',
+      verified: false,
+      features: ['Eco Certification', 'Nature Guides', 'Photography Equipment', 'Tea Tasting'],
+      gallery: [
+        'Eco-friendly bikes',
+        'Tea plantation views',
+        'Nature photography',
+        'Sustainable practices'
+      ]
+    },
+    {
+      id: 5,
+      name: 'Ancient City Bikes',
+      location: 'Sigiriya',
+      category: 'Heritage',
+      rating: 4.5,
+      reviews: 67,
+      bikeCount: 12,
+      yearsActive: 3,
+      specialties: ['Archaeological Sites', 'Cultural Tours', 'Historical Routes'],
+      description: 'Specialized in heritage site visits and cultural exploration around ancient Sigiriya.',
+      phone: '+94 77 567 8901',
+      email: 'heritage@ancientcitybikes.lk',
+      hours: '5:30 AM - 7:00 PM',
+      address: 'Sigiriya Road, Sigiriya',
+      image: 'Traditional bikes near ancient ruins',
+      verified: true,
+      features: ['Site Tickets', 'Audio Guides', 'Historical Maps', 'Cultural Insights'],
+      gallery: [
+        'Heritage bike collection',
+        'Sigiriya Rock views',
+        'Archaeological sites',
+        'Cultural experiences'
+      ]
+    },
+    {
+      id: 6,
+      name: 'Airport Bikes',
+      location: 'Negombo',
+      category: 'Transit',
+      rating: 4.4,
+      reviews: 143,
+      bikeCount: 20,
+      yearsActive: 4,
+      specialties: ['Airport Transfers', 'Beach Access', 'Quick Rentals'],
+      description: 'Convenient bike rentals for travelers arriving at Bandaranaike International Airport.',
+      phone: '+94 77 678 9012',
+      email: 'travel@airportbikes.lk',
+      hours: '24/7',
+      address: 'Airport Road, Negombo',
+      image: 'Airport shuttle bikes',
+      verified: true,
+      features: ['24/7 Service', 'Airport Pickup', 'Luggage Racks', 'Express Booking'],
+      gallery: [
+        'Airport transfer bikes',
+        'Luggage solutions',
+        '24/7 service counter',
+        'Beach access routes'
+      ]
+    }
+  ];
+
+  const categories = [
+    { id: 'all', name: 'All Partners', count: partners.length },
+    { id: 'Premium', name: 'Premium', count: partners.filter(p => p.category === 'Premium').length },
+    { id: 'Adventure', name: 'Adventure', count: partners.filter(p => p.category === 'Adventure').length },
+    { id: 'Beach', name: 'Beach', count: partners.filter(p => p.category === 'Beach').length },
+    { id: 'Eco', name: 'Eco-Friendly', count: partners.filter(p => p.category === 'Eco').length },
+    { id: 'Heritage', name: 'Heritage', count: partners.filter(p => p.category === 'Heritage').length },
+    { id: 'Transit', name: 'Transit', count: partners.filter(p => p.category === 'Transit').length }
+  ];
+
+  const filteredPartners = selectedCategory === 'all' 
+    ? partners 
+    : partners.filter(partner => partner.category === selectedCategory);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Trusted Partners</h1>
+            <p className="text-xl text-emerald-100 max-w-3xl mx-auto">
+              Meet the local bike rental experts who make your Sri Lankan adventure possible
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Stats Section */}
+        <section className="mb-12">
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{partners.length}</div>
+              <div className="text-gray-600">Trusted Partners</div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">6</div>
+              <div className="text-gray-600">Cities Covered</div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Bike className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {partners.reduce((sum, partner) => sum + partner.bikeCount, 0)}
+              </div>
+              <div className="text-gray-600">Total Bikes</div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Star className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">4.7</div>
+              <div className="text-gray-600">Average Rating</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Category Filter */}
+        <section className="mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter by Category</h3>
+            <div className="flex flex-wrap gap-3">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedCategory === category.id
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {category.name} ({category.count})
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Partners Grid */}
+        <section>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {filteredPartners.map((partner) => (
+              <div key={partner.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                {/* Partner Header */}
+                <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="absolute top-4 left-4 flex space-x-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      partner.category === 'Premium' ? 'bg-gold-500 text-white' :
+                      partner.category === 'Adventure' ? 'bg-orange-500 text-white' :
+                      partner.category === 'Beach' ? 'bg-blue-500 text-white' :
+                      partner.category === 'Eco' ? 'bg-green-500 text-white' :
+                      partner.category === 'Heritage' ? 'bg-purple-500 text-white' :
+                      'bg-gray-500 text-white'
+                    }`}>
+                      {partner.category}
+                    </span>
+                    {partner.verified && (
+                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="text-sm opacity-90">{partner.image}</div>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {/* Partner Info */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">{partner.name}</h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        <span className="text-sm">{partner.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                        <span className="text-sm text-gray-600 ml-1">
+                          {partner.rating} ({partner.reviews} reviews)
+                        </span>
+                      </div>
+                    </div>
+                    <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <Heart className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <p className="text-gray-700 mb-4">{partner.description}</p>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-emerald-600">{partner.bikeCount}</div>
+                      <div className="text-xs text-gray-600">Bikes</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{partner.yearsActive}</div>
+                      <div className="text-xs text-gray-600">Years</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-purple-600">{partner.reviews}</div>
+                      <div className="text-xs text-gray-600">Reviews</div>
+                    </div>
+                  </div>
+
+                  {/* Specialties */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Specialties</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {partner.specialties.map((specialty, index) => (
+                        <span key={index} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs">
+                          {specialty}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Features</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {partner.features.map((feature, index) => (
+                        <div key={index} className="flex items-center text-sm text-gray-600">
+                          <CheckCircle className="h-3 w-3 text-emerald-500 mr-2" />
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div className="grid grid-cols-1 gap-2 text-sm">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-gray-600">Hours: {partner.hours}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                        <a href={`tel:${partner.phone}`} className="text-emerald-600 hover:underline">
+                          {partner.phone}
+                        </a>
+                      </div>
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                        <a href={`mailto:${partner.email}`} className="text-emerald-600 hover:underline">
+                          {partner.email}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-3">
+                    <Link
+                      to="/locations"
+                      className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium text-center"
+                    >
+                      View Bikes
+                    </Link>
+                    <button className="flex items-center justify-center bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                      <Phone className="h-4 w-4" />
+                    </button>
+                    <button className="flex items-center justify-center bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                    <button className="flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 transition-colors">
+                      <Navigation className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Partner Benefits */}
+        <section className="mt-16 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Our Partners Choose Cycle.LK</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Join our growing network of successful bike rental businesses across Sri Lanka
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Increased Bookings</h3>
+              <p className="text-gray-600">
+                Access to thousands of tourists looking for authentic local experiences
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Secure Payments</h3>
+              <p className="text-gray-600">
+                Guaranteed payments with comprehensive insurance coverage for all rentals
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Award className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Marketing Support</h3>
+              <p className="text-gray-600">
+                Professional photography, listing optimization, and promotional campaigns
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              to="/support"
+              className="bg-emerald-500 text-white px-8 py-4 rounded-xl hover:bg-emerald-600 transition-colors font-semibold text-lg inline-flex items-center"
+            >
+              Become a Partner
+              <ExternalLink className="h-5 w-5 ml-2" />
+            </Link>
+          </div>
+        </section>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default PartnersPage;
