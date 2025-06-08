@@ -478,9 +478,8 @@ const PartnerDashboardPage = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {item.condition}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
+                              </td>                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Link to={`/edit-bike/${item.id}`} className="text-blue-600 hover:text-blue-900 mr-4">Edit</Link>
                                 <button className="text-red-600 hover:text-red-900">Remove</button>
                               </td>
                             </tr>

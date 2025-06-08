@@ -27,6 +27,7 @@ function App() {
       <Route path="/partner-dashboard" element={<PartnerDashboardPage />} />
       <Route path="/partner-dashboard/:section" element={<PartnerDashboardPage />} />
       <Route path="/add-bike" element={<AddBikePage />} />
+      <Route path="/edit-bike/:id" element={<EditBikePage />} />
       <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
       <Route path="/admin-dashboard/:section" element={<AdminDashboardPage />} />
     </Routes>
