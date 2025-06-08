@@ -11,6 +11,7 @@ import SupportPage from './pages/SupportPage';
 import PartnerDashboardPage from './pages/PartnerDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AddBikePage from './pages/AddBikePage';
+import EditBikePage from './pages/EditBikePage';
 
 function App() {
   return (

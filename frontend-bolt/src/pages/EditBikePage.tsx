@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
@@ -17,11 +17,13 @@ import {
   Clipboard
 } from 'lucide-react';
 
-const AddBikePage = () => {
+const EditBikePage = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -41,7 +43,8 @@ const AddBikePage = () => {
       maxLoad: ''
     },
     availability: true,
-    images: [] as File[]
+    images: [] as File[],
+    existingImages: [] as string[]
   });
 
   const bikeTypes = [
@@ -65,6 +68,58 @@ const AddBikePage = () => {
     'Jaffna City',
     'Trincomalee Port'
   ];
+
+  // Simulate fetching bike data from API
+  useEffect(() => {
+    // In a real application, this would be an API call
+    const fetchBikeData = async () => {
+      setIsLoading(true);
+      try {
+        // Simulating API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock data for the specified bike ID
+        const mockBikeData = {
+          id: id,
+          name: 'City Cruiser',
+          type: 'city',
+          pricePerDay: '15',
+          pricePerWeek: '70',
+          pricePerMonth: '200',
+          location: 'Colombo Central',
+          description: 'A comfortable city bike perfect for urban riding and commuting. Features a sturdy frame and smooth riding experience.',
+          features: ['Front basket', 'Rear rack', 'LED lights', 'Bell'],
+          specifications: {
+            frameSize: 'Medium (54cm)',
+            gears: '7 speed',
+            weight: '12kg',
+            ageRestriction: '16+ years',
+            maxLoad: '100kg'
+          },
+          availability: true,
+          existingImages: [
+            'https://images.unsplash.com/photo-1485965120184-e220f721d03e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
+            'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1476&q=80'
+          ]
+        };
+
+        setFormData({
+          ...formData,
+          ...mockBikeData,
+          images: []
+        });
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching bike data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchBikeData();
+    }
+  }, [id]);
 
   // Handle text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -117,10 +172,16 @@ const AddBikePage = () => {
     }
   };
 
-  // Remove an image
+  // Remove a new image
   const removeImage = (index: number) => {
     const updatedImages = formData.images.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, images: updatedImages }));
+  };
+
+  // Remove an existing image
+  const removeExistingImage = (index: number) => {
+    const updatedExistingImages = formData.existingImages.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, existingImages: updatedExistingImages }));
   };
 
   // Validate form before submission
@@ -131,7 +192,7 @@ const AddBikePage = () => {
     if (!formData.pricePerDay) errors.push("Daily price is required");
     if (!formData.location) errors.push("Location is required");
     if (!formData.description) errors.push("Description is required");
-    if (formData.images.length === 0) errors.push("At least one image is required");
+    if (formData.images.length === 0 && formData.existingImages.length === 0) errors.push("At least one image is required");
     
     return errors;
   };
@@ -157,10 +218,23 @@ const AddBikePage = () => {
       
       // Redirect to partner dashboard after successful submission
       setTimeout(() => {
-        navigate('/partner-dashboard');
+        navigate('/partner-dashboard/inventory');
       }, 2000);
     }, 1500);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <h2 className="text-xl font-medium text-gray-700">Loading bike details...</h2>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,24 +243,31 @@ const AddBikePage = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button */}
         <Link
-          to="/partner-dashboard"
+          to="/partner-dashboard/inventory"
           className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          Back to Inventory
         </Link>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Add New Bike</h1>
-          <p className="text-gray-600 mb-6">Complete the form below to add a new bike to your rental inventory</p>
+          <div className="flex items-center mb-6">
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Bike className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <h1 className="text-2xl font-bold text-gray-900">Edit Bike</h1>
+              <p className="text-gray-600">Update the details for this bike in your inventory</p>
+            </div>
+          </div>
 
           {/* Success Message */}
           {submitSuccess && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <h3 className="text-green-800 font-medium">Bike added successfully!</h3>
-                <p className="text-green-700 text-sm">Your new bike has been added to your inventory.</p>
+                <h3 className="text-green-800 font-medium">Changes saved successfully!</h3>
+                <p className="text-green-700 text-sm">Your bike information has been updated.</p>
               </div>
             </div>
           )}
@@ -348,6 +429,35 @@ const AddBikePage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Bike Images*
                   </label>
+                  
+                  {/* Existing images */}
+                  {formData.existingImages.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-500 mb-2">Existing Images</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {formData.existingImages.map((image, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={image}
+                              alt={`Bike image ${index + 1}`}
+                              className="h-24 w-full object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Upload new images */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                     <input
                       type="file"
@@ -360,33 +470,36 @@ const AddBikePage = () => {
                     <label htmlFor="images" className="cursor-pointer">
                       <div className="flex flex-col items-center">
                         <Camera className="h-10 w-10 text-gray-400" />
-                        <p className="text-sm text-gray-500 mt-2">Click to upload images</p>
+                        <p className="text-sm text-gray-500 mt-2">Click to upload additional images</p>
                         <p className="text-xs text-gray-400">PNG, JPG, GIF up to 5MB</p>
                       </div>
                     </label>
                   </div>
 
-                  {/* Preview images */}
+                  {/* Preview new images */}
                   {formData.images.length > 0 && (
-                    <div className="mt-4 grid grid-cols-3 gap-2">
-                      {formData.images.map((image, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={URL.createObjectURL(image)}
-                            alt={`Bike preview ${index + 1}`}
-                            className="h-20 w-full object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-500 mb-2">New Images</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {formData.images.map((image, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={URL.createObjectURL(image)}
+                              alt={`Bike preview ${index + 1}`}
+                              className="h-20 w-full object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -506,32 +619,40 @@ const AddBikePage = () => {
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-6 flex justify-end space-x-4">
-              <Link
-                to="/partner-dashboard"
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
-              >
-                Cancel
-              </Link>
+            <div className="border-t border-gray-200 pt-6 flex justify-between">
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center ${
-                  isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
-                }`}
+                type="button"
+                className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100"
               >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  'Add Bike'
-                )}
+                Delete Bike
               </button>
+              <div className="flex space-x-4">
+                <Link
+                  to="/partner-dashboard/inventory"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center ${
+                    isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -542,4 +663,4 @@ const AddBikePage = () => {
   );
 };
 
-export default AddBikePage;
+export default EditBikePage;
