@@ -1,4 +1,4 @@
-import React from 'react';
+// React import is automatically included in JSX files
 import { Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';

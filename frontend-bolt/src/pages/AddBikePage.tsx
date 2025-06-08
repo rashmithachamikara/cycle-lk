@@ -3,18 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
-  Bike, 
   ArrowLeft, 
   Camera, 
-  Upload, 
   CheckCircle,
-  AlertCircle,
-  MapPin,
-  Tag,
-  Clock,
-  Info,
-  Shield,
-  Clipboard
+  AlertCircle
 } from 'lucide-react';
 
 const AddBikePage = () => {
@@ -65,20 +57,24 @@ const AddBikePage = () => {
     'Jaffna City',
     'Trincomalee Port'
   ];
-
   // Handle text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     if (name.includes('.')) {
       const [parentProp, childProp] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parentProp]: {
-          ...prev[parentProp as keyof typeof prev],
-          [childProp]: value
+      setFormData(prev => {
+        if (parentProp === 'specifications') {
+          return {
+            ...prev,
+            specifications: {
+              ...prev.specifications,
+              [childProp]: value
+            }
+          };
         }
-      }));
+        return prev;
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }

@@ -1,39 +1,38 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   Calendar, 
-  MapPin, 
   Bike, 
-  Clock, 
   Star, 
   Download,
-  QrCode,
-  Navigation,
   Phone,
-  MessageCircle,
   CheckCircle,
   AlertCircle,
   Plus,
   Settings,
-  CreditCard,
   Bell,
   BarChart3,
   Users,
   PlusCircle,
-  ClipboardList,
-  Shield,
   ArrowUpRight,
   ChevronRight,
   ArrowUp,
   ArrowDown,
   TrendingUp,
-  Search
+  Search,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 
 const PartnerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState('current');
+  // Add delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [bikeToDelete, setBikeToDelete] = useState<{id: string, name: string} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const currentBookings = [
     {
@@ -115,6 +114,32 @@ const PartnerDashboardPage = () => {
     { id: 'BIKE-4567', name: 'City Cruiser', type: 'City', status: 'maintenance', condition: 'Fair' },
     { id: 'BIKE-5678', name: 'Mountain Explorer', type: 'Mountain', status: 'available', condition: 'Excellent' }
   ];
+  // This function is used directly in the onClick of the Remove button
+  // const handleDeleteClick = (bike: {id: string, name: string}) => {
+  //   setBikeToDelete(bike);
+  //   setShowDeleteModal(true);
+  // };
+
+  // Handle confirming bike deletion
+  const handleConfirmDelete = () => {
+    if (!bikeToDelete) return;
+    
+    setIsDeleting(true);
+    
+    // Simulate API call to delete bike
+    setTimeout(() => {
+      setIsDeleting(false);
+      setDeleteSuccess(true);
+      
+      // Close modal after showing success message
+      setTimeout(() => {
+        setShowDeleteModal(false);
+        setDeleteSuccess(false);
+        setBikeToDelete(null);
+        // In a real application, we would update the inventory list here
+      }, 1500);
+    }, 1000);
+  };
 
   const notifications = [
     {
@@ -480,7 +505,15 @@ const PartnerDashboardPage = () => {
                                 {item.condition}
                               </td>                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <Link to={`/edit-bike/${item.id}`} className="text-blue-600 hover:text-blue-900 mr-4">Edit</Link>
-                                <button className="text-red-600 hover:text-red-900">Remove</button>
+                                <button 
+                                  className="text-red-600 hover:text-red-900"
+                                  onClick={() => {
+                                    setBikeToDelete({ id: item.id, name: item.name });
+                                    setShowDeleteModal(true);
+                                  }}
+                                >
+                                  Remove
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -545,12 +578,12 @@ const PartnerDashboardPage = () => {
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button
+              <div className="space-y-3">              <Link
+                  to="/add-bike"
                   className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
                 >
                   Add New Bike
-                </button>
+                </Link>
                 <button
                   className="w-full border border-blue-500 text-blue-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
                 >
@@ -655,6 +688,78 @@ const PartnerDashboardPage = () => {
       </div>
 
       <Footer />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && bikeToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Deletion</h3>
+              <button onClick={() => setShowDeleteModal(false)}>
+                <X className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-gray-700 text-sm">
+                Are you sure you want to delete the bike <span className="font-semibold">{bikeToDelete.name}</span>?
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 mr-3 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v5l4.5-4.5A8 8 0 0116 20v-5l-4.5 4.5A8 8 0 018 4v5L3.5 4.5A8 8 0 004 12z"
+                      />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    Confirm Delete
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {deleteSuccess && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-green-600">
+                  Bike deleted successfully!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

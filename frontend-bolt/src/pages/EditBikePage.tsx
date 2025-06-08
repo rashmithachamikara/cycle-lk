@@ -6,15 +6,8 @@ import {
   Bike, 
   ArrowLeft, 
   Camera, 
-  Upload, 
   CheckCircle,
-  AlertCircle,
-  MapPin,
-  Tag,
-  Clock,
-  Info,
-  Shield,
-  Clipboard
+  AlertCircle
 } from 'lucide-react';
 
 const EditBikePage = () => {
@@ -68,7 +61,6 @@ const EditBikePage = () => {
     'Jaffna City',
     'Trincomalee Port'
   ];
-
   // Simulate fetching bike data from API
   useEffect(() => {
     // In a real application, this would be an API call
@@ -103,11 +95,11 @@ const EditBikePage = () => {
           ]
         };
 
-        setFormData({
-          ...formData,
+        setFormData(prev => ({
+          ...prev,
           ...mockBikeData,
           images: []
-        });
+        }));
         
         setIsLoading(false);
       } catch (error) {
@@ -120,20 +112,24 @@ const EditBikePage = () => {
       fetchBikeData();
     }
   }, [id]);
-
   // Handle text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     if (name.includes('.')) {
       const [parentProp, childProp] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parentProp]: {
-          ...prev[parentProp as keyof typeof prev],
-          [childProp]: value
+      setFormData(prev => {
+        if (parentProp === 'specifications') {
+          return {
+            ...prev,
+            specifications: {
+              ...prev.specifications,
+              [childProp]: value
+            }
+          };
         }
-      }));
+        return prev;
+      });
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
