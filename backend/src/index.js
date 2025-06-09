@@ -61,8 +61,34 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'localhost';
-const server = app.listen(PORT, () => {
-  const actualPort = server.address().port;
-  console.log(`🚲 Cycle.LK API Server running on port ${actualPort}`);
-  console.log(`🌐 Server URL: http://${HOST}:${actualPort}`);
-});
+
+//Start server
+function startServer(port) {
+  const server = app.listen(port);
+  
+  // Handle server ready
+  server.on('listening', () => {
+    const address = server.address();
+    if (address) {
+      const actualPort = address.port;
+      console.log(`🚲 Cycle.LK API Server running on port ${actualPort}`);
+      console.log(`🌐 Server URL: http://${HOST}:${actualPort}`);
+    } else {
+      console.log(`🚲 Cycle.LK API Server running, but address information is not available`);
+    }
+  });
+  
+  // Handle server errors
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`⚠️ Port ${port} is already in use, trying ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+  
+  return server;
+}
+
+startServer(PORT);
