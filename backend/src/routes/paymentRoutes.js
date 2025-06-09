@@ -11,6 +11,13 @@ const { auth, admin } = require('../middleware/auth');
 router.get('/', auth, paymentController.getAllPayments);
 
 /**
+ * @route   GET /api/payments/stats
+ * @desc    Get payment statistics
+ * @access  Private
+ */
+router.get('/stats', auth, paymentController.getPaymentStats);
+
+/**
  * @route   GET /api/payments/:id
  * @desc    Get payment by ID
  * @access  Private
@@ -37,12 +44,5 @@ router.put('/:id/status', auth, admin, paymentController.updatePaymentStatus);
  * @access  Private/Admin
  */
 router.post('/:id/refund', auth, admin, paymentController.processRefund);
-
-/**
- * @route   GET /api/payments/stats
- * @desc    Get payment statistics
- * @access  Private
- */
-router.get('/stats', auth, paymentController.getPaymentStats);
 
 module.exports = router;

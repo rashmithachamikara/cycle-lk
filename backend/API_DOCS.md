@@ -398,6 +398,34 @@ x-auth-token: <your_token_here>
   - `endDate`: Filter by end date
 - **Success Response**: `200 OK`
 
+### Get Payment Statistics
+
+- **URL**: `/payments/stats`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Query Parameters**:
+  - `startDate`: Filter by start date (optional)
+  - `endDate`: Filter by end date (optional)
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "totalRevenue": 5000,
+    "completedPaymentsCount": 20,
+    "paymentMethods": [
+      {
+        "method": "credit_card",
+        "count": 15,
+        "total": 3750
+      },
+      {
+        "method": "paypal",
+        "count": 5,
+        "total": 1250
+      }
+    ]
+  }
+  ```
+
 ### Get Payment by ID
 
 - **URL**: `/payments/:id`
@@ -451,6 +479,45 @@ x-auth-token: <your_token_here>
 - **Method**: `GET`
 - **Auth Required**: No
 - **Success Response**: `200 OK`
+
+### Update Partner Verification Status
+
+- **URL**: `/partners/:id/verification`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "verificationStatus": "verified" 
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Partner verification status updated successfully"
+  }
+  ```
+
+### Update Partner Bank Details
+
+- **URL**: `/partners/:id/bank`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Partner role)
+- **Request Body**:
+  ```json
+  {
+    "bankName": "Example Bank",
+    "accountNumber": "1234567890",
+    "accountHolderName": "John Doe",
+    "branchCode": "001"
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Bank details updated successfully"
+  }
+  ```
 
 ### Get Partner Bikes
 
@@ -779,7 +846,7 @@ x-auth-token: <your_token_here>
 
 ### Delete All User Notifications
 
-- **URL**: `/notifications/:userId`
+- **URL**: `/notifications/user/:userId`
 - **Method**: `DELETE`
 - **Auth Required**: Yes
 - **Success Response**: `200 OK`
