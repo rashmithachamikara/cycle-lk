@@ -232,3 +232,83 @@ exports.getBikesByPartner = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Upload bike images
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.uploadBikeImages = async (req, res) => {
+  try {
+    const bike = await Bike.findById(req.params.id);
+    
+    if (!bike) {
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    // Check if bike belongs to partner
+    if (bike.partnerId.toString() !== req.user.partnerId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this bike' });
+    }
+    
+    // Get file paths from multer
+    const imagePaths = req.files.map(file => file.path);
+    
+    // Update bike with new images
+    bike.images = bike.images.concat(imagePaths);
+    await bike.save();
+    
+    res.json({ 
+      message: 'Images uploaded successfully', 
+      images: bike.images 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Update bike availability
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updateBikeAvailability = async (req, res) => {
+  try {
+    const bike = await Bike.findById(req.params.id);
+    
+    if (!bike) {
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    // Check if bike belongs to partner
+    if (bike.partnerId.toString() !== req.user.partnerId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this bike' });
+    }
+    
+    // Update availability status
+    bike.availability.status = req.body.status;
+    
+    // Update unavailable reason if status is false
+    if (req.body.status === false && req.body.reason) {
+      bike.availability.reason = req.body.reason;
+    } else if (req.body.status === true) {
+      bike.availability.reason = ''; // Clear reason if available
+    }
+    
+    // Update unavailable dates if provided
+    if (req.body.unavailableDates) {
+      bike.availability.unavailableDates = req.body.unavailableDates;
+    }
+    
+    await bike.save();
+    
+    res.json({ 
+      message: 'Bike availability updated', 
+      availability: bike.availability 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

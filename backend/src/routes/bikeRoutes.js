@@ -24,36 +24,6 @@ router.get('/:id', bikeController.getBikeById);
  * @desc    Add a new bike
  * @access  Private/Partner
  */
-router.post('/', async (req, res) => {
-  try {
-    const bike = new Bike(req.body);
-    
-    // Validate partner exists
-    const partner = await Partner.findById(bike.partnerId);
-    if (!partner) {
-      return res.status(400).json({ message: 'Invalid partner ID' });
-    }
-    
-    // Save bike
-    await bike.save();
-    
-    // Update partner's bike count
-    await Partner.findByIdAndUpdate(bike.partnerId, {
-      $inc: { bikeCount: 1 }
-    });
-    
-    res.status(201).json(bike);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-/**
- * @route   POST /api/bikes
- * @desc    Add a new bike
- * @access  Private/Partner
- */
 router.post('/', auth, partner, validateBike, bikeController.addBike);
 
 /**
