@@ -1,0 +1,58 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Environment variables - only keep the template
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*
+!.env.template
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Upload directory
+uploads/*
+!uploads/.gitkeep
+
+# Coverage directory
+coverage/
+
+# Temporary files
+tmp/
+temp/
+.DS_Store
+
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build/dist directory
+dist/
+build/
+
+# Tests
+__tests__/coverage/
+
+# Debug files
+.pnpm-debug.log*
