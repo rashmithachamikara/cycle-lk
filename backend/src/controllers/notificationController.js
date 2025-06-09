@@ -36,6 +36,26 @@ exports.getUserNotifications = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get notification by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getNotificationById = asyncHandler(async (req, res) => {
+  const notification = await Notification.findById(req.params.id);
+  
+  if (!notification) {
+    return res.status(404).json({ message: 'Notification not found' });
+  }
+  
+  // Check if user is the owner of the notification or an admin
+  if (notification.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Not authorized to view this notification' });
+  }
+  
+  res.json(notification);
+});
+
+/**
  * Get count of unread notifications
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -78,12 +98,7 @@ exports.markAsRead = asyncHandler(async (req, res) => {
  * @param {Object} res - Express response object
  */
 exports.markAllAsRead = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  
-  // Ensure user can only mark their own notifications
-  if (userId !== req.user.id && req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Not authorized to update these notifications' });
-  }
+  const userId = req.user.id;
   
   await Notification.updateMany(
     { userId, read: false },
@@ -141,7 +156,7 @@ exports.deleteNotification = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Not authorized to delete this notification' });
   }
   
-  await notification.remove();
+  await Notification.deleteOne({ _id: req.params.id });
   
   res.json({ message: 'Notification removed' });
 });
@@ -165,12 +180,12 @@ exports.deleteAllNotifications = asyncHandler(async (req, res) => {
 });
 
 /**
- * Send notification to multiple users
+ * Create bulk notifications for multiple users
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * Admin only function
  */
-exports.sendBulkNotifications = asyncHandler(async (req, res) => {
+exports.createBulkNotifications = asyncHandler(async (req, res) => {
   const { userIds, type, title, message, relatedTo, sentVia } = req.body;
   
   if (!Array.isArray(userIds) || userIds.length === 0) {
