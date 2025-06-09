@@ -1,0 +1,116 @@
+const mongoose = require('mongoose');
+
+const partnerSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  companyName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    trim: true
+  },
+  description: {
+    type: String
+  },
+  location: {
+    type: String,
+    required: true
+  },
+  address: {
+    type: String
+  },
+  coordinates: {
+    latitude: Number,
+    longitude: Number
+  },
+  contactPerson: {
+    type: String
+  },
+  phone: {
+    type: String
+  },
+  email: {
+    type: String,
+    lowercase: true,
+    trim: true
+  },
+  businessHours: {
+    monday: { open: String, close: String },
+    tuesday: { open: String, close: String },
+    wednesday: { open: String, close: String },
+    thursday: { open: String, close: String },
+    friday: { open: String, close: String },
+    saturday: { open: String, close: String },
+    sunday: { open: String, close: String }
+  },
+  specialties: [String],
+  features: [String],
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  reviews: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5
+    },
+    comment: String,
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  bikeCount: {
+    type: Number,
+    default: 0
+  },
+  yearsActive: {
+    type: Number,
+    default: 0
+  },
+  images: {
+    logo: String,
+    storefront: String,
+    gallery: [String]
+  },
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending'],
+    default: 'pending'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+// Create indexes
+partnerSchema.index({ userId: 1 });
+partnerSchema.index({ location: 1 });
+partnerSchema.index({ status: 1 });
+partnerSchema.index({ companyName: 'text', description: 'text' });
+
+module.exports = mongoose.model('Partner', partnerSchema);
