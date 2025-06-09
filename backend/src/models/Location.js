@@ -45,7 +45,6 @@ const locationSchema = new mongoose.Schema({
 });
 
 // Create indexes
-locationSchema.index({ name: 1 }, { unique: true });
 locationSchema.index({ popular: 1 });
 locationSchema.index({ region: 1 });
 locationSchema.index({ name: 'text', description: 'text' });

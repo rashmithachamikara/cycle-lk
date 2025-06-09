@@ -104,7 +104,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Create indexes
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -119,6 +119,5 @@ bookingSchema.index({ bikeId: 1 });
 bookingSchema.index({ partnerId: 1 });
 bookingSchema.index({ 'dates.startDate': 1, 'dates.endDate': 1 });
 bookingSchema.index({ status: 1 });
-bookingSchema.index({ bookingNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

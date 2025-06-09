@@ -76,7 +76,6 @@ const supportSchema = new mongoose.Schema({
 
 // Create indexes
 supportSchema.index({ userId: 1 });
-supportSchema.index({ ticketNumber: 1 }, { unique: true });
 supportSchema.index({ status: 1 });
 supportSchema.index({ priority: 1 });
 supportSchema.index({ category: 1 });
