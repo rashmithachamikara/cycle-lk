@@ -522,3 +522,445 @@ x-auth-token: <your_token_here>
   }
   ```
 - **Success Response**: `201 Created`
+
+## FAQ Endpoints
+
+### Get All FAQs
+
+- **URL**: `/faqs`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Query Parameters**:
+  - `category`: Filter by category name
+  - `active`: Filter by active status (`true`/`false`)
+- **Success Response**: `200 OK`
+  ```json
+  [
+    {
+      "id": "faq_id",
+      "question": "How do I book a bike?",
+      "answer": "You can book a bike by navigating to the bike's detail page and selecting your desired dates.",
+      "category": "booking",
+      "active": true,
+      "order": 1
+    }
+  ]
+  ```
+
+### Get FAQ by ID
+
+- **URL**: `/faqs/:id`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "faq_id",
+    "question": "How do I book a bike?",
+    "answer": "You can book a bike by navigating to the bike's detail page and selecting your desired dates.",
+    "category": "booking",
+    "active": true,
+    "order": 1
+  }
+  ```
+
+### Create FAQ
+
+- **URL**: `/faqs`
+- **Method**: `POST`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "question": "How do I book a bike?",
+    "answer": "You can book a bike by navigating to the bike's detail page and selecting your desired dates.",
+    "category": "booking",
+    "active": true
+  }
+  ```
+- **Success Response**: `201 Created`
+
+### Update FAQ
+
+- **URL**: `/faqs/:id`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "question": "Updated question",
+    "answer": "Updated answer",
+    "active": false
+  }
+  ```
+- **Success Response**: `200 OK`
+
+### Update FAQ Order
+
+- **URL**: `/faqs/:id/order`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "newOrder": 3
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "FAQ order updated"
+  }
+  ```
+
+### Delete FAQ
+
+- **URL**: `/faqs/:id`
+- **Method**: `DELETE`
+- **Auth Required**: Yes (Admin role)
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "FAQ removed"
+  }
+  ```
+
+### Get FAQ Categories
+
+- **URL**: `/faqs/categories/list`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Success Response**: `200 OK`
+  ```json
+  ["booking", "payment", "locations", "bikes", "safety", "account", "other"]
+  ```
+
+## Notification Endpoints
+
+### Get User Notifications
+
+- **URL**: `/notifications`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Query Parameters**:
+  - `userId`: Filter by user ID (required)
+  - `read`: Filter by read status (`true`/`false`)
+  - `type`: Filter by notification type
+  - `limit`: Limit number of results
+- **Success Response**: `200 OK`
+  ```json
+  [
+    {
+      "id": "notification_id",
+      "userId": "user_id",
+      "type": "booking",
+      "title": "Booking Confirmed",
+      "message": "Your booking has been confirmed.",
+      "read": false,
+      "relatedTo": {
+        "type": "booking",
+        "id": "booking_id"
+      },
+      "sentVia": ["app"],
+      "createdAt": "2023-01-01T00:00:00.000Z"
+    }
+  ]
+  ```
+
+### Get Notification by ID
+
+- **URL**: `/notifications/:id`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "notification_id",
+    "userId": "user_id",
+    "type": "booking",
+    "title": "Booking Confirmed",
+    "message": "Your booking has been confirmed.",
+    "read": false,
+    "relatedTo": {
+      "type": "booking",
+      "id": "booking_id"
+    },
+    "sentVia": ["app"],
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
+
+### Get Unread Notification Count
+
+- **URL**: `/notifications/unread-count/:userId`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "count": 5
+  }
+  ```
+
+### Create Notification
+
+- **URL**: `/notifications`
+- **Method**: `POST`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "userId": "user_id",
+    "type": "booking",
+    "title": "Booking Confirmed",
+    "message": "Your booking has been confirmed.",
+    "relatedTo": {
+      "type": "booking",
+      "id": "booking_id"
+    },
+    "sentVia": ["app", "email"]
+  }
+  ```
+- **Success Response**: `201 Created`
+
+### Create Bulk Notifications
+
+- **URL**: `/notifications/bulk`
+- **Method**: `POST`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "userIds": ["user_id1", "user_id2"],
+    "type": "system",
+    "title": "System Maintenance",
+    "message": "The system will be under maintenance tonight.",
+    "sentVia": ["app", "email"]
+  }
+  ```
+- **Success Response**: `201 Created`
+  ```json
+  {
+    "message": "2 notifications sent successfully",
+    "count": 2
+  }
+  ```
+
+### Mark Notification as Read
+
+- **URL**: `/notifications/:id/mark-read`
+- **Method**: `PUT`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+
+### Mark All Notifications as Read
+
+- **URL**: `/notifications/mark-all-read`
+- **Method**: `PUT`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "All notifications marked as read"
+  }
+  ```
+
+### Delete Notification
+
+- **URL**: `/notifications/:id`
+- **Method**: `DELETE`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Notification removed"
+  }
+  ```
+
+### Delete All User Notifications
+
+- **URL**: `/notifications/:userId`
+- **Method**: `DELETE`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "All notifications deleted"
+  }
+  ```
+
+## Support Endpoints
+
+### Get All Support Tickets
+
+- **URL**: `/support`
+- **Method**: `GET`
+- **Auth Required**: Yes (Admin role)
+- **Query Parameters**:
+  - `userId`: Filter by user ID
+  - `category`: Filter by ticket category
+  - `status`: Filter by ticket status
+  - `priority`: Filter by priority level
+- **Success Response**: `200 OK`
+  ```json
+  [
+    {
+      "id": "ticket_id",
+      "ticketNumber": "TKT-202300001",
+      "userId": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john@example.com",
+        "phone": "0771234567"
+      },
+      "subject": "Issue with booking",
+      "category": "booking",
+      "message": "I'm having trouble with my booking.",
+      "status": "open",
+      "priority": "medium",
+      "assignedTo": null,
+      "createdAt": "2023-01-01T00:00:00.000Z",
+      "updatedAt": "2023-01-01T00:00:00.000Z"
+    }
+  ]
+  ```
+
+### Get Support Ticket by ID
+
+- **URL**: `/support/:id`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "ticket_id",
+    "ticketNumber": "TKT-202300001",
+    "userId": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com",
+      "phone": "0771234567",
+      "profileImage": "url_to_image"
+    },
+    "subject": "Issue with booking",
+    "category": "booking",
+    "message": "I'm having trouble with my booking.",
+    "status": "open",
+    "priority": "medium",
+    "assignedTo": null,
+    "responses": [
+      {
+        "responder": {
+          "id": {
+            "firstName": "Admin",
+            "lastName": "User",
+            "profileImage": "url_to_image"
+          },
+          "type": "staff"
+        },
+        "message": "We're looking into this issue.",
+        "attachments": [],
+        "createdAt": "2023-01-02T00:00:00.000Z"
+      }
+    ],
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-02T00:00:00.000Z"
+  }
+  ```
+
+### Get User Tickets
+
+- **URL**: `/support/user/:userId`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Query Parameters**:
+  - `status`: Filter by ticket status
+- **Success Response**: `200 OK`
+
+### Create Support Ticket
+
+- **URL**: `/support`
+- **Method**: `POST`
+- **Auth Required**: Yes
+- **Request Body**:
+  ```json
+  {
+    "subject": "Issue with booking",
+    "category": "booking",
+    "message": "I'm having trouble with my booking.",
+    "priority": "medium"
+  }
+  ```
+- **Success Response**: `201 Created`
+
+### Update Ticket Status
+
+- **URL**: `/support/:id/status`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "status": "in-progress"
+  }
+  ```
+- **Success Response**: `200 OK`
+
+### Assign Ticket
+
+- **URL**: `/support/:id/assign`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "staffId": "staff_user_id"
+  }
+  ```
+- **Success Response**: `200 OK`
+
+### Add Response to Ticket
+
+- **URL**: `/support/:id/response`
+- **Method**: `POST`
+- **Auth Required**: Yes
+- **Request Body**:
+  ```json
+  {
+    "message": "This is my response to the ticket.",
+    "attachments": ["url_to_attachment"]
+  }
+  ```
+- **Success Response**: `200 OK`
+
+### Update Ticket Priority
+
+- **URL**: `/support/:id/priority`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "priority": "high"
+  }
+  ```
+- **Success Response**: `200 OK`
+
+### Close Ticket
+
+- **URL**: `/support/:id/close`
+- **Method**: `PUT`
+- **Auth Required**: Yes
+- **Request Body**:
+  ```json
+  {
+    "resolution": "Issue was resolved by providing instructions."
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Ticket closed successfully",
+    "ticket": { /* ticket object */ }
+  }
+  ```
