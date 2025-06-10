@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bike, Menu, X, User, Bell, ChevronDown, Building, ShieldCheck } from 'lucide-react';
+import { Bike, Menu, X, User, Bell, ChevronDown, Building, ShieldCheck, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
   
@@ -80,65 +82,112 @@ const Header = () => {
               Support
             </Link>
             
-            <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  2
-                </span>
-              </button>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    2
+                  </span>
+                </Link>
 
-              <div className="relative" ref={dashboardRef}>
-                <button 
-                  onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-                  className="flex items-center space-x-2 p-2 text-gray-600 hover:text-emerald-600 transition-colors"
-                >
-                  <User className="h-5 w-5" />
-                  <span className="font-medium">Dashboard</span>
-                  <ChevronDown className={`h-4 w-4 transform transition-transform ${isDashboardOpen ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="relative" ref={dashboardRef}>
+                  <button 
+                    onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+                    className="flex items-center space-x-2 p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="font-medium">{user?.firstName || 'Dashboard'}</span>
+                    <ChevronDown className={`h-4 w-4 transform transition-transform ${isDashboardOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                {isDashboardOpen && (
-                  <div className="absolute right-0 w-60 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                    <Link 
-                      to="/dashboard" 
-                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsDashboardOpen(false)}
-                    >
-                      <User className="h-5 w-5 text-emerald-600" />
-                      <div>
-                        <div className="font-medium">User Dashboard</div>
-                        <div className="text-xs text-gray-500">Manage your bookings</div>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/partner-dashboard" 
-                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
-                      onClick={() => setIsDashboardOpen(false)}
-                    >
-                      <Building className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <div className="font-medium">Partner Dashboard</div>
-                        <div className="text-xs text-gray-500">Manage your rental business</div>
-                      </div>
-                    </Link>
-                    
-                    <Link 
-                      to="/admin-dashboard" 
-                      className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
-                      onClick={() => setIsDashboardOpen(false)}
-                    >
-                      <ShieldCheck className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <div className="font-medium">Admin Dashboard</div>
-                        <div className="text-xs text-gray-500">System administration</div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
+                  {isDashboardOpen && (
+                    <div className="absolute right-0 w-60 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                      <Link 
+                        to="/dashboard" 
+                        className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50"
+                        onClick={() => setIsDashboardOpen(false)}
+                      >
+                        <User className="h-5 w-5 text-emerald-600" />
+                        <div>
+                          <div className="font-medium">User Dashboard</div>
+                          <div className="text-xs text-gray-500">Manage your bookings</div>
+                        </div>
+                      </Link>
+                      
+                      {user?.role === 'partner' && (
+                        <Link 
+                          to="/partner-dashboard" 
+                          className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
+                          onClick={() => setIsDashboardOpen(false)}
+                        >
+                          <Building className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <div className="font-medium">Partner Dashboard</div>
+                            <div className="text-xs text-gray-500">Manage your rental business</div>
+                          </div>
+                        </Link>
+                      )}
+                      
+                      {user?.role === 'admin' && (
+                        <Link 
+                          to="/admin-dashboard" 
+                          className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
+                          onClick={() => setIsDashboardOpen(false)}
+                        >
+                          <ShieldCheck className="h-5 w-5 text-purple-600" />
+                          <div>
+                            <div className="font-medium">Admin Dashboard</div>
+                            <div className="text-xs text-gray-500">System administration</div>
+                          </div>
+                        </Link>
+                      )}
+                      
+                      <Link 
+                        to="/profile" 
+                        className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100"
+                        onClick={() => setIsDashboardOpen(false)}
+                      >
+                        <User className="h-5 w-5 text-gray-600" />
+                        <div>
+                          <div className="font-medium">Profile</div>
+                          <div className="text-xs text-gray-500">View and edit your profile</div>
+                        </div>
+                      </Link>
+                      
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setIsDashboardOpen(false);
+                        }}
+                        className="w-full flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50 border-t border-gray-100 text-left"
+                      >
+                        <LogOut className="h-5 w-5 text-red-600" />
+                        <div>
+                          <div className="font-medium">Log out</div>
+                          <div className="text-xs text-gray-500">End your current session</div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 font-medium transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg font-medium transition-colors"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </nav>
 
           {/* Mobile menu button */}
