@@ -22,21 +22,21 @@ router.get('/:id', partnerController.getPartnerById);
  * @desc    Register a new partner
  * @access  Private
  */
-router.post('/', auth, partnerController.registerPartner);
+router.post('/', auth(), partnerController.registerPartner);
 
 /**
  * @route   PUT /api/partners/:id
  * @desc    Update partner information
  * @access  Private/Partner
  */
-router.put('/:id', auth, partnerController.updatePartner);
+router.put('/:id', auth(), partnerController.updatePartner);
 
 /**
  * @route   PUT /api/partners/:id/verification
  * @desc    Update partner verification status (admin only)
  * @access  Private/Admin
  */
-router.put('/:id/verification', auth, admin, partnerController.updateVerificationStatus);
+router.put('/:id/verification', auth(), admin, partnerController.updateVerificationStatus);
 
 /**
  * @route   GET /api/partners/:id/bikes
@@ -50,6 +50,6 @@ router.get('/:id/bikes', partnerController.getPartnerBikes);
  * @desc    Update partner bank details
  * @access  Private/Partner
  */
-router.put('/:id/bank', auth, partnerController.updateBankDetails);
+router.put('/:id/bank', auth(), partnerController.updateBankDetails);
 
 module.exports = router;

@@ -9,41 +9,41 @@ const { validateBooking } = require('../middleware/validation');
  * @desc    Get all bookings with optional filtering
  * @access  Private
  */
-router.get('/', auth, bookingController.getAllBookings);
+router.get('/', auth(), bookingController.getAllBookings);
 
 /**
  * @route   GET /api/bookings/:id
  * @desc    Get booking by ID
  * @access  Private
  */
-router.get('/:id', auth, bookingController.getBookingById);
+router.get('/:id', auth(), bookingController.getBookingById);
 
 /**
  * @route   POST /api/bookings
  * @desc    Create a new booking
  * @access  Private
  */
-router.post('/', auth, validateBooking, bookingController.createBooking);
+router.post('/', auth(), validateBooking, bookingController.createBooking);
 
 /**
  * @route   PUT /api/bookings/:id/status
  * @desc    Update booking status
  * @access  Private/Partner/Admin
  */
-router.put('/:id/status', auth, bookingController.updateBookingStatus);
+router.put('/:id/status', auth(), bookingController.updateBookingStatus);
 
 /**
  * @route   POST /api/bookings/:id/payment
  * @desc    Record payment for a booking
  * @access  Private
  */
-router.post('/:id/payment', auth, bookingController.recordPayment);
+router.post('/:id/payment', auth(), bookingController.recordPayment);
 
 /**
  * @route   PUT /api/bookings/:id/cancel
  * @desc    Cancel a booking
  * @access  Private
  */
-router.put('/:id/cancel', auth, bookingController.cancelBooking);
+router.put('/:id/cancel', auth(), bookingController.cancelBooking);
 
 module.exports = router;

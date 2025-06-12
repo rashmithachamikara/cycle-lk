@@ -8,42 +8,42 @@ const { auth, admin } = require('../middleware/auth');
  * @desc    Get all support tickets (filtered by various params)
  * @access  Private/Admin
  */
-router.get('/', auth, admin, supportController.getAllTickets);
+router.get('/', auth(), admin, supportController.getAllTickets);
 
 /**
  * @route   GET /api/support/:id
  * @desc    Get support ticket by ID
  * @access  Private
  */
-router.get('/:id', auth, supportController.getTicketById);
+router.get('/:id', auth(), supportController.getTicketById);
 
 /**
  * @route   GET /api/support/user/:userId
  * @desc    Get user tickets
  * @access  Private
  */
-router.get('/user/:userId', auth, supportController.getUserTickets);
+router.get('/user/:userId', auth(), supportController.getUserTickets);
 
 /**
  * @route   POST /api/support
  * @desc    Create a support ticket
  * @access  Private
  */
-router.post('/', auth, supportController.createTicket);
+router.post('/', auth(), supportController.createTicket);
 
 /**
  * @route   PUT /api/support/:id/status
  * @desc    Update ticket status
  * @access  Private/Admin
  */
-router.put('/:id/status', auth, admin, supportController.updateTicketStatus);
+router.put('/:id/status', auth(), admin, supportController.updateTicketStatus);
 
 /**
  * @route   PUT /api/support/:id/assign
  * @desc    Assign ticket to staff
  * @access  Private/Admin
  */
-router.put('/:id/assign', auth, admin, supportController.assignTicket);
+router.put('/:id/assign', auth(), admin, supportController.assignTicket);
 
 /**
  * @route   POST /api/support/:id/response

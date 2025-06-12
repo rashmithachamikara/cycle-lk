@@ -8,41 +8,41 @@ const { auth, admin } = require('../middleware/auth');
  * @desc    Get all payments with optional filtering
  * @access  Private
  */
-router.get('/', auth, paymentController.getAllPayments);
+router.get('/', auth(), paymentController.getAllPayments);
 
 /**
  * @route   GET /api/payments/stats
  * @desc    Get payment statistics
  * @access  Private
  */
-router.get('/stats', auth, paymentController.getPaymentStats);
+router.get('/stats', auth(), paymentController.getPaymentStats);
 
 /**
  * @route   GET /api/payments/:id
  * @desc    Get payment by ID
  * @access  Private
  */
-router.get('/:id', auth, paymentController.getPaymentById);
+router.get('/:id', auth(), paymentController.getPaymentById);
 
 /**
  * @route   POST /api/payments
  * @desc    Process a new payment
  * @access  Private
  */
-router.post('/', auth, paymentController.processPayment);
+router.post('/', auth(), paymentController.processPayment);
 
 /**
  * @route   PUT /api/payments/:id/status
  * @desc    Update payment status
  * @access  Private/Admin
  */
-router.put('/:id/status', auth, admin, paymentController.updatePaymentStatus);
+router.put('/:id/status', auth(), admin, paymentController.updatePaymentStatus);
 
 /**
  * @route   POST /api/payments/:id/refund
  * @desc    Process a refund
  * @access  Private/Admin
  */
-router.post('/:id/refund', auth, admin, paymentController.processRefund);
+router.post('/:id/refund', auth(), admin, paymentController.processRefund);
 
 module.exports = router;

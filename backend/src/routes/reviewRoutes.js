@@ -23,20 +23,20 @@ router.get('/:id', reviewController.getReviewById);
  * @desc    Create a new review
  * @access  Private
  */
-router.post('/', auth, validateReview, reviewController.createReview);
+router.post('/', auth(), validateReview, reviewController.createReview);
 
 /**
  * @route   PUT /api/reviews/:id
  * @desc    Update a review
  * @access  Private
  */
-router.put('/:id', auth, reviewController.updateReview);
+router.put('/:id', auth(), reviewController.updateReview);
 
 /**
  * @route   DELETE /api/reviews/:id
  * @desc    Delete a review
  * @access  Private
  */
-router.delete('/:id', auth, reviewController.deleteReview);
+router.delete('/:id', auth(), reviewController.deleteReview);
 
 module.exports = router;

@@ -10,8 +10,12 @@ const { User } = require('../models');
  */
 exports.auth = (allowedRoles = []) => {
   return async (req, res, next) => {
+    // Log incoming request
+    console.log(`Auth middleware: Request received - ${req.method} ${req.originalUrl || req.url}`);
+    
     // Safety check to ensure req is properly initialized
     if (!req || typeof req !== 'object') {
+      console.error('Auth middleware: Invalid request object');
       return res.status(500).json({ message: 'Invalid request object' });
     }
 
@@ -21,6 +25,7 @@ exports.auth = (allowedRoles = []) => {
 
     // Check if no token
     if (!token) {
+      console.error('Auth middleware: No token provided');
       return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
@@ -40,16 +45,20 @@ exports.auth = (allowedRoles = []) => {
       const user = await User.findById(req.user.id);
       
       if (!user) {
+        console.error(`Auth middleware: User not found - ID: ${req.user.id}`);
         return res.status(404).json({ message: 'User not found' });
       }
       
       if (!allowedRoles.includes(user.role)) {
+        console.error(`Auth middleware: Access denied for user ${req.user.id} with role ${user.role}. Required: ${allowedRoles.join(' or ')}`);
         return res.status(403).json({ message: `Access denied. Required role: ${allowedRoles.join(' or ')}` });
       }
       
-      next();  } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
-  }
+      next();
+    } catch (err) {
+      console.error('Auth middleware: Token validation error:', err.message);
+      res.status(401).json({ message: 'Token is not valid' });
+    }
   };
 };
 
@@ -87,16 +96,18 @@ exports.userAccess = () => {
       const user = await User.findById(req.user.id);
       
       if (!user) {
+        console.error(`userAccess middleware: User not found - ID: ${req.user.id}`);
         return res.status(404).json({ message: 'User not found' });
       }
       
       if (user.role !== 'admin') {
+        console.error(`userAccess middleware: Access denied for user ${req.user.id} with role ${user.role}`);
         return res.status(403).json({ message: 'Access denied.' });
       }
       
       next();
     } catch (err) {
-      console.error(err);
+      console.error('userAccess middleware: Server error:', err.message);
       res.status(500).json({ message: 'Server error' });
     }
   };

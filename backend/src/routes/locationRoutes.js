@@ -29,20 +29,20 @@ router.get('/search', locationController.searchLocations);
  * @desc    Create a new location (admin only)
  * @access  Private/Admin
  */
-router.post('/', auth, admin, locationController.createLocation);
+router.post('/', auth(), admin, locationController.createLocation);
 
 /**
  * @route   PUT /api/locations/:id
  * @desc    Update a location (admin only)
  * @access  Private/Admin
  */
-router.put('/:id', auth, admin, locationController.updateLocation);
+router.put('/:id', auth(), admin, locationController.updateLocation);
 
 /**
  * @route   DELETE /api/locations/:id
  * @desc    Delete a location (admin only)
  * @access  Private/Admin
  */
-router.delete('/:id', auth, admin, locationController.deleteLocation);
+router.delete('/:id', auth(), admin, locationController.deleteLocation);
 
 module.exports = router;

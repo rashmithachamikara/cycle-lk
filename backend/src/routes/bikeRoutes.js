@@ -24,28 +24,28 @@ router.get('/:id', bikeController.getBikeById);
  * @desc    Add a new bike
  * @access  Private/Partner
  */
-router.post('/', auth, partner, validateBike, bikeController.addBike);
+router.post('/', auth(), partner, validateBike, bikeController.addBike);
 
 /**
  * @route   POST /api/bikes/:id/images
  * @desc    Upload bike images
  * @access  Private/Partner
  */
-router.post('/:id/images', auth, partner, bikeImageUpload.array('images', 5), bikeController.uploadBikeImages);
+router.post('/:id/images', auth(), partner, bikeImageUpload.array('images', 5), bikeController.uploadBikeImages);
 
 /**
  * @route   PUT /api/bikes/:id
  * @desc    Update a bike
  * @access  Private/Partner
  */
-router.put('/:id', auth, partner, bikeController.updateBike);
+router.put('/:id', auth(), partner, bikeController.updateBike);
 
 /**
  * @route   PUT /api/bikes/:id/availability
  * @desc    Update bike availability
  * @access  Private/Partner
  */
-router.put('/:id/availability', auth, partner, bikeController.updateBikeAvailability);
+router.put('/:id/availability', auth(), partner, bikeController.updateBikeAvailability);
 
 /**
  * @route   DELETE /api/bikes/:id
