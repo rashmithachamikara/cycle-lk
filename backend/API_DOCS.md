@@ -573,6 +573,65 @@ x-auth-token: <your_token_here>
   - `rating`: Filter by rating
   - `sort`: Sort order (`latest`, `rating-high`, `rating-low`)
 - **Success Response**: `200 OK`
+  ```json
+  [
+    {
+      "id": "review_id",
+      "userId": {
+        "id": "user_id",
+        "firstName": "John",
+        "lastName": "Doe",
+        "profileImage": "profile_image_url"
+      },
+      "bikeId": {
+        "id": "bike_id",
+        "name": "Mountain Bike Pro",
+        "type": "mountain",
+        "images": ["image_url"]
+      },
+      "bookingId": "booking_id",
+      "rating": 5,
+      "comment": "Great bike, smooth ride!",
+      "helpful": 3,
+      "images": ["review_image_url1", "review_image_url2"],
+      "status": "published",
+      "createdAt": "2023-01-01T00:00:00.000Z",
+      "updatedAt": "2023-01-01T00:00:00.000Z"
+    }
+  ]
+  ```
+
+### Get Review by ID
+
+- **URL**: `/reviews/:id`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "review_id",
+    "userId": {
+      "id": "user_id",
+      "firstName": "John",
+      "lastName": "Doe",
+      "profileImage": "profile_image_url"
+    },
+    "bikeId": {
+      "id": "bike_id",
+      "name": "Mountain Bike Pro",
+      "type": "mountain",
+      "images": ["image_url"]
+    },
+    "bookingId": "booking_id",
+    "rating": 5,
+    "comment": "Great bike, smooth ride!",
+    "helpful": 3,
+    "images": ["review_image_url1", "review_image_url2"],
+    "status": "published",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
 
 ### Create Review
 
@@ -585,10 +644,103 @@ x-auth-token: <your_token_here>
     "bikeId": "bike_id",
     "bookingId": "booking_id",
     "rating": 5,
-    "comment": "Excellent bike, very well maintained!"
+    "comment": "Excellent bike, very well maintained!",
+    "images": ["review_image_url1", "review_image_url2"]
   }
   ```
 - **Success Response**: `201 Created`
+  ```json
+  {
+    "id": "review_id",
+    "userId": "user_id",
+    "bikeId": "bike_id",
+    "bookingId": "booking_id",
+    "rating": 5,
+    "comment": "Excellent bike, very well maintained!",
+    "helpful": 0,
+    "images": ["review_image_url1", "review_image_url2"],
+    "status": "published",
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
+
+### Update Review
+
+- **URL**: `/reviews/:id`
+- **Method**: `PUT`
+- **Auth Required**: Yes
+- **Request Body**:
+  ```json
+  {
+    "rating": 4,
+    "comment": "Updated review comment",
+    "images": ["new_image_url"]
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "review_id",
+    "userId": "user_id",
+    "bikeId": "bike_id",
+    "bookingId": "booking_id",
+    "rating": 4,
+    "comment": "Updated review comment",
+    "helpful": 0,
+    "images": ["new_image_url"],
+    "status": "published",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
+
+### Mark Review as Helpful
+
+- **URL**: `/reviews/:id/helpful`
+- **Method**: `PUT`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Review marked as helpful",
+    "helpfulCount": 4
+  }
+  ```
+
+### Update Review Status
+
+- **URL**: `/reviews/:id/status`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "status": "rejected"
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Review status updated",
+    "review": {
+      "id": "review_id",
+      "status": "rejected"
+      // other review data
+    }
+  }
+  ```
+
+### Delete Review
+
+- **URL**: `/reviews/:id`
+- **Method**: `DELETE`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Review removed successfully"
+  }
+  ```
 
 ## FAQ Endpoints
 

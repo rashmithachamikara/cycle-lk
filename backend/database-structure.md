@@ -240,10 +240,18 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 ```javascript
 {
   _id: ObjectId,
-  userId: ObjectId,
-  entityId: ObjectId, // ID of bike, partner, etc. being reviewed
-  entityType: String, // 'bike', 'partner', 'booking'
-  bookingId: ObjectId,
+  userId: {
+    type: ObjectId,
+    ref: 'User'
+  },
+  bikeId: {
+    type: ObjectId,
+    ref: 'Bike'
+  },
+  bookingId: {
+    type: ObjectId,
+    ref: 'Booking'
+  },
   rating: Number, // 1-5
   comment: String,
   helpful: Number, // Number of people who found the review helpful

@@ -27,15 +27,25 @@ exports.getAllReviews = async (req, res) => {
       sortOptions = { createdAt: -1 }; // Default sort
     }
     
+    // Use lean() for better performance when we just need the data
     const reviews = await Review.find(filter)
-      .populate('userId', 'firstName lastName profileImage')
-      .populate('bikeId', 'name type images')
-      .sort(sortOptions);
+      .populate({
+        path: 'userId',
+        select: 'firstName lastName profileImage',
+        model: 'User'
+      })
+      .populate({
+        path: 'bikeId',
+        select: 'name type images',
+        model: 'Bike'
+      })
+      .sort(sortOptions)
+      .lean();
     
     res.json(reviews);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
@@ -47,8 +57,17 @@ exports.getAllReviews = async (req, res) => {
 exports.getReviewById = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id)
-      .populate('userId', 'firstName lastName profileImage')
-      .populate('bikeId', 'name type images');
+      .populate({
+        path: 'userId',
+        select: 'firstName lastName profileImage',
+        model: 'User'
+      })
+      .populate({
+        path: 'bikeId',
+        select: 'name type images',
+        model: 'Bike'
+      })
+      .lean();
       
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
@@ -57,7 +76,7 @@ exports.getReviewById = async (req, res) => {
     res.json(review);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 

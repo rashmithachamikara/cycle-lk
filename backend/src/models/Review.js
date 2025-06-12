@@ -1,22 +1,19 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const reviewSchema = new mongoose.Schema({
+const reviewSchema = new Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  entityId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  },
-  entityType: {
-    type: String,
-    enum: ['bike', 'partner', 'booking'],
+  bikeId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Bike',
     required: true
   },
   bookingId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Booking'
   },
   rating: {
@@ -26,7 +23,8 @@ const reviewSchema = new mongoose.Schema({
     max: 5
   },
   comment: {
-    type: String
+    type: String,
+    required: true
   },
   helpful: {
     type: Number,
@@ -36,25 +34,15 @@ const reviewSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['published', 'pending', 'rejected'],
-    default: 'pending'
+    default: 'published'
   },
   createdAt: {
     type: Date,
     default: Date.now
   },
   updatedAt: {
-    type: Date,
-    default: Date.now
+    type: Date
   }
-}, {
-  timestamps: true
 });
-
-// Create indexes
-reviewSchema.index({ userId: 1 });
-reviewSchema.index({ entityId: 1, entityType: 1 });
-reviewSchema.index({ bookingId: 1 });
-reviewSchema.index({ rating: 1 });
-reviewSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Review', reviewSchema);
