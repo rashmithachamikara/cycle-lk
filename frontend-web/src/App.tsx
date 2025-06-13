@@ -15,6 +15,7 @@ import AddBikePage from './pages/AddBikePage';
 import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import TestPage from './pages/TestPage';
 
 // Protected route component
 const ProtectedRoute = ({ element, requiredRole }: { element: JSX.Element, requiredRole?: string }) => {
@@ -59,6 +60,7 @@ function App() {
       <Route path="/edit-bike/:id" element={<ProtectedRoute element={<EditBikePage />} requiredRole="partner" />} />
       <Route path="/admin-dashboard" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole="admin" />} />
       <Route path="/admin-dashboard/:section" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole="admin" />} />
+      <Route path="/test" element={<ProtectedRoute element={<TestPage />} requiredRole="admin" />} />
     </Routes>
   );
 }
