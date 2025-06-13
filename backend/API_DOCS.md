@@ -639,6 +639,7 @@ x-auth-token: <your_token_here>
     {
       "id": "location_id",
       "name": "Colombo",
+      "description": "The commercial capital of Sri Lanka",
       "city": "Colombo",
       "province": "Western",
       "coordinates": {
@@ -646,9 +647,37 @@ x-auth-token: <your_token_here>
         "longitude": 79.861243
       },
       "bikeCount": 25,
-      "partnerCount": 5
+      "partnerCount": 5,
+      "popular": true,
+      "image": "colombo_image_url.jpg",
+      "region": "Western Province"
     }
   ]
+  ```
+
+### Get Location by ID
+
+- **URL**: `/locations/:id`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "location_id",
+    "name": "Colombo",
+    "description": "The commercial capital of Sri Lanka",
+    "coordinates": {
+      "latitude": 6.927079,
+      "longitude": 79.861243
+    },
+    "bikeCount": 25,
+    "partnerCount": 5,
+    "popular": true,
+    "image": "colombo_image_url.jpg",
+    "region": "Western Province",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  }
   ```
 
 ### Search Locations
@@ -659,6 +688,113 @@ x-auth-token: <your_token_here>
 - **Query Parameters**:
   - `query`: Search term for location name, city or province
 - **Success Response**: `200 OK`
+  ```json
+  [
+    {
+      "id": "location_id",
+      "name": "Colombo",
+      "description": "The commercial capital of Sri Lanka",
+      "city": "Colombo",
+      "province": "Western",
+      "coordinates": {
+        "latitude": 6.927079,
+        "longitude": 79.861243
+      },
+      "bikeCount": 25,
+      "partnerCount": 5,
+      "image": "colombo_image_url.jpg",
+      "region": "Western Province"
+    }
+  ]
+  ```
+
+### Create Location (Admin only)
+
+- **URL**: `/locations`
+- **Method**: `POST`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "name": "Kandy",
+    "description": "Cultural capital of Sri Lanka",
+    "city": "Kandy", 
+    "province": "Central",
+    "coordinates": {
+      "latitude": 7.2906,
+      "longitude": 80.6337
+    },
+    "popular": false,
+    "image": "kandy_image_url.jpg",
+    "region": "Central Province"
+  }
+  ```
+- **Success Response**: `201 Created`
+  ```json
+  {
+    "id": "location_id",
+    "name": "Kandy",
+    "description": "Cultural capital of Sri Lanka",
+    "city": "Kandy",
+    "province": "Central",
+    "coordinates": {
+      "latitude": 7.2906,
+      "longitude": 80.6337
+    },
+    "bikeCount": 0,
+    "partnerCount": 0,
+    "popular": false,
+    "image": "kandy_image_url.jpg",
+    "region": "Central Province",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
+
+### Update Location (Admin only)
+
+- **URL**: `/locations/:id`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "description": "Updated description for this location",
+    "popular": true,
+    "image": "updated_image_url.jpg"
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "id": "location_id",
+    "name": "Kandy",
+    "description": "Updated description for this location",
+    "coordinates": {
+      "latitude": 7.2906,
+      "longitude": 80.6337
+    },
+    "bikeCount": 0,
+    "partnerCount": 0,
+    "popular": true,
+    "image": "updated_image_url.jpg",
+    "region": "Central Province",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  }
+  ```
+
+### Delete Location (Admin only)
+
+- **URL**: `/locations/:id`
+- **Method**: `DELETE`
+- **Auth Required**: Yes (Admin role)
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Location deleted successfully"
+  }
+  ```
 
 ## Review Endpoints
 
