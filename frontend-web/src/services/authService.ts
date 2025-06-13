@@ -1,34 +1,34 @@
-import axios from 'axios';
+import api from '../utils/apiUtils';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// User registration data interface
+export interface RegisterUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+}
 
-// Set up default headers
-axios.defaults.headers.post['Content-Type'] = 'application/json';
-
-// Check for token and set auth header
-const token = localStorage.getItem('token');
-if (token) {
-  axios.defaults.headers.common['x-auth-token'] = token;
+// User profile update data interface
+export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  [key: string]: string | undefined;
 }
 
 // Auth service
 export const authService = {
   // Login user
   login: async (email: string, password: string) => {
-    const response = await axios.post(`${API_URL}/users/login`, { email, password });
+    const response = await api.post('/users/login', { email, password });
     return response.data;
   },
 
   // Register user
-  register: async (userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    phone: string;
-  }) => {
-    const response = await axios.post(`${API_URL}/users/`, userData);
+  register: async (userData: RegisterUserData) => {
+    const response = await api.post('/users/register', userData);
     return response.data;
   },
 
@@ -38,7 +38,7 @@ export const authService = {
     if (!user) return null;
     
     const userData = JSON.parse(user);
-    const response = await axios.get(`${API_URL}/users/${userData.id}`);
+    const response = await api.get(`/users/${userData.id}`);
     return response.data;
   }
 };
@@ -46,14 +46,23 @@ export const authService = {
 // User service
 export const userService = {
   // Update user profile
-  updateProfile: async (userId: string, userData: any) => {
-    const response = await axios.put(`${API_URL}/users/${userId}`, userData);
+  updateProfile: async (userId: string, userData: UpdateProfileData) => {
+    const response = await api.put(`/users/${userId}`, userData);
     return response.data;
   },
-
-  // Change password
-  changePassword: async (userId: string, data: { currentPassword: string; newPassword: string }) => {
-    const response = await axios.put(`${API_URL}/users/${userId}/password`, data);
+  
+  // Change user password
+  changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const response = await api.put(`/users/${userId}/password`, {
+      currentPassword,
+      newPassword
+    });
+    return response.data;
+  },
+  
+  // Get user by ID
+  getUserById: async (userId: string) => {
+    const response = await api.get(`/users/${userId}`);
     return response.data;
   }
 };
@@ -61,8 +70,8 @@ export const userService = {
 // Helper function to set auth token
 export const setAuthToken = (token: string | null) => {
   if (token) {
-    axios.defaults.headers.common['x-auth-token'] = token;
+    api.defaults.headers.common['x-auth-token'] = token;
   } else {
-    delete axios.defaults.headers.common['x-auth-token'];
+    delete api.defaults.headers.common['x-auth-token'];
   }
 };
