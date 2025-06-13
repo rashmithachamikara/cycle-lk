@@ -18,6 +18,25 @@ export interface UpdateProfileData {
   [key: string]: string | undefined;
 }
 
+// Document verification interfaces
+export interface IdDocumentData {
+  documentType: 'national_id' | 'passport' | 'driving_license' | 'other';
+  documentNumber: string;
+  documentImage: File;
+}
+
+export interface IdDocumentStatus {
+  isVerified: boolean;
+  status: 'not_submitted' | 'pending' | 'approved' | 'rejected';
+  documentType?: string;
+  documentNumber?: string;
+  documentImage?: string;
+  submittedAt?: Date;
+  verifiedAt?: Date;
+  approvedBy?: string;
+  rejectionReason?: string;
+}
+
 // Auth service
 export const authService = {
   // Login user
@@ -63,6 +82,50 @@ export const userService = {
   // Get user by ID
   getUserById: async (userId: string) => {
     const response = await api.get(`/users/${userId}`);
+    return response.data;
+  },
+  
+  // Submit ID document for verification
+  submitIdDocument: async (userId: string, documentData: IdDocumentData) => {
+    // Create form data for file upload
+    const formData = new FormData();
+    formData.append('documentType', documentData.documentType);
+    formData.append('documentNumber', documentData.documentNumber);
+    formData.append('documentImage', documentData.documentImage);
+    
+    const response = await api.post(`/users/${userId}/verification/document`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+  
+  // Get ID document verification status
+  getIdDocumentStatus: async (userId: string) => {
+    const response = await api.get(`/users/${userId}/verification/document/status`);
+    return response.data;
+  },
+  
+  // Admin only: Approve ID document verification
+  approveIdDocument: async (userId: string) => {
+    const response = await api.put(`/users/${userId}/verification/document/approve`);
+    return response.data;
+  },
+  
+  // Admin only: Reject ID document verification
+  rejectIdDocument: async (userId: string, rejectionReason: string) => {
+    const response = await api.put(`/users/${userId}/verification/document/reject`, {
+      rejectionReason
+    });
+    return response.data;
+  },
+  
+  // Admin only: Get all pending ID document verifications
+  getPendingVerifications: async (page: number = 1, limit: number = 10) => {
+    const response = await api.get('/admin/verifications/pending', {
+      params: { page, limit }
+    });
     return response.data;
   }
 };
