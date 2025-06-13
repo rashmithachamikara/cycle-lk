@@ -4,8 +4,9 @@ import api from '../utils/apiUtils';
 export interface Location {
   id: string;
   name: string;
-  city: string;
-  province: string;
+  region: string;
+  image:string;
+  description: string,
   coordinates: {
     latitude: number;
     longitude: number;
