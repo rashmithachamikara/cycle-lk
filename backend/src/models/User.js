@@ -86,6 +86,40 @@ const userSchema = new mongoose.Schema({
     phone: {
       type: Boolean,
       default: false
+    },
+    idDocument: {
+      isVerified: {
+        type: Boolean,
+        default: false
+      },
+      status: {
+        type: String,
+        enum: ['not_submitted', 'pending', 'approved', 'rejected'],
+        default: 'not_submitted'
+      },
+      documentType: {
+        type: String,
+        enum: ['national_id', 'passport', 'driving_license', 'other'],
+      },
+      documentNumber: {
+        type: String
+      },
+      documentImage: {
+        type: String // URL to stored document image
+      },
+      submittedAt: {
+        type: Date
+      },
+      verifiedAt: {
+        type: Date
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      rejectionReason: {
+        type: String
+      }
     }
   },
   createdAt: {

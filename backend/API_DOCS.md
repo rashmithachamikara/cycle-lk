@@ -134,6 +134,106 @@ x-auth-token: <your_token_here>
   }
   ```
 
+### Submit ID Document for Verification
+
+- **URL**: `/users/:id/verification/document`
+- **Method**: `POST`
+- **Auth Required**: Yes
+- **Content Type**: `multipart/form-data`
+- **Request Body**:
+  - `documentType`: Document type ('national_id', 'passport', 'driving_license', 'other')
+  - `documentNumber`: Document identification number
+  - `documentImage`: Image file of the document
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "Document submitted for verification",
+    "verificationStatus": {
+      "idDocument": {
+        "status": "pending",
+        "documentType": "national_id",
+        "documentNumber": "123456789",
+        "documentImage": "url_to_uploaded_image",
+        "submittedAt": "2023-01-01T00:00:00.000Z"
+      }
+    }
+  }
+  ```
+
+### Get ID Verification Status
+
+- **URL**: `/users/:id/verification/document/status`
+- **Method**: `GET`
+- **Auth Required**: Yes
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "verificationStatus": {
+      "idDocument": {
+        "isVerified": false,
+        "status": "pending",
+        "documentType": "national_id",
+        "documentNumber": "123456789",
+        "documentImage": "url_to_uploaded_image",
+        "submittedAt": "2023-01-01T00:00:00.000Z"
+      }
+    }
+  }
+  ```
+
+### Approve ID Document Verification
+
+- **URL**: `/users/:id/verification/document/approve`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "ID document verified successfully",
+    "verificationStatus": {
+      "idDocument": {
+        "isVerified": true,
+        "status": "approved",
+        "documentType": "national_id",
+        "documentNumber": "123456789",
+        "documentImage": "url_to_uploaded_image",
+        "submittedAt": "2023-01-01T00:00:00.000Z",
+        "verifiedAt": "2023-01-05T00:00:00.000Z",
+        "approvedBy": "admin_user_id"
+      }
+    }
+  }
+  ```
+
+### Reject ID Document Verification
+
+- **URL**: `/users/:id/verification/document/reject`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin role)
+- **Request Body**:
+  ```json
+  {
+    "rejectionReason": "Document is illegible or appears altered"
+  }
+  ```
+- **Success Response**: `200 OK`
+  ```json
+  {
+    "message": "ID document verification rejected",
+    "verificationStatus": {
+      "idDocument": {
+        "isVerified": false,
+        "status": "rejected",
+        "documentType": "national_id",
+        "documentNumber": "123456789",
+        "documentImage": "url_to_uploaded_image",
+        "submittedAt": "2023-01-01T00:00:00.000Z",
+        "rejectionReason": "Document is illegible or appears altered"
+      }
+    }
+  }
+  ```
+
 ## Bike Endpoints
 
 ### Get All Bikes

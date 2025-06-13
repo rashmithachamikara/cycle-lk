@@ -32,7 +32,18 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   },
   verificationStatus: {
     email: Boolean,
-    phone: Boolean
+    phone: Boolean,
+    idDocument: {
+      isVerified: Boolean,
+      status: String, // 'not_submitted', 'pending', 'approved', 'rejected'
+      documentType: String, // 'national_id', 'passport', 'driving_license', 'other'
+      documentNumber: String,
+      documentImage: String, // URL to stored document image
+      submittedAt: Date,
+      verifiedAt: Date,
+      approvedBy: ObjectId, // reference to User (admin)
+      rejectionReason: String
+    }
   },
   createdAt: Date,
   updatedAt: Date,
