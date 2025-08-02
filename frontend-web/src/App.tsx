@@ -60,7 +60,7 @@ function App() {
       <Route path="/edit-bike/:id" element={<ProtectedRoute element={<EditBikePage />} requiredRole="partner" />} />
       <Route path="/admin-dashboard" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole="admin" />} />
       <Route path="/admin-dashboard/:section" element={<ProtectedRoute element={<AdminDashboardPage />} requiredRole="admin" />} />
-      <Route path="/test" element={<ProtectedRoute element={<TestPage />} requiredRole="admin" />} />
+      <Route path="/test" element={<ProtectedRoute element={<TestPage />} requiredRole="partner" />} />
     </Routes>
   );
 }
