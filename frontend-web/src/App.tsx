@@ -6,6 +6,7 @@ import BookingPage from './pages/BookingPage';
 import DashboardPage from './pages/DashboardPage';
 import BikeDetailsPage from './pages/BikeDetailsPage';
 import LocationsPage from './pages/LocationsPage';
+import LocationPage from './pages/LocationPage';
 import PartnersPage from './pages/PartnersPage';
 import ProfilePage from './pages/ProfilePage';
 import SupportPage from './pages/SupportPage';
@@ -51,6 +52,7 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} />} />
       <Route path="/bike/:id" element={<BikeDetailsPage />} />
       <Route path="/locations" element={<LocationsPage />} />
+      <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
       <Route path="/support" element={<SupportPage />} />

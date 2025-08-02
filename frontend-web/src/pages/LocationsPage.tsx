@@ -58,6 +58,7 @@ const LocationsPage = () => {
   const fetchBikes = async (filters?: BikeFilterParams) => {
     try {
       const data = await bikeService.getAllBikes(filters);
+      console.log('Bikes data received:', data); // Temporary debug log
       setBikes(data);
     } catch (err) {
       setError('Failed to load bikes. Please try again later.');
