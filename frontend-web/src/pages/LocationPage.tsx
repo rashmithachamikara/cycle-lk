@@ -42,6 +42,7 @@ const LocationPage: React.FC = () => {
     try {
       setLocationLoading(true);
       const locationData = await locationService.getLocationById(id);
+      console.log('Location data received:', locationData); // Temporary debug log
       setLocation(locationData);
     } catch (err) {
       console.error('Error fetching location:', err);
@@ -53,15 +54,16 @@ const LocationPage: React.FC = () => {
 
   // Fetch bikes for this location
   const fetchBikes = useCallback(async (filters?: BikeFilterParams) => {
-    if (!id) return;
+    if (!location?.name) return;
     
     try {
       setLoading(true);
       const filtersWithLocation = {
         ...filters,
-        location: id // Filter by location ID
+        location: location.name // Use location name for filtering
       };
       const bikesData = await bikeService.getAllBikes(filtersWithLocation);
+      console.log(`Bikes in location ${location.name}:`, bikesData); // Temporary debug log
       setBikes(bikesData);
     } catch (err) {
       setError('Failed to load bikes. Please try again later.');
@@ -69,17 +71,23 @@ const LocationPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [location?.name]);
 
   // Load initial data
   useEffect(() => {
     if (id && id !== 'undefined') {
       fetchLocation();
-      fetchBikes();
     } else {
       navigate('/locations');
     }
-  }, [id, navigate, fetchLocation, fetchBikes]);
+  }, [id, navigate, fetchLocation]);
+
+  // Load bikes when location is available
+  useEffect(() => {
+    if (location) {
+      fetchBikes();
+    }
+  }, [location, fetchBikes]);
 
   // Apply filters when search parameters change
   useEffect(() => {
