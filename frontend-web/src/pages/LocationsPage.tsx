@@ -217,7 +217,7 @@ const LocationsPage = () => {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            Available Bikes ({sortedBikes.length})
+            Available Bikes in {selectedLocation !== 'all' ? selectedLocation : 'All Locations'} ({sortedBikes.length})
           </h2>
           {selectedLocation !== 'all' && (
             <button

@@ -26,7 +26,7 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">{bike.name}</h3>
-            {!bike.available && (
+            {!bike. && (
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
                 Unavailable
               </span>
@@ -67,12 +67,12 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
             <Link
               to={`/booking/${bike.id}`}
               className={`py-2 px-4 rounded-lg font-medium text-center transition-colors ${
-                bike.available
+                bike.availability?.status
                   ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {bike.available ? 'Book Now' : 'Unavailable'}
+              {bike.availability?.status ? 'Book Now' : 'Unavailable'}
             </Link>
           </div>
         </div>
