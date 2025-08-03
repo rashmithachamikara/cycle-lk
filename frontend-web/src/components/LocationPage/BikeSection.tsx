@@ -1,6 +1,7 @@
 import React from 'react';
 import { BikeCard, BikeListItem } from '../LocationsPage';
-import { LoadingState, ErrorState, EmptyState } from '../LocationsPage';
+import { EmptyState } from '../LocationsPage';
+import { Loader, ErrorDisplay } from '../../ui';
 import { Bike } from '../../services/bikeService';
 
 interface BikeSectionProps {
@@ -21,11 +22,11 @@ const BikeSection: React.FC<BikeSectionProps> = ({
   onClearFilters
 }) => {
   if (loading) {
-    return <LoadingState message="Loading bikes..." />;
+    return <Loader message="Loading bikes..." />;
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={onRetry} />;
+    return <ErrorDisplay error={error} onRetry={onRetry} />;
   }
 
   if (bikes.length === 0) {
