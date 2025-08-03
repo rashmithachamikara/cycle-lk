@@ -1,4 +1,5 @@
 import api from '../utils/apiUtils';
+import { Partner } from './partnerService'; // Import comprehensive Partner interface
 
 // Interface for bike filter parameters
 export interface BikeFilterParams {
@@ -56,17 +57,7 @@ export interface BikeReview {
   helpful?: number;
 }
 
-// Interface for partner information
-export interface Partner {
-  _id: string;
-  companyName: string;
-  rating?: number;
-  contact?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  businessHours?: string | { [key: string]: string }; // Can be string or object
-}
+// Partner interface is imported from partnerService
 
 // Interface for bike from API (with MongoDB _id)
 export interface BikeFromAPI {

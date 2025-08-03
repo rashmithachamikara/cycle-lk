@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -21,171 +21,28 @@ import {
   Camera
 } from 'lucide-react';
 
+import { Partner,partnerService } from '../services/partnerService';
+
 const PartnersPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(true);
+  const [categories, setCategories] = useState<{ id: string; name: string; count: number }[]>([]);
 
-  const partners = [
-    {
-      id: 1,
-      name: 'Colombo Bikes',
-      location: 'Colombo Central',
-      category: 'Premium',
-      rating: 4.9,
-      reviews: 234,
-      bikeCount: 25,
-      yearsActive: 5,
-      specialties: ['City Tours', 'Business Rentals', 'Airport Transfers'],
-      description: 'Leading bike rental service in Colombo with premium fleet and exceptional customer service.',
-      phone: '+94 77 123 4567',
-      email: 'info@colombobikes.lk',
-      hours: '6:00 AM - 10:00 PM',
-      address: 'No. 123, Galle Road, Colombo 03',
-      image: 'Modern bike shop storefront',
-      verified: true,
-      features: ['24/7 Support', 'Free Delivery', 'Insurance Included', 'GPS Tracking'],
-      gallery: [
-        'Shop interior with bikes',
-        'Professional staff',
-        'Maintenance workshop',
-        'Customer service area'
-      ]
-    },
-    {
-      id: 2,
-      name: 'Hill Country Cycles',
-      location: 'Kandy',
-      category: 'Adventure',
-      rating: 4.8,
-      reviews: 156,
-      bikeCount: 18,
-      yearsActive: 3,
-      specialties: ['Mountain Biking', 'Tea Plantation Tours', 'Cultural Routes'],
-      description: 'Specialized in mountain bikes and scenic routes through Kandy\'s beautiful hill country.',
-      phone: '+94 77 234 5678',
-      email: 'rides@hillcountrycycles.lk',
-      hours: '7:00 AM - 7:00 PM',
-      address: 'Temple Street, Kandy',
-      image: 'Mountain bike shop with hills backdrop',
-      verified: true,
-      features: ['Route Planning', 'Guide Services', 'Equipment Rental', 'Emergency Support'],
-      gallery: [
-        'Mountain bikes display',
-        'Scenic route maps',
-        'Safety equipment',
-        'Local guides'
-      ]
-    },
-    {
-      id: 3,
-      name: 'Coastal Bikes',
-      location: 'Galle',
-      category: 'Beach',
-      rating: 4.7,
-      reviews: 189,
-      bikeCount: 22,
-      yearsActive: 4,
-      specialties: ['Beach Cruising', 'Fort Tours', 'Sunset Rides'],
-      description: 'Perfect for exploring Galle Fort and coastal areas with comfortable beach cruisers.',
-      phone: '+94 77 345 6789',
-      email: 'hello@coastalbikes.lk',
-      hours: '6:30 AM - 8:00 PM',
-      address: 'Fort Road, Galle Fort',
-      image: 'Beach bikes near historic fort',
-      verified: true,
-      features: ['Beach Accessories', 'Fort Passes', 'Photography Tips', 'Sunset Tours'],
-      gallery: [
-        'Beach cruiser collection',
-        'Galle Fort views',
-        'Sunset cycling',
-        'Coastal routes'
-      ]
-    },
-    {
-      id: 4,
-      name: 'Mountain View Rentals',
-      location: 'Ella',
-      category: 'Eco',
-      rating: 4.6,
-      reviews: 98,
-      bikeCount: 15,
-      yearsActive: 2,
-      specialties: ['Eco Tours', 'Tea Estate Visits', 'Nature Photography'],
-      description: 'Eco-friendly bike rentals focusing on sustainable tourism and nature experiences.',
-      phone: '+94 77 456 7890',
-      email: 'eco@mountainviewrentals.lk',
-      hours: '6:00 AM - 6:00 PM',
-      address: 'Main Street, Ella',
-      image: 'Eco-friendly shop with mountain views',
-      verified: false,
-      features: ['Eco Certification', 'Nature Guides', 'Photography Equipment', 'Tea Tasting'],
-      gallery: [
-        'Eco-friendly bikes',
-        'Tea plantation views',
-        'Nature photography',
-        'Sustainable practices'
-      ]
-    },
-    {
-      id: 5,
-      name: 'Ancient City Bikes',
-      location: 'Sigiriya',
-      category: 'Heritage',
-      rating: 4.5,
-      reviews: 67,
-      bikeCount: 12,
-      yearsActive: 3,
-      specialties: ['Archaeological Sites', 'Cultural Tours', 'Historical Routes'],
-      description: 'Specialized in heritage site visits and cultural exploration around ancient Sigiriya.',
-      phone: '+94 77 567 8901',
-      email: 'heritage@ancientcitybikes.lk',
-      hours: '5:30 AM - 7:00 PM',
-      address: 'Sigiriya Road, Sigiriya',
-      image: 'Traditional bikes near ancient ruins',
-      verified: true,
-      features: ['Site Tickets', 'Audio Guides', 'Historical Maps', 'Cultural Insights'],
-      gallery: [
-        'Heritage bike collection',
-        'Sigiriya Rock views',
-        'Archaeological sites',
-        'Cultural experiences'
-      ]
-    },
-    {
-      id: 6,
-      name: 'Airport Bikes',
-      location: 'Negombo',
-      category: 'Transit',
-      rating: 4.4,
-      reviews: 143,
-      bikeCount: 20,
-      yearsActive: 4,
-      specialties: ['Airport Transfers', 'Beach Access', 'Quick Rentals'],
-      description: 'Convenient bike rentals for travelers arriving at Bandaranaike International Airport.',
-      phone: '+94 77 678 9012',
-      email: 'travel@airportbikes.lk',
-      hours: '24/7',
-      address: 'Airport Road, Negombo',
-      image: 'Airport shuttle bikes',
-      verified: true,
-      features: ['24/7 Service', 'Airport Pickup', 'Luggage Racks', 'Express Booking'],
-      gallery: [
-        'Airport transfer bikes',
-        'Luggage solutions',
-        '24/7 service counter',
-        'Beach access routes'
-      ]
+  const fetchPartners = async () => {
+    const allPartners = await partnerService.getAllPartners();
+    try{
+      setPartners(allPartners);
+      setPartnersLoading(false);
+    } catch (error) {
+      console.error('Error fetching partners:', error);
+      setPartnersLoading(false);
     }
-  ];
+  };
 
-  const categories = [
-    { id: 'all', name: 'All Partners', count: partners.length },
-    { id: 'Premium', name: 'Premium', count: partners.filter(p => p.category === 'Premium').length },
-    { id: 'Adventure', name: 'Adventure', count: partners.filter(p => p.category === 'Adventure').length },
-    { id: 'Beach', name: 'Beach', count: partners.filter(p => p.category === 'Beach').length },
-    { id: 'Eco', name: 'Eco-Friendly', count: partners.filter(p => p.category === 'Eco').length },
-    { id: 'Heritage', name: 'Heritage', count: partners.filter(p => p.category === 'Heritage').length },
-    { id: 'Transit', name: 'Transit', count: partners.filter(p => p.category === 'Transit').length }
-  ];
+  useEffect(()=>{
+    fetchPartners();
+  },[])
 
   const filteredPartners = selectedCategory === 'all' 
     ? partners 
@@ -232,7 +89,7 @@ const PartnersPage = () => {
                 <Bike className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">
-                {partners.reduce((sum, partner) => sum + partner.bikeCount, 0)}
+                {partners.reduce((sum, partner: Partner) => sum + partner.bikeCount, 0)}
               </div>
               <div className="text-gray-600">Total Bikes</div>
             </div>
