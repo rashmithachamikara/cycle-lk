@@ -26,7 +26,7 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">{bike.name}</h3>
-            {!bike. && (
+            {!bike.availability?.status && (
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
                 Unavailable
               </span>
