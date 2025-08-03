@@ -1,7 +1,7 @@
 import React from 'react';
 import BikeCard from './BikeCard';
 import BikeListItem from './BikeListItem';
-import { Bike } from './types';
+import { Bike } from '../../services/bikeService';
 
 interface BikeGridProps {
   bikes: Bike[];

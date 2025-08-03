@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Bike as BikeIcon } from 'lucide-react';
-import { Bike } from './types';
+import { Bike } from '../../services/bikeService';
 
 interface BikeCardProps {
   bike: Bike;
@@ -49,7 +49,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
         
         <div className="flex items-center text-gray-600 mb-4">
           <MapPin className="h-4 w-4 mr-2" />
-          <span className="text-sm">{bike.location} • {bike.partner?.name || 'Partner'}</span>
+          <span className="text-sm">{bike.location} • {bike.partner?.companyName || 'Partner'}</span>
         </div>
         
         <div className="flex flex-wrap gap-2 mb-4">

@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 
 // Import services and interfaces
 import { locationService, Location } from '../services/locationService';
-import { bikeService, BikeFilterParams } from '../services/bikeService';
+import { bikeService, BikeFilterParams, Bike } from '../services/bikeService';
 
 // Import components
 import {
@@ -15,8 +15,7 @@ import {
   ErrorState,
   EmptyState,
   HeroSection,
-  BikeGrid,
-  Bike
+  BikeGrid
 } from '../components/LocationsPage';
 
 const LocationsPage = () => {

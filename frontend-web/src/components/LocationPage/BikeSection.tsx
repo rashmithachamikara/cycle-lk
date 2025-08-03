@@ -1,7 +1,7 @@
 import React from 'react';
 import { BikeCard, BikeListItem } from '../LocationsPage';
 import { LoadingState, ErrorState, EmptyState } from '../LocationsPage';
-import { Bike } from './types';
+import { Bike } from '../../services/bikeService';
 
 interface BikeSectionProps {
   bikes: Bike[];
