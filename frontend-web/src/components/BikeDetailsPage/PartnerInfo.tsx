@@ -3,7 +3,7 @@ import { Bike } from '../../services/bikeService';
 
 interface PartnerInfoProps {
   bike: Bike;
-  formatBusinessHours: (businessHours: string | { [key: string]: string } | undefined) => string;
+  formatBusinessHours: (businessHours: any) => string;
 }
 
 const PartnerInfo = ({ bike, formatBusinessHours }: PartnerInfoProps) => {
