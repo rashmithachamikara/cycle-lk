@@ -152,7 +152,7 @@ const SupportPage = () => {
                   <Phone className="h-5 w-5 text-emerald-600 mr-3" />
                   <div>
                     <div className="font-medium text-gray-900">Call Us</div>
-                    <div className="text-sm text-gray-600">+94 11 234 5678</div>
+                    <div className="text-sm text-gray-600">+94 11 234 5672</div>
                   </div>
                 </a>
                 
