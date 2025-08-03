@@ -1,6 +1,24 @@
 import api from '../utils/apiUtils';
 
-// Interface for location data
+// Interface for location data from API (with _id)
+interface LocationFromAPI {
+  _id: string;
+  name: string;
+  description: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  bikeCount: number;
+  partnerCount: number;
+  popular: boolean;
+  image: string;
+  region: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Interface for location data (with id for frontend)
 export interface Location {
   id: string;
   name: string;
@@ -18,6 +36,21 @@ export interface Location {
   updatedAt?: string;
 }
 
+// Helper function to transform API response
+const transformLocation = (apiLocation: LocationFromAPI): Location => ({
+  id: apiLocation._id,
+  name: apiLocation.name,
+  description: apiLocation.description,
+  coordinates: apiLocation.coordinates,
+  bikeCount: apiLocation.bikeCount,
+  partnerCount: apiLocation.partnerCount,
+  popular: apiLocation.popular,
+  image: apiLocation.image,
+  region: apiLocation.region,
+  createdAt: apiLocation.createdAt,
+  updatedAt: apiLocation.updatedAt,
+});
+
 /**
  * Location service for interacting with location-related API endpoints
  */
@@ -29,7 +62,8 @@ export const locationService = {
   getAllLocations: async (): Promise<Location[]> => {
     try {
       const response = await api.get('/locations');
-      return response.data;
+      const apiLocations: LocationFromAPI[] = response.data;
+      return apiLocations.map(transformLocation);
     } catch (error) {
       console.error('Error fetching locations:', error);
       throw error;
@@ -44,7 +78,8 @@ export const locationService = {
   getLocationById: async (id: string): Promise<Location> => {
     try {
       const response = await api.get(`/locations/${id}`);
-      return response.data;
+      const apiLocation: LocationFromAPI = response.data;
+      return transformLocation(apiLocation);
     } catch (error) {
       console.error(`Error fetching location with ID ${id}:`, error);
       throw error;
@@ -59,7 +94,8 @@ export const locationService = {
   searchLocations: async (query: string): Promise<Location[]> => {
     try {
       const response = await api.get('/locations/search', { params: { query } });
-      return response.data;
+      const apiLocations: LocationFromAPI[] = response.data;
+      return apiLocations.map(transformLocation);
     } catch (error) {
       console.error('Error searching locations:', error);
       throw error;
@@ -73,7 +109,8 @@ export const locationService = {
   getPopularLocations: async (): Promise<Location[]> => {
     try {
       const response = await api.get('/locations', { params: { popular: true } });
-      return response.data;
+      const apiLocations: LocationFromAPI[] = response.data;
+      return apiLocations.map(transformLocation);
     } catch (error) {
       console.error('Error fetching popular locations:', error);
       throw error;
