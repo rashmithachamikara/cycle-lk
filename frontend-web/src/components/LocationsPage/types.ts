@@ -8,16 +8,21 @@ export interface Bike {
     perDay: number;
     perHour?: number;
     perWeek?: number;
+    perMonth?: number;
   };
   rating?: number;
   reviews?: Array<unknown>;
   images?: string[];
-  available: boolean;
+  availability?: {
+    status: boolean;
+    unavailableDates?: Date[];
+  };
   features?: string[];
   partner?: {
     name: string;
     id?: string;
   };
+  partnerId?: string;
   brand?: string;
   description?: string;
   condition?: string;

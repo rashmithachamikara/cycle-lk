@@ -122,9 +122,14 @@ const LocationsPage = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedLocation, selectedType]);
 
-  // Filter bikes based on search query client-side as well
+  // Filter bikes based on search query and availability
   const filteredBikes = bikes.filter(bike => {
-    // Only apply search filter client-side, other filters are handled by the API
+    // Only show available bikes
+    if (!bike.availability?.status) {
+      return false;
+    }
+    
+    // Apply search filter client-side, other filters are handled by the API
     return searchQuery === '' || 
            bike.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            bike.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -132,9 +137,13 @@ const LocationsPage = () => {
 
   // Handler for location card click
   const handleLocationSelect = (locationId: string) => {
-    setSelectedLocation(locationId);
-    // Scroll to the bike listings section
-    document.getElementById('bike-listings')?.scrollIntoView({ behavior: 'smooth' });
+    // Find the location by ID and use its name for filtering
+    const location = locations.find(loc => loc.id === locationId);
+    if (location) {
+      setSelectedLocation(location.name);
+      // Scroll to the bike listings section
+      document.getElementById('bike-listings')?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   // Navigate to location detail page
@@ -221,7 +230,7 @@ const LocationsPage = () => {
         </div>
 
         {/* Bike Listings */}
-        <section>
+        <section id="bike-listings">
           {loading ? (
             <LoadingState message="Loading bikes..." />
           ) : error ? (

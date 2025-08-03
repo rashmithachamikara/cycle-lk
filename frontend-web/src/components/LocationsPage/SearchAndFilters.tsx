@@ -54,7 +54,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             >
               <option value="all">All Locations</option>
               {locations.map((location) => (
-                <option key={location.id} value={location.id}>
+                <option key={location.id} value={location.name}>
                   {location.name}
                 </option>
               ))}

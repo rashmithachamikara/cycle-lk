@@ -17,7 +17,7 @@ const LocationHero: React.FC<LocationHeroProps> = ({ location, bikeCount = 0 }) 
         style={
           location.image 
             ? {
-                backgroundImage: `linear-gradient(rgba(16, 185, 129, 0.8), rgba(20, 184, 166, 0.8)), url(${location.image})`,
+                backgroundImage: `linear-gradient(rgba(16, 170, 129, 0.8), rgba(20, 184, 166, 0.8)), url(${location.image})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }

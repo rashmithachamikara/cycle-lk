@@ -22,7 +22,11 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
             <BikeIcon className="h-16 w-16 text-gray-400" />
           </div>
         )}
-        {!bike.available && (
+        {bike.availability?.status ? (
+          <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+            Available
+          </div>
+        ) : (
           <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
             Unavailable
           </div>
@@ -66,12 +70,12 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
           <Link
             to={`/booking/${bike.id}`}
             className={`flex-1 py-3 rounded-lg font-medium text-center transition-colors ${
-              bike.available
+              bike.availability?.status
                 ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {bike.available ? 'Book Now' : 'Unavailable'}
+            {bike.availability?.status ? 'Book Now' : 'Unavailable'}
           </Link>
         </div>
       </div>
