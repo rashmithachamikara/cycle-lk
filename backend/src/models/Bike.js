@@ -1,3 +1,4 @@
+//backend/src/models/Bike.js
 const mongoose = require('mongoose');
 
 const bikeSchema = new mongoose.Schema({
@@ -24,8 +25,8 @@ const bikeSchema = new mongoose.Schema({
     required: true
   },
   coordinates: {
-    latitude: Number,
-    longitude: Number
+    latitude: { type: Number, default: 0 },
+    longitude: { type: Number, default: 0 }
   },
   pricing: {
     perDay: {
@@ -50,7 +51,11 @@ const bikeSchema = new mongoose.Schema({
     tireSize: String,
     gearSystem: String
   },
-  images: [String],  availability: {
+  images: [{
+    url: String,
+    publicId: String
+  }],  
+  availability: {
     status: {
       type: Boolean,
       default: true

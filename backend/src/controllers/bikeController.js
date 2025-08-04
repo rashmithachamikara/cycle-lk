@@ -1,4 +1,8 @@
-const { Bike, Partner, Location } = require('../models');
+//backend/src/controllers/bikeController.js
+const { Bike, Partner } = require('../models');
+const cloudinary = require('../config/cloudinary');
+
+
 
 /**
  * Get all bikes with optional filtering
@@ -74,46 +78,145 @@ exports.getBikeById = async (req, res) => {
   }
 };
 
-/**
- * Add a new bike
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-exports.addBike = async (req, res) => {
-  try {
-    const bike = new Bike(req.body);
+// /**
+//  * Add a new bike
+//  * @param {Object} req - Express request object
+//  * @param {Object} res - Express response object
+//  */
+// exports.addBike = async (req, res) => {
+//   try {
+//     const bike = new Bike(req.body);
     
-    // Validate partner exists
-    const partner = await Partner.findById(bike.partnerId);
+//     // Validate partner exists
+//     const partner = await Partner.findById(bike.partnerId);
+//     if (!partner) {
+//       return res.status(400).json({ message: 'Invalid partner ID' });
+//     }
+    
+//     // Validate location exists
+//     const location = await Location.findOne({ name: bike.location });
+//     if (!location) {
+//       return res.status(400).json({ message: 'Invalid location' });
+//     }
+    
+//     // Save bike
+//     await bike.save();
+    
+//     // Update partner's bike count
+//     await Partner.findByIdAndUpdate(bike.partnerId, {
+//       $inc: { bikeCount: 1 }
+//     });
+    
+//     // Update location's bike count
+//     await Location.findOneAndUpdate({ name: bike.location }, {
+//       $inc: { bikeCount: 1 }
+//     });
+    
+//     res.status(201).json(bike);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
+
+
+exports.addBike = async (req, res) => {
+  // ====================================================================
+  //  START: DEBUGGING LOGS - Add these lines
+  // ====================================================================
+  console.log('--- Inside addBike Controller ---');
+  console.log('req.user:', req.user); // Should show the user and partnerId
+  console.log('req.body:', req.body); // Should show text fields: name, type, etc.
+  console.log('req.files:', req.files); // <<< THIS SHOULD NOW SHOW AN ARRAY OF FILE OBJECTS!
+  console.log('---------------------------------');
+  // ====================================================================
+  //  END: DEBUGGING LOGS
+  // ====================================================================
+
+
+
+
+  try {
+    // The auth middleware has already run and should have added `partnerId` to `req.user`.
+    // This is our final safeguard.
+    if (!req.user || !req.user.partnerId) {
+      console.error('Bike Controller: partnerId is missing from request. Auth middleware may have failed.');
+      return res.status(403).json({ message: 'Authentication error: Partner could not be identified.' });
+    }
+    
+    // Simple validation (can be replaced with a more robust library like Joi or express-validator)
+    if (!req.body.name || !req.body.type || !req.body.location) {
+        return res.status(400).json({ message: 'Validation failed: Name, type, and location are required.' });
+    }
+
+    // This line will now work correctly!
+    const partnerId = req.user.partnerId;
+
+    const partner = await Partner.findById(partnerId);
     if (!partner) {
+      // This is the error you were getting. It's now a fallback safety check.
       return res.status(400).json({ message: 'Invalid partner ID' });
     }
     
-    // Validate location exists
-    const location = await Location.findOne({ name: bike.location });
-    if (!location) {
-      return res.status(400).json({ message: 'Invalid location' });
-    }
+    const {
+        name,
+        type,
+        description,
+        location,
+        pricing,
+        features,
+        specifications,
+        coordinates,
+        availability
+    } = req.body;
     
-    // Save bike
+    // This logic should now work correctly because req.files will be populated
+    const imageUrls = [];
+    if (req.files && req.files.length > 0) {
+        req.files.forEach(file => {
+            imageUrls.push({
+                url: file.path,      // This is the URL from Cloudinary
+                publicId: file.filename // This is the public_id from Cloudinary
+            });
+        });
+      }
+
+    const bike = new Bike({
+        partnerId: req.user.partnerId, // This is now the correct _id from the Partner model
+        name,
+        type,
+        description,
+        location,
+        pricing,
+        features: Array.isArray(features) ? features : [features],
+        specifications,
+        coordinates,
+        images: imageUrls,
+        'availability.status': availability.status === 'true'
+    });
+
+    
     await bike.save();
-    
-    // Update partner's bike count
-    await Partner.findByIdAndUpdate(bike.partnerId, {
-      $inc: { bikeCount: 1 }
+
+    await Partner.findByIdAndUpdate(req.user.partnerId, {
+        $inc: { bikeCount: 1 }
     });
-    
-    // Update location's bike count
-    await Location.findOneAndUpdate({ name: bike.location }, {
-      $inc: { bikeCount: 1 }
-    });
-    
+
     res.status(201).json(bike);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error in addBike controller:", err);
+    res.status(500).json({ message: 'Server error while adding bike' });
   }
 };
+
+
+
+
+
+
 
 /**
  * Update a bike

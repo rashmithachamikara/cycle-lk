@@ -1,3 +1,4 @@
+//frontend-web/src/services/bikeService.ts
 import api from '../utils/apiUtils';
 import { Partner } from './partnerService'; // Import comprehensive Partner interface
 
@@ -57,6 +58,16 @@ export interface BikeReview {
   helpful?: number;
 }
 
+
+// Define a specific interface for the image object
+export interface BikeImage {
+  url: string;
+  publicId: string;
+  _id?: string; // Mongoose might add an _id to subdocuments
+}
+
+
+
 // Partner interface is imported from partnerService
 
 // Interface for bike from API (with MongoDB _id)
@@ -71,7 +82,7 @@ export interface BikeFromAPI {
   pricing: BikePricing;
   features?: string[];
   specifications?: BikeSpecifications;
-  images?: string[];
+  images?: BikeImage[];
   availability?: BikeAvailability;
   condition?: string;
   rating?: number;
@@ -93,7 +104,7 @@ export interface Bike {
   pricing: BikePricing;
   features?: string[];
   specifications?: BikeSpecifications;
-  images?: string[];
+  images?: BikeImage[];
   availability?: BikeAvailability;
   condition?: string;
   rating?: number;
@@ -156,12 +167,23 @@ export const bikeService = {
     return transformBike(response.data);
   },
 
-  // Add a new bike (requires partner role)
-  addBike: async (bikeData: BikeData) => {
-    const response = await api.post('/bikes', bikeData);
-    return transformBike(response.data);
-  },
+  // // Add a new bike (requires partner role)
+  // addBike: async (bikeData: BikeData) => {
+  //   const response = await api.post('/bikes', bikeData);
+  //   return response.data;
+  // },
 
+  // Add a new bike (requires partner role)
+    addBike: async (bikeData: FormData) => {
+        const response = await api.post('/bikes', bikeData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    },
+
+    
   // Update a bike (requires partner role)
   updateBike: async (id: string, bikeData: Partial<BikeData>) => {
     const response = await api.put(`/bikes/${id}`, bikeData);
