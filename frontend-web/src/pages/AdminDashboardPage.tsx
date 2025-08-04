@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
-  Calendar, 
+Clock, 
   MapPin, 
   Bike, 
   Users, 
   Star, 
-  Download,
   Settings,
   CreditCard,
-  Bell,
   BarChart3,
-  PieChart,
-  ArrowUpRight,
   ChevronRight,
   ArrowUp,
   ArrowDown,
@@ -24,17 +20,11 @@ import {
   CheckCircle,
   AlertCircle,
   Edit,
-  Trash2,
-  Grid,
-  CircleSlash,
   User,
   Building,
-  Ban,
-  Activity,
   Filter,
   Plus,
   TrendingUp,
-  PlusCircle,
   MessageSquare,
   HelpCircle,
   ClipboardList
