@@ -9,7 +9,7 @@ import {
 
 import { Partner, partnerService } from '../services/partnerService';
 import { Bike } from '../services/bikeService';
-import { Loader, ErrorDisplay, BackButton, SearchAndFilters, BikeGrid } from '../ui';
+import { Loader, ErrorDisplay, SearchAndFilters, BikeGrid } from '../ui';
 
 const PartnerBikesPage = () => {
   const { partnerId } = useParams<{ partnerId: string }>();
