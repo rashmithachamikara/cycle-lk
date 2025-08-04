@@ -1,5 +1,5 @@
 import React from 'react';
-import { BikeCard, BikeListItem } from '../LocationsPage';
+import { BikeCard, BikeListItem } from '../../ui';
 import { EmptyState } from '../LocationsPage';
 import { Loader, ErrorDisplay } from '../../ui';
 import { Bike } from '../../services/bikeService';
