@@ -25,8 +25,8 @@ const bikeSchema = new mongoose.Schema({
     required: true
   },
   coordinates: {
-    latitude: Number,
-    longitude: Number
+    latitude: { type: Number, default: 0 },
+    longitude: { type: Number, default: 0 }
   },
   pricing: {
     perDay: {

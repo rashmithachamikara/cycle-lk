@@ -169,6 +169,7 @@ exports.addBike = async (req, res) => {
         pricing,
         features,
         specifications,
+        coordinates,
         availability
     } = req.body;
     
@@ -192,6 +193,7 @@ exports.addBike = async (req, res) => {
         pricing,
         features: Array.isArray(features) ? features : [features],
         specifications,
+        coordinates,
         images: imageUrls,
         'availability.status': availability.status === 'true'
     });
