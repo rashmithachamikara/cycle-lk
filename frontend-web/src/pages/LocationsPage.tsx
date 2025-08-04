@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 // Import services and interfaces
 import { locationService, Location } from '../services/locationService';
-import { bikeService, BikeFilterParams } from '../services/bikeService';
+import { bikeService, BikeFilterParams, Bike } from '../services/bikeService';
+
+// Import UI components
+import { SearchAndFilters, BikeGrid } from '../ui';
 
 // Import components
 import {
   LocationCard,
-  SearchAndFilters,
   LoadingState,
   ErrorState,
   EmptyState,
-  HeroSection,
-  BikeGrid,
-  Bike
+  HeroSection
 } from '../components/LocationsPage';
 
 const LocationsPage = () => {
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
@@ -199,35 +199,66 @@ const LocationsPage = () => {
           )}
         </section>
 
+        {/* Location Filter - separate from SearchAndFilters for specific location functionality */}
+        {locations.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Filter by location:</label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              >
+                <option value="all">All Locations</option>
+                {locations.map((location) => (
+                  <option key={location.id} value={location.name}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+              {selectedLocation !== 'all' && (
+                <button
+                  onClick={() => setSelectedLocation('all')}
+                  className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                >
+                  Clear filter
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Filters and Search */}
         <SearchAndFilters
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedLocation={selectedLocation}
-          setSelectedLocation={setSelectedLocation}
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search bikes or locations..."
+          filterOptions={[
+            { value: 'hybrid', label: 'Hybrid' },
+            { value: 'mountain', label: 'Mountain' },
+            { value: 'beach', label: 'Beach Cruiser' },
+            { value: 'city', label: 'City Bike' },
+            { value: 'touring', label: 'Touring' }
+          ]}
+          filterValue={selectedType}
+          onFilterChange={setSelectedType}
+          filterLabel="All Types"
+          sortOptions={[
+            { value: 'rating', label: 'Sort by Rating' },
+            { value: 'price-low', label: 'Price: Low to High' },
+            { value: 'price-high', label: 'Price: High to Low' },
+            { value: 'name', label: 'Name A-Z' }
+          ]}
+          sortValue={sortBy}
+          onSortChange={setSortBy}
           viewMode={viewMode}
-          setViewMode={setViewMode}
-          locations={locations}
+          onViewModeChange={setViewMode}
+          showViewToggle={true}
+          totalResults={bikes.length}
+          filteredResults={sortedBikes.length}
+          resultsLabel="bikes"
+          className="mb-6"
         />
-
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Available Bikes in {selectedLocation !== 'all' ? selectedLocation : 'All Locations'} ({sortedBikes.length})
-          </h2>
-          {selectedLocation !== 'all' && (
-            <button
-              onClick={() => setSelectedLocation('all')}
-              className="text-emerald-600 hover:text-emerald-700 font-medium"
-            >
-              Clear location filter
-            </button>
-          )}
-        </div>
 
         {/* Bike Listings */}
         <section id="bike-listings">
