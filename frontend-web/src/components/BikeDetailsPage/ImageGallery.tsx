@@ -54,7 +54,7 @@ const ImageGallery = ({ images, bikeName }: ImageGalleryProps) => {
             >
               <div className="w-full h-24 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                 <img
-                  src={image}
+                  src={image.url}
                   alt={`${bikeName} ${index + 1}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
