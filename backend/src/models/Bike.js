@@ -50,7 +50,11 @@ const bikeSchema = new mongoose.Schema({
     tireSize: String,
     gearSystem: String
   },
-  images: [String],  availability: {
+  images: {
+    url: String,
+    publicId: String
+  },  
+  availability: {
     status: {
       type: Boolean,
       default: true
