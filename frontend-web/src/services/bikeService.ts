@@ -58,6 +58,16 @@ export interface BikeReview {
   helpful?: number;
 }
 
+
+// Define a specific interface for the image object
+export interface BikeImage {
+  url: string;
+  publicId: string;
+  _id?: string; // Mongoose might add an _id to subdocuments
+}
+
+
+
 // Partner interface is imported from partnerService
 
 // Interface for bike from API (with MongoDB _id)
@@ -72,7 +82,7 @@ export interface BikeFromAPI {
   pricing: BikePricing;
   features?: string[];
   specifications?: BikeSpecifications;
-  images?: string[];
+  images?: BikeImage[];
   availability?: BikeAvailability;
   condition?: string;
   rating?: number;
@@ -94,7 +104,7 @@ export interface Bike {
   pricing: BikePricing;
   features?: string[];
   specifications?: BikeSpecifications;
-  images?: string[];
+  images?: BikeImage[];
   availability?: BikeAvailability;
   condition?: string;
   rating?: number;

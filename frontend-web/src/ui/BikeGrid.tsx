@@ -1,3 +1,4 @@
+// frontend-web/src/ui/BikeGrid.tsx
 import React from 'react';
 import BikeCard from './BikeCard';
 import BikeListItem from './BikeListItem';
