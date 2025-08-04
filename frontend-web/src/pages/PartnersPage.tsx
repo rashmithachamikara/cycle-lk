@@ -71,9 +71,9 @@ const PartnersPage = () => {
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchPartners();
-  },[])
+  }, []);
 
   const filteredPartners = selectedCategory === 'all' 
     ? partners 
@@ -193,46 +193,46 @@ const PartnersPage = () => {
             <div className="text-center py-12">
               <Bike className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No partners found</h3>
-              <p className="text-gray-600">Try selecting a different category.</p>
+              <p className="text-gray-600">Try selecting a different category or check back later.</p>
             </div>
           ) : (
             <div className="grid lg:grid-cols-2 gap-8">
               {filteredPartners.map((partner) => (
-                <div key={partner.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  {/* Partner Header */}
-                  <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
-                    {partner.images?.storefront && (
-                      <img 
-                        src={partner.images.storefront} 
-                        alt={partner.companyName}
-                        className="w-full h-full object-cover"
-                      />
+                <div key={partner.id || partner._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                {/* Partner Header */}
+                <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
+                  {partner.images?.storefront && (
+                    <img 
+                      src={partner.images.storefront} 
+                      alt={partner.companyName}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="absolute top-4 left-4 flex space-x-2">
+                    {partner.category && (
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        partner.category === 'Premium' ? 'bg-gold-500 text-white' :
+                        partner.category === 'Adventure' ? 'bg-orange-500 text-white' :
+                        partner.category === 'Beach' ? 'bg-blue-500 text-white' :
+                        partner.category === 'Eco' ? 'bg-green-500 text-white' :
+                        partner.category === 'Heritage' ? 'bg-purple-500 text-white' :
+                        'bg-gray-500 text-white'
+                      }`}>
+                        {partner.category}
+                      </span>
                     )}
-                    <div className="absolute inset-0 bg-black/20"></div>
-                    <div className="absolute top-4 left-4 flex space-x-2">
-                      {partner.category && (
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          partner.category === 'Premium' ? 'bg-gold-500 text-white' :
-                          partner.category === 'Adventure' ? 'bg-orange-500 text-white' :
-                          partner.category === 'Beach' ? 'bg-blue-500 text-white' :
-                          partner.category === 'Eco' ? 'bg-green-500 text-white' :
-                          partner.category === 'Heritage' ? 'bg-purple-500 text-white' :
-                          'bg-gray-500 text-white'
-                        }`}>
-                          {partner.category}
-                        </span>
-                      )}
-                      {partner.verified && (
-                        <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Verified
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <div className="text-lg font-bold">{partner.companyName}</div>
-                    </div>
+                    {partner.verified && (
+                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </span>
+                    )}
                   </div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="text-lg font-bold">{partner.companyName}</div>
+                  </div>
+                </div>
 
                   <div className="p-6">
                     {/* Partner Info */}
@@ -335,7 +335,7 @@ const PartnersPage = () => {
                     {/* Action Buttons */}
                     <div className="flex space-x-3">
                       <Link
-                        to={`/locations?partnerId=${partner.id}`}
+                        to={`/locations?partnerId=${partner.id || partner._id}`}
                         className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium text-center"
                       >
                         View Bikes
@@ -367,9 +367,9 @@ const PartnersPage = () => {
                         </a>
                       )}
                     </div>
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
             </div>
           )}
         </section>
