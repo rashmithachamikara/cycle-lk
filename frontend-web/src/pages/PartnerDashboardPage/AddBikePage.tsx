@@ -293,16 +293,16 @@ const AddBikePage = () => {
                                                 <span className="text-xs text-gray-500 mb-1">Per Day</span>
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                                                <span className="absolute left-3 top-2.5 text-gray-500">Rs.</span>
                                                 <input
                                                     type="number"
                                                     name="pricePerDay"
                                                     value={formData.pricePerDay}
                                                     onChange={handleChange}
                                                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="15"
+                                                    placeholder="100"
                                                     min="0"
-                                                    step="0.01"
+                                                    step="10"
                                                 />
                                             </div>
                                         </div>
@@ -311,16 +311,16 @@ const AddBikePage = () => {
                                                 <span className="text-xs text-gray-500 mb-1">Per Week</span>
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                                                <span className="absolute left-3 top-2.5 text-gray-500">Rs.</span>
                                                 <input
                                                     type="number"
                                                     name="pricePerWeek"
                                                     value={formData.pricePerWeek}
                                                     onChange={handleChange}
                                                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="70"
+                                                    placeholder="700"
                                                     min="0"
-                                                    step="0.01"
+                                                    step="100"
                                                 />
                                             </div>
                                         </div>
@@ -329,16 +329,16 @@ const AddBikePage = () => {
                                                 <span className="text-xs text-gray-500 mb-1">Per Month</span>
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+                                                <span className="absolute left-3 top-2.5 text-gray-500">Rs.</span>
                                                 <input
                                                     type="number"
                                                     name="pricePerMonth"
                                                     value={formData.pricePerMonth}
                                                     onChange={handleChange}
                                                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="200"
+                                                    placeholder="2000"
                                                     min="0"
-                                                    step="0.01"
+                                                    step="100"
                                                 />
                                             </div>
                                         </div>
