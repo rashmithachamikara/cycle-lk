@@ -1,4 +1,4 @@
-import { Bike } from '../LocationsPage/types';
+import { Bike } from '../../services/bikeService';
 import { Location } from '../../services/locationService';
 
 export type { Bike, Location };
