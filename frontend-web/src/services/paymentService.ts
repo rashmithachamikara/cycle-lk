@@ -1,7 +1,7 @@
-import axios from 'axios';
+import { api, debugLog } from '../utils/apiUtils';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// Log service initialization in debug mode
+debugLog('Payment Service initialized');
 
 // Interface for payment filter parameters
 export interface PaymentFilterParams {
@@ -24,19 +24,22 @@ export interface PaymentData {
 export const paymentService = {
   // Process payment
   processPayment: async (paymentData: PaymentData) => {
-    const response = await axios.post(`${API_URL}/payments`, paymentData);
+    debugLog('Processing payment', paymentData);
+    const response = await api.post('/payments', paymentData);
     return response.data;
   },
 
   // Get all payments
   getAllPayments: async (filters?: PaymentFilterParams) => {
-    const response = await axios.get(`${API_URL}/payments`, { params: filters });
+    debugLog('Fetching payments with filters', filters);
+    const response = await api.get('/payments', { params: filters });
     return response.data;
   },
 
   // Get payment statistics
   getPaymentStatistics: async (startDate?: string, endDate?: string) => {
-    const response = await axios.get(`${API_URL}/payments/stats`, {
+    debugLog('Fetching payment statistics', { startDate, endDate });
+    const response = await api.get('/payments/stats', {
       params: { startDate, endDate }
     });
     return response.data;
@@ -44,13 +47,15 @@ export const paymentService = {
 
   // Get payment by ID
   getPaymentById: async (id: string) => {
-    const response = await axios.get(`${API_URL}/payments/${id}`);
+    debugLog('Fetching payment by ID', { id });
+    const response = await api.get(`/payments/${id}`);
     return response.data;
   },
 
   // Process refund (requires admin role)
   processRefund: async (id: string, reason: string, amount: number) => {
-    const response = await axios.post(`${API_URL}/payments/${id}/refund`, {
+    debugLog('Processing refund', { id, reason, amount });
+    const response = await api.post(`/payments/${id}/refund`, {
       reason,
       amount
     });

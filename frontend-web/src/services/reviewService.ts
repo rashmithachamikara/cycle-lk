@@ -1,7 +1,7 @@
-import axios from 'axios';
+import { api, debugLog } from '../utils/apiUtils';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// Log service initialization in debug mode
+debugLog('Review Service initialized');
 
 // Interface for review filter parameters
 export interface ReviewFilterParams {
@@ -23,13 +23,15 @@ export interface ReviewData {
 export const reviewService = {
   // Get all reviews with optional filters
   getAllReviews: async (filters?: ReviewFilterParams) => {
-    const response = await axios.get(`${API_URL}/reviews`, { params: filters });
+    debugLog('Fetching reviews with filters', filters);
+    const response = await api.get('/reviews', { params: filters });
     return response.data;
   },
 
   // Create a new review
   createReview: async (reviewData: ReviewData) => {
-    const response = await axios.post(`${API_URL}/reviews`, reviewData);
+    debugLog('Creating new review', reviewData);
+    const response = await api.post('/reviews', reviewData);
     return response.data;
   }
 };
