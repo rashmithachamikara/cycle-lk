@@ -146,7 +146,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
         {/* Action Buttons */}
         <div className="flex space-x-3">
           <Link
-            to={`/locations?partnerId=${partner.id || partner._id}`}
+            to={`/partners/${partner.id || partner._id}/bikes`}
             className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium text-center"
           >
             View Bikes
