@@ -1,3 +1,4 @@
+//frontend-web/src/components/LocationsPage/BikeCard.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Bike as BikeIcon } from 'lucide-react';

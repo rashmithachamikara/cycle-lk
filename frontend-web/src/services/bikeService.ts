@@ -1,3 +1,4 @@
+//frontend-web/src/services/bikeService.ts
 import api from '../utils/apiUtils';
 
 // Interface for bike filter parameters
@@ -53,12 +54,23 @@ export const bikeService = {
     return response.data;
   },
 
-  // Add a new bike (requires partner role)
-  addBike: async (bikeData: BikeData) => {
-    const response = await api.post('/bikes', bikeData);
-    return response.data;
-  },
+  // // Add a new bike (requires partner role)
+  // addBike: async (bikeData: BikeData) => {
+  //   const response = await api.post('/bikes', bikeData);
+  //   return response.data;
+  // },
 
+  // Add a new bike (requires partner role)
+    addBike: async (bikeData: FormData) => {
+        const response = await api.post('/bikes', bikeData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    },
+
+    
   // Update a bike (requires partner role)
   updateBike: async (id: string, bikeData: Partial<BikeData>) => {
     const response = await api.put(`/bikes/${id}`, bikeData);
