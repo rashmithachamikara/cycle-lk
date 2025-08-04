@@ -27,6 +27,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const uploadRoutes = require('./routes/uploadRoutes'); //cloudinary upload routes
 
 // Use API routes
 app.use('/api/users', userRoutes);
@@ -39,6 +40,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/upload', uploadRoutes); // cloudinary upload routes
 
 // Health check endpoint
 app.get('/', (req, res) => {

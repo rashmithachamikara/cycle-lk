@@ -1,3 +1,4 @@
+//backend/src/models/Bike.js
 const mongoose = require('mongoose');
 
 const bikeSchema = new mongoose.Schema({
@@ -50,10 +51,10 @@ const bikeSchema = new mongoose.Schema({
     tireSize: String,
     gearSystem: String
   },
-  images: {
+  images: [{
     url: String,
     publicId: String
-  },  
+  }],  
   availability: {
     status: {
       type: Boolean,
