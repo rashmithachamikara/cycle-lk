@@ -1,5 +1,5 @@
 import { api, ENV_CONFIG, debugLog } from '../utils/apiUtils';
-
+import {transformBike} from './bikeService';
 // Log API configuration in debug mode
 debugLog('Partner Service initialized', { API_URL: ENV_CONFIG.API_URL });
 
@@ -251,7 +251,7 @@ export const partnerService = {
   // Get partner bikes
   getPartnerBikes: async (id: string) => {
     const response = await api.get(`/partners/${id}/bikes`);
-    return response.data;
+    return response.data.map(transformBike);
   },
 
   // Get partners by location
