@@ -117,14 +117,49 @@ const mockPartners = [
  */
 exports.getAllPartners = async (req, res) => {
   try {
+    console.log('Attempting to fetch partners from database...');
+    
+    // Check if Partner model is properly imported
+    if (!Partner) {
+      console.error('Partner model is not properly imported');
+      return res.status(500).json({ 
+        message: 'Server configuration error', 
+        data: mockPartners 
+      });
+    }
+
+    // Test database connection
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.error('Database not connected. Connection state:', mongoose.connection.readyState);
+      return res.status(500).json({ 
+        message: 'Database connection error', 
+        data: mockPartners 
+      });
+    }
+
+    console.log('Database connected, fetching partners...');
+    
     const partners = await Partner.find()
-      .populate('userId', 'firstName lastName email phone');
-    console.log('Fetched partners from database:', partners.length);
+      .populate('userId', 'firstName lastName email phone')
+      .lean(); // Use lean() for better performance
+    
+    console.log(`Successfully fetched ${partners.length} partners from database`);
     res.json(partners);
-  } catch (err) {
-    console.error('Database error, returning mock data:', err.message);
-    // Return mock data for development when database is unavailable
-    res.json(mockPartners);
+    
+  } catch (error) {
+    console.error('Database error in getAllPartners:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Return mock data with error information for development
+    res.status(500).json({ 
+      message: 'Database error occurred',
+      error: error.message,
+      data: mockPartners 
+    });
   }
 };
 
@@ -135,22 +170,29 @@ exports.getAllPartners = async (req, res) => {
  */
 exports.getPartnerById = async (req, res) => {
   try {
+    console.log('Fetching partner by ID:', req.params.id);
+    
     const partner = await Partner.findById(req.params.id)
       .populate('userId', 'firstName lastName email phone');
       
     if (!partner) {
+      console.log('Partner not found with ID:', req.params.id);
       return res.status(404).json({ message: 'Partner not found' });
     }
     
     // If user is not admin and not the partner, don't show bank details (only if user is authenticated)
-    if (req.user && req.user.role !== 'admin' && partner.userId.toString() !== req.user.id) {
+    if (req.user && req.user.role !== 'admin' && partner.userId && partner.userId._id.toString() !== req.user.id) {
       partner.bankDetails = undefined;
     }
     
+    console.log('Successfully fetched partner:', partner.companyName);
     res.json(partner);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in getPartnerById:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -162,6 +204,8 @@ exports.getPartnerById = async (req, res) => {
 exports.registerPartner = async (req, res) => {
   try {
     const { userId, companyName, companyAddress, businessRegNumber, contactPhone } = req.body;
+    
+    console.log('Registering new partner for user:', userId);
     
     // Check if user exists
     const user = await User.findById(userId);
@@ -195,10 +239,14 @@ exports.registerPartner = async (req, res) => {
     user.role = 'partner';
     await user.save();
     
+    console.log('Successfully registered partner:', companyName);
     res.status(201).json(partner);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in registerPartner:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -209,30 +257,36 @@ exports.registerPartner = async (req, res) => {
  */
 exports.updatePartner = async (req, res) => {
   try {
+    console.log('Updating partner:', req.params.id);
+    
     // Don't allow updating userId
     if (req.body.userId) {
       delete req.body.userId;
     }
     
     // Don't allow updating verification status unless admin
-    if (req.body.verificationStatus && req.user.role !== 'admin') {
+    if (req.body.verificationStatus && req.user && req.user.role !== 'admin') {
       delete req.body.verificationStatus;
     }
     
     const partner = await Partner.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true }
+      { new: true, runValidators: true }
     );
     
     if (!partner) {
       return res.status(404).json({ message: 'Partner not found' });
     }
     
+    console.log('Successfully updated partner:', partner.companyName);
     res.json(partner);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in updatePartner:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -244,6 +298,8 @@ exports.updatePartner = async (req, res) => {
 exports.updateVerificationStatus = async (req, res) => {
   try {
     const { verificationStatus } = req.body;
+    
+    console.log('Updating verification status for partner:', req.params.id, 'to:', verificationStatus);
     
     // Validate status
     const validStatuses = ['pending', 'verified', 'rejected'];
@@ -265,10 +321,14 @@ exports.updateVerificationStatus = async (req, res) => {
     
     await partner.save();
     
+    console.log('Successfully updated verification status for:', partner.companyName);
     res.json(partner);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in updateVerificationStatus:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -279,11 +339,18 @@ exports.updateVerificationStatus = async (req, res) => {
  */
 exports.getPartnerBikes = async (req, res) => {
   try {
+    console.log('Fetching bikes for partner:', req.params.id);
+    
     const bikes = await Bike.find({ partnerId: req.params.id });
+    
+    console.log(`Found ${bikes.length} bikes for partner:`, req.params.id);
     res.json(bikes);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in getPartnerBikes:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -296,13 +363,15 @@ exports.updateBankDetails = async (req, res) => {
   try {
     const { bankName, accountNumber, accountHolder, branchCode } = req.body;
     
+    console.log('Updating bank details for partner:', req.params.id);
+    
     const partner = await Partner.findById(req.params.id);
     if (!partner) {
       return res.status(404).json({ message: 'Partner not found' });
     }
     
     // Only allow if the user is the partner or an admin
-    if (partner.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (req.user && partner.userId.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'You are not authorized to update bank details' });
     }
     
@@ -315,9 +384,13 @@ exports.updateBankDetails = async (req, res) => {
     
     await partner.save();
     
+    console.log('Successfully updated bank details for:', partner.companyName);
     res.json({ message: 'Bank details updated successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    console.error('Error in updateBankDetails:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
