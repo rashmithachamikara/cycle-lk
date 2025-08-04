@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { Bike as BikeIcon } from 'lucide-react';
 
+
+export interface BikeImage {
+  url: string;
+  publicId: string;
+  _id?: string; // Mongoose might add an _id to subdocuments
+}
 interface ImageGalleryProps {
-  images?: string[];
+  images?: BikeImage[];
   bikeName: string;
 }
 
@@ -12,11 +18,12 @@ const ImageGallery = ({ images, bikeName }: ImageGalleryProps) => {
   return (
     <div className="space-y-4">
       {/* Main Image */}
+      
       <div className="aspect-w-4 aspect-h-3 bg-gray-200 rounded-2xl overflow-hidden">
         <div className="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center relative">
           {images && images.length > 0 ? (
             <img
-              src={images[selectedImage]}
+              src={images[selectedImage].url}
               alt={bikeName}
               className="w-full h-full object-cover"
               onError={(e) => {
