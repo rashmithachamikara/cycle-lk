@@ -5,14 +5,13 @@ import Footer from '../components/Footer';
 
 // Import services and interfaces
 import { locationService, Location } from '../services/locationService';
-import { bikeService, BikeFilterParams } from '../services/bikeService';
+import { bikeService, BikeFilterParams, Bike } from '../services/bikeService';
 
 // Import components
 import {
   LocationHero,
   BikeFilters,
-  BikeSection,
-  Bike
+  BikeSection
 } from '../components/LocationPage';
 
 const LocationPage: React.FC = () => {
@@ -134,8 +133,8 @@ const LocationPage: React.FC = () => {
   const filteredBikes = bikes.filter(bike => {
     return searchQuery === '' || 
            bike.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           bike.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           bike.type.toLowerCase().includes(searchQuery.toLowerCase());
+           bike.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           bike.description?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   // Handle clear filters

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Bike as BikeIcon } from 'lucide-react';
-import { Bike } from '../../services/bikeService';
+import { Bike } from '../services/bikeService';
 
 interface BikeCardProps {
   bike: Bike;
@@ -36,7 +36,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xl font-semibold text-gray-900">{bike.name}</h3>
-          <div className="text-lg font-bold text-emerald-600">${bike.pricing.perDay}/day</div>
+          <div className="text-lg font-bold text-emerald-600">LKR {bike.pricing.perDay.toLocaleString()}/day</div>
         </div>
         
         <div className="flex items-center space-x-4 mb-3">

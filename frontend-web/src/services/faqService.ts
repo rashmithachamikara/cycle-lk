@@ -1,7 +1,7 @@
-import axios from 'axios';
+import { api, debugLog } from '../utils/apiUtils';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// Log service initialization in debug mode
+debugLog('FAQ Service initialized');
 
 // Interface for FAQ filter parameters
 export interface FAQFilterParams {
@@ -21,43 +21,50 @@ export interface FAQData {
 export const faqService = {
   // Get all FAQs with optional filters
   getAllFAQs: async (filters?: FAQFilterParams) => {
-    const response = await axios.get(`${API_URL}/faqs`, { params: filters });
+    debugLog('Fetching FAQs with filters', filters);
+    const response = await api.get('/faqs', { params: filters });
     return response.data;
   },
 
   // Get FAQ by ID
   getFAQById: async (id: string) => {
-    const response = await axios.get(`${API_URL}/faqs/${id}`);
+    debugLog('Fetching FAQ by ID', { id });
+    const response = await api.get(`/faqs/${id}`);
     return response.data;
   },
 
   // Create FAQ (requires admin role)
   createFAQ: async (faqData: FAQData) => {
-    const response = await axios.post(`${API_URL}/faqs`, faqData);
+    debugLog('Creating new FAQ', faqData);
+    const response = await api.post('/faqs', faqData);
     return response.data;
   },
 
   // Update FAQ (requires admin role)
   updateFAQ: async (id: string, faqData: Partial<FAQData>) => {
-    const response = await axios.put(`${API_URL}/faqs/${id}`, faqData);
+    debugLog('Updating FAQ', { id, faqData });
+    const response = await api.put(`/faqs/${id}`, faqData);
     return response.data;
   },
 
   // Update FAQ order (requires admin role)
   updateFAQOrder: async (id: string, newOrder: number) => {
-    const response = await axios.put(`${API_URL}/faqs/${id}/order`, { newOrder });
+    debugLog('Updating FAQ order', { id, newOrder });
+    const response = await api.put(`/faqs/${id}/order`, { newOrder });
     return response.data;
   },
 
   // Delete FAQ (requires admin role)
   deleteFAQ: async (id: string) => {
-    const response = await axios.delete(`${API_URL}/faqs/${id}`);
+    debugLog('Deleting FAQ', { id });
+    const response = await api.delete(`/faqs/${id}`);
     return response.data;
   },
 
   // Get FAQ categories
   getFAQCategories: async () => {
-    const response = await axios.get(`${API_URL}/faqs/categories/list`);
+    debugLog('Fetching FAQ categories');
+    const response = await api.get('/faqs/categories/list');
     return response.data;
   }
 };
