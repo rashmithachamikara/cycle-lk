@@ -80,6 +80,7 @@ import BikeDetailsPage from './pages/BikeDetailsPage';
 import LocationsPage from './pages/LocationsPage';
 import LocationPage from './pages/LocationPage';
 import PartnersPage from './pages/PartnersPage';
+import PartnerBikesPage from './pages/PartnerBikesPage';
 import ProfilePage from './pages/ProfilePage';
 import SupportPage from './pages/SupportPage';
 import PartnerDashboardPage from './pages/PartnerDashboardPage';
@@ -149,6 +150,7 @@ function App() {
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
+      <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
       <Route path="/support" element={<SupportPage />} />
       
