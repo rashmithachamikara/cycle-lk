@@ -43,6 +43,8 @@ const PartnerBikesPage = () => {
       
       setPartner(partnerResponse);
       setBikes(bikesResponse);
+      console.log('Fetched partner:', partnerResponse); // Debug log
+      console.log('Fetched bikes:', bikesResponse); // Debug log
     } catch (err: unknown) {
       console.error('Error fetching partner data:', err);
       let errorMessage = 'Failed to load partner bikes. Please try again later.';
