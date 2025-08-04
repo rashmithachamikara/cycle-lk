@@ -83,9 +83,9 @@ import PartnersPage from './pages/PartnersPage';
 import PartnerBikesPage from './pages/PartnerBikesPage';
 import ProfilePage from './pages/ProfilePage';
 import SupportPage from './pages/SupportPage';
-import PartnerDashboardPage from './pages/PartnerDashboardPage';
+import PartnerDashboardPage from './pages/PartnerDashboardPage/PartnerDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
-import AddBikePage from './pages/AddBikePage';
+import AddBikePage from './pages/PartnerDashboardPage/AddBikePage';
 import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -157,7 +157,7 @@ function App() {
       {/* Partner-only routes */}
       <Route path="/partner-dashboard" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/:section" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
-      <Route path="/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/edit-bike/:id" element={<ProtectedRoute element={<EditBikePage />} requiredRole="partner" />} />
       
       {/* Admin dashboard routes - accessible by both admin and partner roles */}
