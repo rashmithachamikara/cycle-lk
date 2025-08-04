@@ -118,9 +118,8 @@ const mockPartners = [
 exports.getAllPartners = async (req, res) => {
   try {
     const partners = await Partner.find()
-      .select('-bankDetails')
       .populate('userId', 'firstName lastName email phone');
-    console,log('Fetched partners from database:', partners.length);
+    console.log('Fetched partners from database:', partners.length);
     res.json(partners);
   } catch (err) {
     console.error('Database error, returning mock data:', err.message);
@@ -143,8 +142,8 @@ exports.getPartnerById = async (req, res) => {
       return res.status(404).json({ message: 'Partner not found' });
     }
     
-    // If user is not admin and not the partner, don't show bank details
-    if (req.user.role !== 'admin' && partner.userId.toString() !== req.user.id) {
+    // If user is not admin and not the partner, don't show bank details (only if user is authenticated)
+    if (req.user && req.user.role !== 'admin' && partner.userId.toString() !== req.user.id) {
       partner.bankDetails = undefined;
     }
     
