@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// API base URL from environment variable with fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+console.log('API_URL configured as:', API_URL); // Debug log
 
 // Interface for coordinates
 export interface Coordinates {
@@ -88,7 +90,13 @@ export interface BankDetails {
 // Interface for raw partner data from MongoDB API
 export interface PartnerFromAPI {
   _id: string;
-  userId: string;
+  userId: string | {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
   companyName: string;
   category?: string;
   description?: string;
@@ -117,6 +125,9 @@ export const transformPartner = (partnerFromAPI: PartnerFromAPI): Partner => {
   return {
     ...partnerFromAPI,
     id: partnerFromAPI._id, // Add id field for frontend consistency
+    userId: typeof partnerFromAPI.userId === 'string' 
+      ? partnerFromAPI.userId 
+      : partnerFromAPI.userId._id, // Handle populated userId
   };
 };
 
@@ -183,8 +194,40 @@ export const partnerService = {
 
   // Get all partners
   getAllPartners: async (): Promise<Partner[]> => {
-    const response = await axios.get(`${API_URL}/partners`);
-    return response.data.map(transformPartner);
+    try {
+      console.log('Fetching partners from:', `${API_URL}/partners`);
+      const response = await axios.get(`${API_URL}/partners`);
+      console.log('Partners API response:', response.data);
+      console.log('Response data type:', typeof response.data);
+      console.log('Is array:', Array.isArray(response.data));
+      
+      // Handle different response structures
+      let partnersData: PartnerFromAPI[];
+      
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        partnersData = response.data;
+        console.log('Using direct array response, length:', partnersData.length);
+      } else if (response.data.partners && Array.isArray(response.data.partners)) {
+        // Nested in partners property
+        partnersData = response.data.partners;
+        console.log('Using nested partners array, length:', partnersData.length);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        // Nested in data property
+        partnersData = response.data.data;
+        console.log('Using nested data array, length:', partnersData.length);
+      } else {
+        console.error('Unexpected response structure:', response.data);
+        throw new Error('Invalid response format from partners API');
+      }
+      
+      const transformedPartners = partnersData.map(transformPartner);
+      console.log('Transformed partners:', transformedPartners);
+      return transformedPartners;
+    } catch (error) {
+      console.error('Error in getAllPartners:', error);
+      throw error;
+    }
   },
 
   // Get a single partner by ID

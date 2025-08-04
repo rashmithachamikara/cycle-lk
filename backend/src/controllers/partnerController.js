@@ -3,110 +3,157 @@ const { Partner, User, Bike } = require('../models');
 // Mock data for development when database is not available
 const mockPartners = [
   {
-    _id: '507f1f77bcf86cd799439011',
-    userId: '507f1f77bcf86cd799439012',
-    companyName: 'Colombo Bikes',
-    category: 'Premium',
-    description: 'Leading bike rental service in Colombo with premium fleet and exceptional customer service.',
-    location: 'Colombo Central',
-    address: 'No. 123, Galle Road, Colombo 03',
-    coordinates: { latitude: 6.9271, longitude: 79.8612 },
-    phone: '+94 77 123 4567',
-    email: 'info@colombobikes.lk',
-    businessHours: {
-      monday: { open: '06:00', close: '22:00' },
-      tuesday: { open: '06:00', close: '22:00' },
-      wednesday: { open: '06:00', close: '22:00' },
-      thursday: { open: '06:00', close: '22:00' },
-      friday: { open: '06:00', close: '22:00' },
-      saturday: { open: '06:00', close: '22:00' },
-      sunday: { open: '08:00', close: '20:00' }
+    _id: '64f2a3b4c5d6e7f8a9b0c1d2',
+    userId: {
+      _id: '64f1a2b3c4d5e6f7a8b9c0d1',
+      firstName: 'Samantha',
+      lastName: 'Fernando',
+      email: 'samantha.fernando@gmail.com',
+      phone: '+94771234567'
     },
-    specialties: ['City Tours', 'Business Rentals', 'Airport Transfers'],
-    features: ['24/7 Support', 'Free Delivery', 'Insurance Included', 'GPS Tracking'],
-    rating: 4.9,
+    companyName: 'Galle Fort Cycles',
+    category: 'Premium',
+    description: 'Premium bike rental service in historic Galle Fort with guided tours and high-end bikes.',
+    location: 'Galle',
+    address: '42 Church Street, Galle Fort, Galle 80000',
+    coordinates: { latitude: 6.0329, longitude: 80.2168 },
+    contactPerson: 'Nimal Perera',
+    phone: '+94912234567',
+    email: 'info@gallefortcycles.lk',
+    businessHours: {
+      monday: { open: '08:00', close: '18:00' },
+      tuesday: { open: '08:00', close: '18:00' },
+      wednesday: { open: '08:00', close: '18:00' },
+      thursday: { open: '08:00', close: '18:00' },
+      friday: { open: '08:00', close: '18:00' },
+      saturday: { open: '08:00', close: '19:00' },
+      sunday: { open: '08:00', close: '19:00' }
+    },
+    specialties: ['Heritage Tours', 'Sunset Rides', 'Photography Tours'],
+    features: ['24/7 Support', 'Free Delivery', 'Guided Tours', 'Professional Maintenance'],
+    rating: 4.8,
     reviews: [
-      { userId: '507f1f77bcf86cd799439013', rating: 5, comment: 'Excellent service!', date: '2024-01-15' },
-      { userId: '507f1f77bcf86cd799439014', rating: 4, comment: 'Great bikes!', date: '2024-01-10' }
+      {
+        userId: '64f1a2b3c4d5e6f7a8b9c0d1',
+        rating: 5,
+        comment: 'Excellent service and beautiful bikes! The heritage tour was amazing.',
+        date: '2025-05-20T16:30:00.000Z'
+      }
     ],
     bikeCount: 25,
     yearsActive: 5,
     images: {
-      logo: 'https://via.placeholder.com/200x100?text=Colombo+Bikes',
-      storefront: 'https://via.placeholder.com/800x400?text=Modern+Bike+Shop',
-      gallery: ['https://via.placeholder.com/400x300?text=Shop+Interior']
+      logo: 'https://images.cycleLK.com/partners/galle_fort_cycles_logo.jpg',
+      storefront: 'https://images.cycleLK.com/partners/galle_fort_cycles_store.jpg',
+      gallery: [
+        'https://images.cycleLK.com/partners/galle_fort_cycles_1.jpg',
+        'https://images.cycleLK.com/partners/galle_fort_cycles_2.jpg',
+        'https://images.cycleLK.com/partners/galle_fort_cycles_3.jpg'
+      ]
     },
     verified: true,
     status: 'active',
-    createdAt: '2019-01-15T00:00:00.000Z',
-    updatedAt: '2024-01-15T00:00:00.000Z'
+    createdAt: '2024-09-01T12:00:00.000Z',
+    updatedAt: '2025-06-01T10:00:00.000Z'
   },
   {
-    _id: '507f1f77bcf86cd799439015',
-    userId: '507f1f77bcf86cd799439016',
-    companyName: 'Hill Country Cycles',
+    _id: '64f2a3b4c5d6e7f8a9b0c1d3',
+    userId: {
+      _id: '64f1a2b3c4d5e6f7a8b9c0d1',
+      firstName: 'Samantha',
+      lastName: 'Fernando',
+      email: 'samantha.fernando@gmail.com',
+      phone: '+94771234567'
+    },
+    companyName: 'Colombo City Bikes',
+    category: 'Urban',
+    description: 'Modern city bikes for exploring Colombo\'s bustling streets and landmarks.',
+    location: 'Colombo',
+    address: '156 R.A. De Mel Mawatha, Colombo 03',
+    coordinates: { latitude: 6.9271, longitude: 79.8612 },
+    contactPerson: 'Priya Jayawardena',
+    phone: '+94112345678',
+    email: 'hello@colombocitybikes.com',
+    businessHours: {
+      monday: { open: '07:00', close: '20:00' },
+      tuesday: { open: '07:00', close: '20:00' },
+      wednesday: { open: '07:00', close: '20:00' },
+      thursday: { open: '07:00', close: '20:00' },
+      friday: { open: '07:00', close: '20:00' },
+      saturday: { open: '08:00', close: '21:00' },
+      sunday: { open: '08:00', close: '21:00' }
+    },
+    specialties: ['City Tours', 'Corporate Rentals', 'Airport Pickup'],
+    features: ['Express Booking', 'Mobile App', 'GPS Tracking', 'Insurance Included'],
+    rating: 4.6,
+    reviews: [],
+    bikeCount: 45,
+    yearsActive: 3,
+    images: {
+      logo: 'https://images.cycleLK.com/partners/colombo_city_bikes_logo.jpg',
+      storefront: 'https://images.cycleLK.com/partners/colombo_city_bikes_store.jpg',
+      gallery: [
+        'https://images.cycleLK.com/partners/colombo_city_bikes_1.jpg',
+        'https://images.cycleLK.com/partners/colombo_city_bikes_2.jpg'
+      ]
+    },
+    verified: true,
+    status: 'active',
+    createdAt: '2024-11-15T09:30:00.000Z',
+    updatedAt: '2025-05-28T15:45:00.000Z'
+  },
+  {
+    _id: '64f2a3b4c5d6e7f8a9b0c1d4',
+    userId: {
+      _id: '64f1a2b3c4d5e6f7a8b9c0d2',
+      firstName: 'Kasun',
+      lastName: 'Silva',
+      email: 'kasun.silva@gmail.com',
+      phone: '+94773456789'
+    },
+    companyName: 'Kandy Hill Bikes',
     category: 'Adventure',
-    description: 'Specialized in mountain bikes and scenic routes through Kandy\'s beautiful hill country.',
+    description: 'Adventure bike rentals for exploring the scenic hill country around Kandy.',
     location: 'Kandy',
     address: 'Temple Street, Kandy',
     coordinates: { latitude: 7.2906, longitude: 80.6337 },
-    phone: '+94 77 234 5678',
-    email: 'rides@hillcountrycycles.lk',
+    contactPerson: 'Kasun Silva',
+    phone: '+94812345678',
+    email: 'adventure@kandyhillbikes.lk',
     businessHours: {
-      monday: { open: '07:00', close: '19:00' },
-      tuesday: { open: '07:00', close: '19:00' },
-      wednesday: { open: '07:00', close: '19:00' },
-      thursday: { open: '07:00', close: '19:00' },
-      friday: { open: '07:00', close: '19:00' },
-      saturday: { open: '07:00', close: '19:00' },
-      sunday: { open: '08:00', close: '18:00' }
+      monday: { open: '06:00', close: '19:00' },
+      tuesday: { open: '06:00', close: '19:00' },
+      wednesday: { open: '06:00', close: '19:00' },
+      thursday: { open: '06:00', close: '19:00' },
+      friday: { open: '06:00', close: '19:00' },
+      saturday: { open: '06:00', close: '20:00' },
+      sunday: { open: '07:00', close: '20:00' }
     },
-    specialties: ['Mountain Biking', 'Tea Plantation Tours', 'Cultural Routes'],
-    features: ['Route Planning', 'Guide Services', 'Equipment Rental', 'Emergency Support'],
-    rating: 4.8,
-    reviews: [
-      { userId: '507f1f77bcf86cd799439017', rating: 5, comment: 'Amazing mountain routes!', date: '2024-01-12' }
-    ],
-    bikeCount: 18,
-    yearsActive: 3,
-    images: {
-      storefront: 'https://via.placeholder.com/800x400?text=Mountain+Bike+Shop'
-    },
-    verified: true,
-    status: 'active',
-    createdAt: '2021-01-15T00:00:00.000Z',
-    updatedAt: '2024-01-12T00:00:00.000Z'
-  },
-  {
-    _id: '507f1f77bcf86cd799439018',
-    userId: '507f1f77bcf86cd799439019',
-    companyName: 'Coastal Bikes',
-    category: 'Beach',
-    description: 'Perfect for exploring Galle Fort and coastal areas with comfortable beach cruisers.',
-    location: 'Galle',
-    address: 'Fort Road, Galle Fort',
-    coordinates: { latitude: 6.0329, longitude: 80.217 },
-    phone: '+94 77 345 6789',
-    email: 'hello@coastalbikes.lk',
-    businessHours: {
-      monday: { open: '06:30', close: '20:00' },
-      tuesday: { open: '06:30', close: '20:00' },
-      wednesday: { open: '06:30', close: '20:00' },
-      thursday: { open: '06:30', close: '20:00' },
-      friday: { open: '06:30', close: '20:00' },
-      saturday: { open: '06:30', close: '20:00' },
-      sunday: { open: '07:00', close: '19:00' }
-    },
-    specialties: ['Beach Cruising', 'Fort Tours', 'Sunset Rides'],
-    features: ['Beach Accessories', 'Fort Passes', 'Photography Tips', 'Sunset Tours'],
+    specialties: ['Mountain Biking', 'Tea Plantation Tours', 'Nature Trails'],
+    features: ['Trail Maps', 'Safety Gear', 'Emergency Support', 'Guide Services'],
     rating: 4.7,
-    reviews: [],
-    bikeCount: 22,
+    reviews: [
+      {
+        userId: '64f1a2b3c4d5e6f7a8b9c0d3',
+        rating: 5,
+        comment: 'Amazing mountain trails and excellent bike quality!',
+        date: '2025-04-15T14:20:00.000Z'
+      }
+    ],
+    bikeCount: 30,
     yearsActive: 4,
+    images: {
+      logo: 'https://images.cycleLK.com/partners/kandy_hill_bikes_logo.jpg',
+      storefront: 'https://images.cycleLK.com/partners/kandy_hill_bikes_store.jpg',
+      gallery: [
+        'https://images.cycleLK.com/partners/kandy_hill_bikes_1.jpg',
+        'https://images.cycleLK.com/partners/kandy_hill_bikes_2.jpg'
+      ]
+    },
     verified: true,
     status: 'active',
-    createdAt: '2020-01-15T00:00:00.000Z',
-    updatedAt: '2024-01-10T00:00:00.000Z'
+    createdAt: '2024-07-10T08:15:00.000Z',
+    updatedAt: '2025-05-01T12:30:00.000Z'
   }
 ];
 
