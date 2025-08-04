@@ -1,7 +1,7 @@
-import axios from 'axios';
+import { api, debugLog } from '../utils/apiUtils';
 
-// API base URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL;
+// Log service initialization in debug mode
+debugLog('Notification Service initialized');
 
 // Interface for notification filter parameters
 export interface NotificationFilterParams {
@@ -15,43 +15,50 @@ export interface NotificationFilterParams {
 export const notificationService = {
   // Get user notifications
   getUserNotifications: async (filters: NotificationFilterParams) => {
-    const response = await axios.get(`${API_URL}/notifications`, { params: filters });
+    debugLog('Fetching user notifications', filters);
+    const response = await api.get('/notifications', { params: filters });
     return response.data;
   },
 
   // Get notification by ID
   getNotificationById: async (id: string) => {
-    const response = await axios.get(`${API_URL}/notifications/${id}`);
+    debugLog('Fetching notification by ID', { id });
+    const response = await api.get(`/notifications/${id}`);
     return response.data;
   },
 
   // Get unread notification count
   getUnreadCount: async (userId: string) => {
-    const response = await axios.get(`${API_URL}/notifications/unread-count/${userId}`);
+    debugLog('Fetching unread notification count', { userId });
+    const response = await api.get(`/notifications/unread-count/${userId}`);
     return response.data;
   },
 
   // Mark notification as read
   markAsRead: async (id: string) => {
-    const response = await axios.put(`${API_URL}/notifications/${id}/mark-read`);
+    debugLog('Marking notification as read', { id });
+    const response = await api.put(`/notifications/${id}/mark-read`);
     return response.data;
   },
 
   // Mark all notifications as read
   markAllAsRead: async () => {
-    const response = await axios.put(`${API_URL}/notifications/mark-all-read`);
+    debugLog('Marking all notifications as read');
+    const response = await api.put('/notifications/mark-all-read');
     return response.data;
   },
 
   // Delete notification
   deleteNotification: async (id: string) => {
-    const response = await axios.delete(`${API_URL}/notifications/${id}`);
+    debugLog('Deleting notification', { id });
+    const response = await api.delete(`/notifications/${id}`);
     return response.data;
   },
 
   // Delete all user notifications
   deleteAllNotifications: async (userId: string) => {
-    const response = await axios.delete(`${API_URL}/notifications/user/${userId}`);
+    debugLog('Deleting all user notifications', { userId });
+    const response = await api.delete(`/notifications/user/${userId}`);
     return response.data;
   }
 };

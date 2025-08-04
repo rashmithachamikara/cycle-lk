@@ -1,9 +1,7 @@
-import axios from 'axios';
+import { api, ENV_CONFIG, debugLog } from '../utils/apiUtils';
 
-// API base URL from environment variable with fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-console.log('API_URL configured as:', API_URL); // Debug log
+// Log API configuration in debug mode
+debugLog('Partner Service initialized', { API_URL: ENV_CONFIG.API_URL });
 
 // Interface for coordinates
 export interface Coordinates {
@@ -188,15 +186,15 @@ export const isPartnerOpen = (businessHours: BusinessHours | undefined): boolean
 export const partnerService = {
   // Register as a partner
   registerPartner: async (partnerData: PartnerRegistrationData) => {
-    const response = await axios.post(`${API_URL}/partners`, partnerData);
+    const response = await api.post('/partners', partnerData);
     return transformPartner(response.data);
   },
 
   // Get all partners
   getAllPartners: async (): Promise<Partner[]> => {
     try {
-      console.log('Fetching partners from:', `${API_URL}/partners`);
-      const response = await axios.get(`${API_URL}/partners`);
+      debugLog('Fetching partners from API');
+      const response = await api.get('/partners');
       console.log('Partners API response:', response.data);
       console.log('Response data type:', typeof response.data);
       console.log('Is array:', Array.isArray(response.data));
@@ -232,13 +230,13 @@ export const partnerService = {
 
   // Get a single partner by ID
   getPartnerById: async (id: string): Promise<Partner> => {
-    const response = await axios.get(`${API_URL}/partners/${id}`);
+    const response = await api.get(`/partners/${id}`);
     return transformPartner(response.data);
   },
 
   // Update partner verification status (requires admin role)
   updateVerificationStatus: async (id: string, status: string) => {
-    const response = await axios.put(`${API_URL}/partners/${id}/verification`, { 
+    const response = await api.put(`/partners/${id}/verification`, { 
       verificationStatus: status 
     });
     return transformPartner(response.data);
@@ -246,31 +244,31 @@ export const partnerService = {
 
   // Update partner bank details (requires partner role)
   updateBankDetails: async (id: string, bankDetails: BankDetails) => {
-    const response = await axios.put(`${API_URL}/partners/${id}/bank`, bankDetails);
+    const response = await api.put(`/partners/${id}/bank`, bankDetails);
     return transformPartner(response.data);
   },
 
   // Get partner bikes
   getPartnerBikes: async (id: string) => {
-    const response = await axios.get(`${API_URL}/partners/${id}/bikes`);
+    const response = await api.get(`/partners/${id}/bikes`);
     return response.data;
   },
 
   // Get partners by location
   getPartnersByLocation: async (location: string): Promise<Partner[]> => {
-    const response = await axios.get(`${API_URL}/partners?location=${encodeURIComponent(location)}`);
+    const response = await api.get(`/partners?location=${encodeURIComponent(location)}`);
     return response.data.map(transformPartner);
   },
 
   // Search partners
   searchPartners: async (query: string): Promise<Partner[]> => {
-    const response = await axios.get(`${API_URL}/partners/search?q=${encodeURIComponent(query)}`);
+    const response = await api.get(`/partners/search?q=${encodeURIComponent(query)}`);
     return response.data.map(transformPartner);
   },
 
   // Get verified partners only
   getVerifiedPartners: async (): Promise<Partner[]> => {
-    const response = await axios.get(`${API_URL}/partners?verified=true`);
+    const response = await api.get('/partners?verified=true');
     return response.data.map(transformPartner);
   }
 };
