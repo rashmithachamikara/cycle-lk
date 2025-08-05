@@ -94,7 +94,7 @@ const BookingPage = () => {
         deliveryAddress: deliveryAddress || undefined
       };
 
-      const response = await bookingService.createBooking(bookingPayload);
+       await bookingService.createBooking(bookingPayload);
       setCurrentStep(3); // Move to confirmation step
       
     } catch (err: unknown) {
