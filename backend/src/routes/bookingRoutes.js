@@ -26,6 +26,13 @@ router.get('/:id', auth(), bookingController.getBookingById);
 router.post('/', auth(), validateBooking, bookingController.createBooking);
 
 /**
+ * @route   GET /api/bookings/partner/:partnerId
+ * @desc    Get all bookings for a specific partner
+ * @access  Private/Partner/Admin
+ */
+router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.getBookingsByPartnerId);
+
+/**
  * @route   PUT /api/bookings/:id/status
  * @desc    Update booking status
  * @access  Private/Partner/Admin
