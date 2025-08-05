@@ -12,6 +12,7 @@ interface BookingDetailsStepProps {
   deliveryAddress: string;
   error: string | null;
   isBooking: boolean;
+  isAuthenticated: boolean;
   onStartDateChange: (date: string) => void;
   onStartTimeChange: (time: string) => void;
   onEndDateChange: (date: string) => void;
@@ -22,7 +23,6 @@ interface BookingDetailsStepProps {
 }
 
 const BookingDetailsStep = ({
-  selectedBike,
   startDate,
   startTime,
   endDate,
@@ -30,6 +30,7 @@ const BookingDetailsStep = ({
   deliveryAddress,
   error,
   isBooking,
+  isAuthenticated,
   onStartDateChange,
   onStartTimeChange,
   onEndDateChange,
@@ -43,6 +44,13 @@ const BookingDetailsStep = ({
       <div>
         <h2 className="text-3xl font-bold text-gray-900 mb-4">Booking Details</h2>
         <p className="text-gray-600">Set your rental dates and delivery preferences</p>
+        {/* {!isAuthenticated && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800 text-sm">
+              <strong>Note:</strong> You can browse and see pricing, but you'll need to log in to complete your booking.
+            </p>
+          </div>
+        )} */}
       </div>
 
       {error && <ErrorAlert message={error} />}
@@ -72,7 +80,12 @@ const BookingDetailsStep = ({
           disabled={!startDate || !endDate || isBooking}
           className="bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isBooking ? 'Creating Booking...' : 'Create Booking'}
+          {isBooking 
+            ? 'Creating Booking...' 
+            : isAuthenticated 
+              ? 'Create Booking' 
+              : 'Login to Book'
+          }
           {!isBooking && <ArrowRight className="h-5 w-5 ml-2" />}
         </button>
       </div>

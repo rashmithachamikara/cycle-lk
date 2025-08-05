@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { bikeService, Bike } from '../services/bikeService';
-import { bookingService, BookingData } from '../services/bookingService';
+import { bookingService, CreateBookingRequest } from '../services/bookingService';
 import {
   BookingProgressSteps,
   BikeSelectionStep,
@@ -52,12 +52,8 @@ const BookingPage = () => {
     fetchBikes();
   }, []);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+  // Only redirect to login when trying to complete booking (step 3) and not authenticated
+  // Allow public users to browse bikes and see pricing in steps 1 and 2
 
   // Calculate total price based on selected bike and duration
   const calculateTotalPrice = () => {
@@ -71,8 +67,14 @@ const BookingPage = () => {
     return days * selectedBike.pricing.perDay;
   };
 
-  // Handle booking creation
+  // Handle booking creation - redirect to login if not authenticated
   const handleCreateBooking = async () => {
+    // Check if user is authenticated before proceeding with booking
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     if (!selectedBike || !startDate || !endDate || !user) {
       setError('Please fill in all required fields');
       return;
@@ -85,14 +87,14 @@ const BookingPage = () => {
       const startDateTime = `${startDate}T${startTime || '09:00'}:00.000Z`;
       const endDateTime = `${endDate}T${endTime || '18:00'}:00.000Z`;
 
-      const bookingPayload: BookingData = {
+      const bookingPayload: CreateBookingRequest = {
         bikeId: selectedBike.id,
         startTime: startDateTime,
         endTime: endDateTime,
         deliveryAddress: deliveryAddress || undefined
       };
 
-      await bookingService.createBooking(bookingPayload);
+      const response = await bookingService.createBooking(bookingPayload);
       setCurrentStep(3); // Move to confirmation step
       
     } catch (err: unknown) {
@@ -111,10 +113,6 @@ const BookingPage = () => {
       setIsBooking(false);
     }
   };
-
-  if (!isAuthenticated) {
-    return null; // Will redirect to login
-  }
 
   if (loading) {
     return <LoadingSpinner />;
@@ -160,6 +158,7 @@ const BookingPage = () => {
                 deliveryAddress={deliveryAddress}
                 error={error}
                 isBooking={isBooking}
+                isAuthenticated={isAuthenticated}
                 onStartDateChange={setStartDate}
                 onStartTimeChange={setStartTime}
                 onEndDateChange={setEndDate}

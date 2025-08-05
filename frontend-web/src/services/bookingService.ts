@@ -13,15 +13,32 @@ export interface BookingFilterParams {
 // Interface for new booking data
 export interface BookingData {
   bikeId: string;
-  startTime: string;
-  endTime: string;
-  deliveryAddress?: string;
+  package: {
+    id: 'day' | 'week' | 'month';
+    name: string;
+    features: string[];
+  };
+  dates: {
+    startDate: string;
+    endDate: string;
+  };
+  locations: {
+    pickup: string;
+    dropoff: string;
+  };
+}
+
+export interface CreateBookingRequest{
+        bikeId: string,
+        startTime: string,
+        endTime: string,
+        deliveryAddress?: string 
 }
 
 // Booking service object
 export const bookingService = {
   // Create a new booking
-  createBooking: async (bookingData: BookingData) => {
+  createBooking: async (bookingData: CreateBookingRequest) => {
     const response = await api.post('/bookings', bookingData);
     return response.data;
   },
