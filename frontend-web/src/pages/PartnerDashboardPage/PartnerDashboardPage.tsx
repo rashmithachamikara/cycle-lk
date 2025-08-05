@@ -44,12 +44,11 @@ const PartnerDashboardPage = () => {
         setLoading(true);
         setError(null);
         
-        // For now, we'll use a placeholder partnerId since the user object doesn't include it yet
-        // In a real implementation, you would get this from the partner profile or user data
-        // const partnerId = 'placeholder-partner-id';
-        
-        const backendBookings: BackendBooking[] = await bookingService.getBookingsByPartnerId;
+        // Use the new endpoint that doesn't require partnerId in URL
+        const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+        console.log('Raw backend bookings:', backendBookings);
         const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
+        console.log('Transformed bookings:', transformedBookings);
         
         setBookings(transformedBookings);
       } catch (err) {

@@ -12,6 +12,20 @@ const { validateBooking } = require('../middleware/validation');
 router.get('/', auth(), bookingController.getAllBookings);
 
 /**
+ * @route   GET /api/bookings/my-bookings
+ * @desc    Get all bookings for the authenticated partner
+ * @access  Private/Partner/Admin
+ */
+router.get('/my-bookings', auth(['partner', 'admin']), bookingController.getMyBookings);
+
+/**
+ * @route   GET /api/bookings/partner/:partnerId
+ * @desc    Get all bookings for a specific partner
+ * @access  Private/Partner/Admin
+ */
+router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.getBookingsByPartnerId);
+
+/**
  * @route   GET /api/bookings/:id
  * @desc    Get booking by ID
  * @access  Private
@@ -24,13 +38,6 @@ router.get('/:id', auth(), bookingController.getBookingById);
  * @access  Private
  */
 router.post('/', auth(), validateBooking, bookingController.createBooking);
-
-/**
- * @route   GET /api/bookings/partner/:partnerId
- * @desc    Get all bookings for a specific partner
- * @access  Private/Partner/Admin
- */
-router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.getBookingsByPartnerId);
 
 /**
  * @route   PUT /api/bookings/:id/status

@@ -198,16 +198,68 @@ exports.createBooking = async (req, res) => {
 };
 
 /**
+ * Get all bookings for the authenticated partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyBookings = async (req, res) => {
+  try {
+    // Get user details to check role
+    const user = await User.findById(req.user.id);
+    console.log(`User role: ${user.role}, User's Partner ID: ${req.user.partnerId}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // For partners, use their own partnerId
+    if (user.role === 'partner') {
+      if (!req.user.partnerId) {
+        return res.status(403).json({ message: 'Partner profile not found.' });
+      }
+      
+      // Get all bookings for the authenticated partner
+      const bookings = await Booking.find({ partnerId: req.user.partnerId })
+        .populate('userId', 'firstName lastName email phone')
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location')
+        .sort({ createdAt: -1 });
+      
+      res.json(bookings);
+    } else if (user.role === 'admin') {
+      // Admins can see all bookings (or implement specific admin logic)
+      const bookings = await Booking.find({})
+        .populate('userId', 'firstName lastName email phone')
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location')
+        .sort({ createdAt: -1 });
+      
+      res.json(bookings);
+    } else {
+      return res.status(403).json({ message: 'Access denied. Invalid role.' });
+    }
+  } catch (err) {
+    console.error('Get my bookings error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
  * Get all bookings for a specific partner
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 exports.getBookingsByPartnerId = async (req, res) => {
   try {
-    const { partnerId } = req.params;
+    const partnerId = req.params.partnerId; // Get from URL params
     
     // Get user details to check role
     const user = await User.findById(req.user.id);
+    console.log(`User role: ${user.role}`);
+    console.log(`Requested Partner ID from URL: ${partnerId}`);
+    console.log(`User's actual Partner ID from auth: ${req.user.partnerId}`);
+    console.log(`Do they match? ${req.user.partnerId && req.user.partnerId.toString() === partnerId}`);
+    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
