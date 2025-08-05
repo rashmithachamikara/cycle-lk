@@ -88,13 +88,14 @@ exports.validateBike = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 exports.validateBooking = (req, res, next) => {
-  const { bikeId, userId, startTime, endTime } = req.body;
+  const { bikeId, startTime, endTime } = req.body;
   const errors = [];
 
   if (!bikeId) errors.push({ field: 'bikeId', message: 'Bike ID is required' });
-  if (!userId) errors.push({ field: 'userId', message: 'User ID is required' });
   if (!startTime) errors.push({ field: 'startTime', message: 'Start time is required' });
   if (!endTime) errors.push({ field: 'endTime', message: 'End time is required' });
+
+  // Note: userId is obtained from req.user.id (from auth middleware), not from request body
 
   // Validate dates
   if (startTime && endTime) {
