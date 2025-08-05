@@ -69,16 +69,36 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
+    console.log('=== BOOKING CREATION DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('User from token:', req.user);
+    
     const { bikeId, startTime, endTime, deliveryAddress } = req.body;
     const userId = req.user.id; // From auth middleware
     
+    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, userId });
+    
     // Validate bike exists and is available
     const bike = await Bike.findById(bikeId);
+    console.log('Found bike:', bike ? 'Yes' : 'No');
+    
+    if (!bike) {
+      console.log('ERROR: Bike not found');
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    console.log('Bike details:', {
+      id: bike._id,
+      name: bike.name,
+      partnerId: bike.partnerId,
+      availability: bike.availability
+    });
     if (!bike) {
       return res.status(404).json({ message: 'Bike not found' });
     }
     
     if (!bike.availability.status) {
+      console.log('ERROR: Bike is not available');
       return res.status(400).json({ message: 'Bike is not available for booking' });
     }
     
