@@ -269,7 +269,7 @@ const PartnerDashboardPage = () => {
                 )}
 
                 {/* Recent Bookings */}
-                {activeTab === 'recent' && <CompletedRentals />}
+                {activeTab === 'recent' && <CompletedRentals bookings={recentBookings} />}
               </div>
             </div>
           </div>
