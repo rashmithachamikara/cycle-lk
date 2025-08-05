@@ -131,19 +131,19 @@ export interface CreateBookingRequest{
 export const transformBookingForPartnerDashboard = (booking: BackendBooking): PartnerDashboardBooking => {
   return {
     id: booking._id,
-    customerName: `${booking.userId.firstName} ${booking.userId.lastName}`,
-    customerPhone: booking.userId.phone,
-    customerEmail: booking.userId.email,
-    bikeName: booking.bikeId.name,
-    bikeId: booking.bikeId._id,
-    startDate: new Date(booking.dates.startDate).toLocaleDateString(),
-    endDate: new Date(booking.dates.endDate).toLocaleDateString(),
-    status: booking.status,
-    value: `$${booking.pricing.total}`,
-    bookingNumber: booking.bookingNumber,
-    pickupLocation: booking.locations.pickup,
-    dropoffLocation: booking.locations.dropoff,
-    packageType: booking.package.name,
+    customerName: booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown Customer',
+    customerPhone: booking.userId?.phone || '',
+    customerEmail: booking.userId?.email || '',
+    bikeName: booking.bikeId?.name || 'Unknown Bike',
+    bikeId: booking.bikeId?._id || '',
+    startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
+    endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
+    status: booking.status || 'unknown',
+    value: booking.pricing?.total ? `$${booking.pricing.total}` : '$0',
+    bookingNumber: booking.bookingNumber || '',
+    pickupLocation: booking.locations?.pickup || '',
+    dropoffLocation: booking.locations?.dropoff || '',
+    packageType: booking.package?.name || '',
     rating: booking.review?.rating
   };
 };
@@ -170,6 +170,12 @@ export const bookingService = {
 
   getBookingsByPartnerId: async (partnerId: string) => {
     const response = await api.get(`/bookings/partner/${partnerId}`);
+    return response.data;
+  },
+
+  // Get bookings for the authenticated partner
+  getMyBookings: async () => {
+    const response = await api.get('/bookings/my-bookings');
     return response.data;
   },
 
