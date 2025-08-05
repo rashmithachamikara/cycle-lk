@@ -109,8 +109,12 @@ const BikeDetailsPage = () => {
         <BackButton to="/locations" text="Back to Bikes" />
 
         <div className="grid lg:grid-cols-2 gap-12">
+
+
           {/* Image Gallery */}
-          <ImageGallery images={bike.images} bikeName={bike.name} />
+          {/* <ImageGallery images={bike.images} bikeName={bike.name} /> */}
+          <ImageGallery images={bike.images?.map(img => typeof img === 'string' ? img : img.url)} bikeName={bike.name} />
+
 
           {/* Bike Details */}
           <div className="space-y-6">
