@@ -1,4 +1,4 @@
-const { Booking, Bike, User, Payment } = require('../models');
+const { Booking, Bike, User, Payment, Partner } = require('../models');
 
 /**
  * Get all bookings with optional filtering
@@ -193,6 +193,44 @@ exports.createBooking = async (req, res) => {
     res.status(201).json(booking);
   } catch (err) {
     console.error('Booking creation error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get all bookings for a specific partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getBookingsByPartnerId = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    
+    // Get user details to check role
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // For partners, verify they can only access their own bookings
+    if (user.role === 'partner') {
+      // Check if the requested partnerId matches the authenticated user's partnerId
+      if (!req.user.partnerId || req.user.partnerId.toString() !== partnerId) {
+        return res.status(403).json({ message: 'Access denied. You can only view your own bookings.' });
+      }
+    }
+    // Admins can access any partner's bookings (no additional check needed)
+    
+    // Get all bookings for the specified partner
+    const bookings = await Booking.find({ partnerId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location')
+      .sort({ createdAt: -1 });
+    
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get bookings by partner error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
