@@ -17,11 +17,11 @@ exports.getAllBookings = async (req, res) => {
     if (partnerId) filter.partnerId = partnerId;
     if (status) filter.status = status;
     
-    // Date filters
+    // Date filters - updated to use model structure
     if (startDate || endDate) {
-      filter.startTime = {};
-      if (startDate) filter.startTime.$gte = new Date(startDate);
-      if (endDate) filter.endTime.$lte = new Date(endDate);
+      filter['dates.startDate'] = {};
+      if (startDate) filter['dates.startDate'].$gte = new Date(startDate);
+      if (endDate) filter['dates.endDate'] = { $lte: new Date(endDate) };
     }
     
     // Create the query
@@ -85,13 +85,13 @@ exports.createBooking = async (req, res) => {
     // Check if bike is already booked for the specified time
     const overlappingBookings = await Booking.find({
       bikeId,
-      status: { $in: ['confirmed', 'inProgress'] },
+      status: { $in: ['requested', 'confirmed', 'active'] },
       $or: [
-        { startTime: { $lt: new Date(endTime), $gte: new Date(startTime) } },
-        { endTime: { $gt: new Date(startTime), $lte: new Date(endTime) } },
+        { 'dates.startDate': { $lt: new Date(endTime), $gte: new Date(startTime) } },
+        { 'dates.endDate': { $gt: new Date(startTime), $lte: new Date(endTime) } },
         { 
-          startTime: { $lte: new Date(startTime) }, 
-          endTime: { $gte: new Date(endTime) } 
+          'dates.startDate': { $lte: new Date(startTime) }, 
+          'dates.endDate': { $gte: new Date(endTime) } 
         }
       ]
     });
@@ -100,48 +100,79 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Bike is already booked for this time period' });
     }
     
-    // Calculate duration and total cost
+    // Calculate duration and determine package
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const durationHours = (end - start) / (1000 * 60 * 60); // Duration in hours
+    const durationHours = (end - start) / (1000 * 60 * 60);
+    const durationDays = Math.ceil(durationHours / 24);
     
+    let packageInfo;
+    if (durationDays <= 7) {
+      packageInfo = {
+        id: 'day',
+        name: 'Daily Package',
+        features: ['Basic insurance', 'Roadside assistance']
+      };
+    } else if (durationDays <= 30) {
+      packageInfo = {
+        id: 'week',
+        name: 'Weekly Package',
+        features: ['Basic insurance', 'Roadside assistance', 'Free maintenance']
+      };
+    } else {
+      packageInfo = {
+        id: 'month',
+        name: 'Monthly Package',
+        features: ['Full insurance', 'Roadside assistance', 'Free maintenance', 'Priority support']
+      };
+    }
+    
+    // Calculate pricing
     let basePrice = 0;
-    
-    // Calculate price based on hourly or daily rate
     if (durationHours <= 24) {
       basePrice = bike.pricing.perHour * durationHours;
     } else {
-      const days = Math.ceil(durationHours / 24);
-      basePrice = bike.pricing.perDay * days;
+      basePrice = bike.pricing.perDay * durationDays;
     }
     
-    // Add delivery cost if applicable
-    const deliveryCost = deliveryAddress ? bike.pricing.deliveryFee || 0 : 0;
+    const insurance = basePrice * 0.1; // 10% insurance
+    const extras = 0; // No extras for now
+    const discount = 0; // No discount for now
+    const total = basePrice + insurance + extras - discount;
     
-    // Calculate total amount
-    const totalAmount = basePrice + deliveryCost;
+    // Generate unique booking number
+    const bookingNumber = `BK${Date.now()}${Math.floor(Math.random() * 1000)}`;
     
-    // Create booking
+    // Create booking with proper model structure
     const booking = new Booking({
+      bookingNumber,
       userId,
       bikeId,
       partnerId: bike.partnerId,
-      startTime,
-      endTime,
-      deliveryAddress,
+      package: packageInfo,
       pricing: {
         basePrice,
-        deliveryCost,
-        totalAmount
+        insurance,
+        extras,
+        discount,
+        total
       },
-      status: 'pending'
+      dates: {
+        startDate: start,
+        endDate: end
+      },
+      locations: {
+        pickup: deliveryAddress || bike.location,
+        dropoff: deliveryAddress || bike.location
+      },
+      status: 'requested'
     });
     
     await booking.save();
     
     res.status(201).json(booking);
   } catch (err) {
-    console.error(err);
+    console.error('Booking creation error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -156,7 +187,7 @@ exports.updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     
     // Validate status is valid
-    const validStatuses = ['pending', 'confirmed', 'inProgress', 'completed', 'cancelled'];
+    const validStatuses = ['requested', 'confirmed', 'active', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -211,7 +242,7 @@ exports.recordPayment = async (req, res) => {
       bookingId,
       userId: booking.userId,
       partnerId: booking.partnerId,
-      amount: booking.pricing.totalAmount,
+      amount: booking.pricing.total,
       paymentMethod,
       transactionId,
       status: 'completed'
@@ -244,8 +275,8 @@ exports.cancelBooking = async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
     
-    if (booking.status === 'inProgress' || booking.status === 'completed') {
-      return res.status(400).json({ message: 'Cannot cancel a booking that is in progress or completed' });
+    if (booking.status === 'active' || booking.status === 'completed') {
+      return res.status(400).json({ message: 'Cannot cancel a booking that is active or completed' });
     }
     
     // Update booking status to cancelled
