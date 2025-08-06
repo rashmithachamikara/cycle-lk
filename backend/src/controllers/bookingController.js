@@ -211,9 +211,16 @@ exports.getMyBookings = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // For partners, use their own partnerId
-    if (user.role === 'partner') {
+
+    if(user.role === 'user') {
+      // Users can only see their own bookings
+      const bookings = await Booking.find({ userId: req.user.id })
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location');
+      
+      // Return empty array if no bookings found (don't return 404)
+      res.json(bookings || []);
+    } else if (user.role === 'partner') { // For partners, use their own partnerId
       if (!req.user.partnerId) {
         return res.status(403).json({ message: 'Partner profile not found.' });
       }
