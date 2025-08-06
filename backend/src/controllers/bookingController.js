@@ -1,4 +1,4 @@
-const { Booking, Bike, User, Payment } = require('../models');
+const { Booking, Bike, User, Payment, Partner } = require('../models');
 
 /**
  * Get all bookings with optional filtering
@@ -17,11 +17,11 @@ exports.getAllBookings = async (req, res) => {
     if (partnerId) filter.partnerId = partnerId;
     if (status) filter.status = status;
     
-    // Date filters
+    // Date filters - updated to use model structure
     if (startDate || endDate) {
-      filter.startTime = {};
-      if (startDate) filter.startTime.$gte = new Date(startDate);
-      if (endDate) filter.endTime.$lte = new Date(endDate);
+      filter['dates.startDate'] = {};
+      if (startDate) filter['dates.startDate'].$gte = new Date(startDate);
+      if (endDate) filter['dates.endDate'] = { $lte: new Date(endDate) };
     }
     
     // Create the query
@@ -69,29 +69,49 @@ exports.getBookingById = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
   try {
+    console.log('=== BOOKING CREATION DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('User from token:', req.user);
+    
     const { bikeId, startTime, endTime, deliveryAddress } = req.body;
     const userId = req.user.id; // From auth middleware
     
+    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, userId });
+    
     // Validate bike exists and is available
     const bike = await Bike.findById(bikeId);
+    console.log('Found bike:', bike ? 'Yes' : 'No');
+    
+    if (!bike) {
+      console.log('ERROR: Bike not found');
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    console.log('Bike details:', {
+      id: bike._id,
+      name: bike.name,
+      partnerId: bike.partnerId,
+      availability: bike.availability
+    });
     if (!bike) {
       return res.status(404).json({ message: 'Bike not found' });
     }
     
     if (!bike.availability.status) {
+      console.log('ERROR: Bike is not available');
       return res.status(400).json({ message: 'Bike is not available for booking' });
     }
     
     // Check if bike is already booked for the specified time
     const overlappingBookings = await Booking.find({
       bikeId,
-      status: { $in: ['confirmed', 'inProgress'] },
+      status: { $in: ['requested', 'confirmed', 'active'] },
       $or: [
-        { startTime: { $lt: new Date(endTime), $gte: new Date(startTime) } },
-        { endTime: { $gt: new Date(startTime), $lte: new Date(endTime) } },
+        { 'dates.startDate': { $lt: new Date(endTime), $gte: new Date(startTime) } },
+        { 'dates.endDate': { $gt: new Date(startTime), $lte: new Date(endTime) } },
         { 
-          startTime: { $lte: new Date(startTime) }, 
-          endTime: { $gte: new Date(endTime) } 
+          'dates.startDate': { $lte: new Date(startTime) }, 
+          'dates.endDate': { $gte: new Date(endTime) } 
         }
       ]
     });
@@ -100,48 +120,169 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Bike is already booked for this time period' });
     }
     
-    // Calculate duration and total cost
+    // Calculate duration and determine package
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const durationHours = (end - start) / (1000 * 60 * 60); // Duration in hours
+    const durationHours = (end - start) / (1000 * 60 * 60);
+    const durationDays = Math.ceil(durationHours / 24);
     
+    let packageInfo;
+    if (durationDays <= 7) {
+      packageInfo = {
+        id: 'day',
+        name: 'Daily Package',
+        features: ['Basic insurance', 'Roadside assistance']
+      };
+    } else if (durationDays <= 30) {
+      packageInfo = {
+        id: 'week',
+        name: 'Weekly Package',
+        features: ['Basic insurance', 'Roadside assistance', 'Free maintenance']
+      };
+    } else {
+      packageInfo = {
+        id: 'month',
+        name: 'Monthly Package',
+        features: ['Full insurance', 'Roadside assistance', 'Free maintenance', 'Priority support']
+      };
+    }
+    
+    // Calculate pricing
     let basePrice = 0;
-    
-    // Calculate price based on hourly or daily rate
     if (durationHours <= 24) {
       basePrice = bike.pricing.perHour * durationHours;
     } else {
-      const days = Math.ceil(durationHours / 24);
-      basePrice = bike.pricing.perDay * days;
+      basePrice = bike.pricing.perDay * durationDays;
     }
     
-    // Add delivery cost if applicable
-    const deliveryCost = deliveryAddress ? bike.pricing.deliveryFee || 0 : 0;
+    const insurance = basePrice * 0.1; // 10% insurance
+    const extras = 0; // No extras for now
+    const discount = 0; // No discount for now
+    const total = basePrice + insurance + extras - discount;
     
-    // Calculate total amount
-    const totalAmount = basePrice + deliveryCost;
+    // Generate unique booking number
+    const bookingNumber = `BK${Date.now()}${Math.floor(Math.random() * 1000)}`;
     
-    // Create booking
+    // Create booking with proper model structure
     const booking = new Booking({
+      bookingNumber,
       userId,
       bikeId,
       partnerId: bike.partnerId,
-      startTime,
-      endTime,
-      deliveryAddress,
+      package: packageInfo,
       pricing: {
         basePrice,
-        deliveryCost,
-        totalAmount
+        insurance,
+        extras,
+        discount,
+        total
       },
-      status: 'pending'
+      dates: {
+        startDate: start,
+        endDate: end
+      },
+      locations: {
+        pickup: deliveryAddress || bike.location,
+        dropoff: deliveryAddress || bike.location
+      },
+      status: 'requested'
     });
     
     await booking.save();
     
     res.status(201).json(booking);
   } catch (err) {
-    console.error(err);
+    console.error('Booking creation error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get all bookings for the authenticated partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyBookings = async (req, res) => {
+  try {
+    // Get user details to check role
+    const user = await User.findById(req.user.id);
+    console.log(`User role: ${user.role}, User's Partner ID: ${req.user.partnerId}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // For partners, use their own partnerId
+    if (user.role === 'partner') {
+      if (!req.user.partnerId) {
+        return res.status(403).json({ message: 'Partner profile not found.' });
+      }
+      
+      // Get all bookings for the authenticated partner
+      const bookings = await Booking.find({ partnerId: req.user.partnerId })
+        .populate('userId', 'firstName lastName email phone')
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location')
+        .sort({ createdAt: -1 });
+      
+      res.json(bookings);
+    } else if (user.role === 'admin') {
+      // Admins can see all bookings (or implement specific admin logic)
+      const bookings = await Booking.find({})
+        .populate('userId', 'firstName lastName email phone')
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location')
+        .sort({ createdAt: -1 });
+      
+      res.json(bookings);
+    } else {
+      return res.status(403).json({ message: 'Access denied. Invalid role.' });
+    }
+  } catch (err) {
+    console.error('Get my bookings error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get all bookings for a specific partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getBookingsByPartnerId = async (req, res) => {
+  try {
+    const partnerId = req.params.partnerId; // Get from URL params
+    
+    // Get user details to check role
+    const user = await User.findById(req.user.id);
+    console.log(`User role: ${user.role}`);
+    console.log(`Requested Partner ID from URL: ${partnerId}`);
+    console.log(`User's actual Partner ID from auth: ${req.user.partnerId}`);
+    console.log(`Do they match? ${req.user.partnerId && req.user.partnerId.toString() === partnerId}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // For partners, verify they can only access their own bookings
+    if (user.role === 'partner') {
+      // Check if the requested partnerId matches the authenticated user's partnerId
+      if (!req.user.partnerId || req.user.partnerId.toString() !== partnerId) {
+        return res.status(403).json({ message: 'Access denied. You can only view your own bookings.' });
+      }
+    }
+    // Admins can access any partner's bookings (no additional check needed)
+    
+    // Get all bookings for the specified partner
+    const bookings = await Booking.find({ partnerId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location')
+      .sort({ createdAt: -1 });
+    
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get bookings by partner error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -156,7 +297,7 @@ exports.updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     
     // Validate status is valid
-    const validStatuses = ['pending', 'confirmed', 'inProgress', 'completed', 'cancelled'];
+    const validStatuses = ['requested', 'confirmed', 'active', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -211,7 +352,7 @@ exports.recordPayment = async (req, res) => {
       bookingId,
       userId: booking.userId,
       partnerId: booking.partnerId,
-      amount: booking.pricing.totalAmount,
+      amount: booking.pricing.total,
       paymentMethod,
       transactionId,
       status: 'completed'
@@ -244,8 +385,8 @@ exports.cancelBooking = async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
     
-    if (booking.status === 'inProgress' || booking.status === 'completed') {
-      return res.status(400).json({ message: 'Cannot cancel a booking that is in progress or completed' });
+    if (booking.status === 'active' || booking.status === 'completed') {
+      return res.status(400).json({ message: 'Cannot cancel a booking that is active or completed' });
     }
     
     // Update booking status to cancelled
