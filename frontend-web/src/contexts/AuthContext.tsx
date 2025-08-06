@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
-import { authService } from '../services/authService';
+import { authService, setAuthToken } from '../services/authService';
 
 // Define types
 export interface User {
@@ -56,8 +55,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         try {
-          // Set default auth header
-          axios.defaults.headers.common['x-auth-token'] = storedToken;
+          // Set auth token using helper
+          setAuthToken(storedToken);
           
           // Get user data
           const userData = localStorage.getItem('user');
@@ -94,8 +93,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(token);
       setUser(user);
       
-      // Set default auth header
-      axios.defaults.headers.common['x-auth-token'] = token;    } catch (err: unknown) {
+      // Set auth token using helper
+      setAuthToken(token);
+    } catch (err: unknown) {
       console.error('Login error:', err);
       const error = err as { response?: { data?: { message?: string } } };
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
@@ -120,8 +120,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(token);
       setUser(user);
       
-      // Set default auth header
-      axios.defaults.headers.common['x-auth-token'] = token;    } catch (err: unknown) {
+      // Set auth token using helper
+      setAuthToken(token);
+    } catch (err: unknown) {
       console.error('Registration error:', err);
       const error = err as { response?: { data?: { message?: string, errors?: Array<{ message: string }> } } };
       const errorMessage = error.response?.data?.message || error.response?.data?.errors?.[0]?.message || 'Registration failed. Please try again.';
@@ -137,7 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    delete axios.defaults.headers.common['x-auth-token'];
+    setAuthToken(null);
   };
 
   // Clear error

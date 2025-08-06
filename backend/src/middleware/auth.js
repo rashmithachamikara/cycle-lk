@@ -119,7 +119,7 @@ exports.auth = (allowedRoles = []) => {
         // Attach the Partner's MongoDB _id to the request object.
         // This makes it available in the bikeController.
         req.user.partnerId = partnerProfile._id;
-        console.log(`Auth middleware: Partner profile found. Attached partnerId: ${req.user.partnerId}`);
+        console.log(`Auth middleware: Partner profile found. Attached partnerId: ${req.user.partnerId} userId: ${user._id}`);
       }
       // ====================================================================
       //  END: NEW LOGIC

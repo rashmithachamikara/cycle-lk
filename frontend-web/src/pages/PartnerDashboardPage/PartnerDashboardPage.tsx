@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -16,86 +16,64 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+import { 
+  bookingService, 
+  BackendBooking, 
+  PartnerDashboardBooking, 
+  transformBookingForPartnerDashboard 
+} from '../../services/bookingService';
+import { useAuth } from '../../contexts/AuthContext';
+
 const PartnerDashboardPage = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('current');
+  const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Add delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [bikeToDelete, setBikeToDelete] = useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
-  const currentBookings = [
-    {
-      id: 'CL2025001',
-      customerName: 'John Doe',
-      customerPhone: '+94 77 123 4567',
-      bikeName: 'City Cruiser',
-      bikeId: 'BIKE-1234',
-      startDate: '2025-03-15',
-      endDate: '2025-03-22',
-      status: 'active',
-      value: '$105'
-    },
-    {
-      id: 'CL2025002',
-      customerName: 'Sarah Johnson',
-      customerPhone: '+94 77 234 5678',
-      bikeName: 'Mountain Explorer',
-      bikeId: 'BIKE-2345',
-      startDate: '2025-03-18',
-      endDate: '2025-03-25',
-      status: 'active',
-      value: '$140'
-    }
-  ];
+  // Fetch bookings for the partner
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Use the new endpoint that doesn't require partnerId in URL
+        const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+        console.log('Raw backend bookings:', backendBookings);
+        const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
+        console.log('Transformed bookings:', transformedBookings);
+        
+        setBookings(transformedBookings);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError('Failed to load bookings');
+        // For now, use fallback data if the API fails
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const requestedBookings = [
-    {
-      id: 'CL2025003',
-      customerName: 'David Chen',
-      customerPhone: '+94 77 345 6789',
-      bikeName: 'Beach Rider',
-      bikeId: 'BIKE-3456',
-      startDate: '2025-03-20',
-      endDate: '2025-03-27',
-      status: 'requested',
-      value: '$105'
-    },
-    {
-      id: 'CL2025004',
-      customerName: 'Maria Garcia',
-      customerPhone: '+94 77 456 7890',
-      bikeName: 'City Cruiser',
-      bikeId: 'BIKE-4567',
-      startDate: '2025-03-22',
-      endDate: '2025-03-29',
-      status: 'requested',
-      value: '$105'
+    if (user && user.role === 'partner') {
+      fetchBookings();
+    } else {
+      // If not a partner, set to empty and stop loading
+      setBookings([]);
+      setLoading(false);
     }
-  ];
+  }, [user]);
 
-  const recentBookings = [
-    {
-      id: 'CL2025005',
-      customerName: 'Robert Smith',
-      bikeName: 'Mountain Explorer',
-      bikeId: 'BIKE-5678',
-      startDate: '2025-02-10',
-      endDate: '2025-02-17',
-      status: 'completed',
-      rating: 5,
-    },
-    {
-      id: 'CL2025006',
-      customerName: 'Emma Wilson',
-      bikeName: 'Beach Rider',
-      bikeId: 'BIKE-6789',
-      startDate: '2025-02-15',
-      endDate: '2025-02-18',
-      status: 'completed',
-      rating: 4,
-    }
-  ];
+  // Filter bookings by status
+  const requestedBookings = bookings.filter(booking => booking.status === 'requested');
+  const currentBookings = bookings.filter(booking => booking.status === 'active' || booking.status === 'confirmed');
+  const recentBookings = bookings.filter(booking => booking.status === 'completed');
 
   const inventoryItems = [
     { id: 'BIKE-1234', name: 'City Cruiser', type: 'City', status: 'rented', condition: 'Excellent' },
@@ -104,6 +82,12 @@ const PartnerDashboardPage = () => {
     { id: 'BIKE-4567', name: 'City Cruiser', type: 'City', status: 'maintenance', condition: 'Fair' },
     { id: 'BIKE-5678', name: 'Mountain Explorer', type: 'Mountain', status: 'available', condition: 'Excellent' }
   ];
+
+  // Calculate total revenue from completed bookings
+  const totalRevenue = recentBookings.reduce((sum, booking) => {
+    const value = parseFloat(booking.value.replace('$', ''));
+    return sum + value;
+  }, 0);
 
   // Handle confirming bike deletion
   const handleConfirmDelete = () => {
@@ -131,6 +115,23 @@ const PartnerDashboardPage = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="text-red-800">
+              <strong>Error:</strong> {error}
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading bookings...</span>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
           <div className="flex items-center justify-between">
@@ -164,7 +165,7 @@ const PartnerDashboardPage = () => {
                     <Users className="h-6 w-6 text-green-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">8</div>
+                    <div className="text-2xl font-bold text-gray-900">{currentBookings.length}</div>
                     <div className="text-sm text-gray-600">Active Rentals</div>
                   </div>
                 </div>
@@ -188,7 +189,7 @@ const PartnerDashboardPage = () => {
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">$2.4k</div>
+                    <div className="text-2xl font-bold text-gray-900">${totalRevenue.toFixed(0)}</div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
@@ -252,7 +253,7 @@ const PartnerDashboardPage = () => {
                 {activeTab === 'current' && <CurrentRentals />}
 
                 {/* Booking Requests */}
-                {activeTab === 'requested' && <BookingRequests />}
+                {activeTab === 'requested' && <BookingRequests bookings={requestedBookings} />}
 
                 {/* Inventory */}
                 {activeTab === 'inventory' && (
@@ -268,7 +269,7 @@ const PartnerDashboardPage = () => {
                 )}
 
                 {/* Recent Bookings */}
-                {activeTab === 'recent' && <CompletedRentals />}
+                {activeTab === 'recent' && <CompletedRentals bookings={recentBookings} />}
               </div>
             </div>
           </div>

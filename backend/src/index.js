@@ -18,6 +18,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cycle-lk'
 
 // Define API routes
 const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const bikeRoutes = require('./routes/bikeRoutes');
 const partnerRoutes = require('./routes/partnerRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -31,6 +32,7 @@ const uploadRoutes = require('./routes/uploadRoutes'); //cloudinary upload route
 
 // Use API routes
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/bikes', bikeRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/bookings', bookingRoutes);

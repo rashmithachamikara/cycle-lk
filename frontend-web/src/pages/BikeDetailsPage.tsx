@@ -112,8 +112,7 @@ const BikeDetailsPage = () => {
 
 
           {/* Image Gallery */}
-          {/* <ImageGallery images={bike.images} bikeName={bike.name} /> */}
-          <ImageGallery images={bike.images?.map(img => typeof img === 'string' ? img : img.url)} bikeName={bike.name} />
+          <ImageGallery images={bike.images} bikeName={bike.name} />
 
 
           {/* Bike Details */}
