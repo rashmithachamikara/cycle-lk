@@ -91,6 +91,7 @@ export interface PartnerDashboardBooking {
   customerEmail: string;
   bikeName: string;
   bikeId: string;
+  bikeImages: string[];
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -105,6 +106,7 @@ export interface PartnerDashboardBooking {
 export interface UserDashboardBooking {
   id: string;
   bikeName: string;
+  bikeImages: string[];
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -154,6 +156,7 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     customerEmail: booking.userId?.email || '',
     bikeName: booking.bikeId?.name || 'Unknown Bike',
     bikeId: booking.bikeId?._id || '',
+    bikeImages: booking.bikeId?.images || [],
     startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
     endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
     status: booking.status || 'unknown',
@@ -172,6 +175,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
   try {
     const transformed = {
       id: booking._id || '',
+      bikeImages: booking.bikeId?.images || [],
       bikeName: booking.bikeId?.name || 'Unknown Bike',
       startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
       endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
@@ -198,6 +202,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
     return {
       id: booking._id || 'unknown',
       bikeName: 'Unknown Bike',
+      bikeImages: [],
       startDate: '',
       endDate: '',
       status: 'requested' as const,
