@@ -30,7 +30,7 @@ interface NotificationProps {
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past'>('current');
+  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past'>('requested');
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
