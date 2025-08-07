@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import BookingCard from './BookingCard';
 import { UserDashboardBooking } from '../../services/bookingService';
 
@@ -18,6 +19,9 @@ const BookingList: React.FC<BookingListProps> = ({
   type, 
   onRetry 
 }) => {
+
+  const navigate = useNavigate();
+  
   if (loading) {
     return (
       <div className="space-y-4">
@@ -121,12 +125,12 @@ const BookingList: React.FC<BookingListProps> = ({
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{emptyState.title}</h3>
         <p className="text-gray-600 mb-6">{emptyState.description}</p>
-        <a
-          href={emptyState.link}
+        <Link
+          to={emptyState.link}
           className="inline-flex items-center bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-colors"
         >
           {emptyState.action}
-        </a>
+        </Link>
       </div>
     );
   }
@@ -134,11 +138,16 @@ const BookingList: React.FC<BookingListProps> = ({
   return (
     <div className="space-y-6">
       {bookings.map((booking) => (
-        <BookingCard 
-          key={booking.id} 
-          booking={booking} 
-          type={type} 
-        />
+        <div
+          key={booking.id}
+          onClick={() => navigate(`/booking-details/${booking.id}`)}
+          className="cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+        >
+          <BookingCard
+            booking={booking}
+            type={type}
+          />
+        </div>
       ))}
     </div>
   );

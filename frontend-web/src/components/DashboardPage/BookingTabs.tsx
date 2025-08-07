@@ -14,14 +14,6 @@ interface BookingTabsProps {
 const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, onTabChange, counts }) => {
   const tabs = [
     {
-      id: 'current' as const,
-      label: 'Current Rentals',
-      icon: Calendar,
-      count: counts.current,
-      color: 'text-green-600',
-      activeColor: 'border-green-500 bg-green-50 text-green-700'
-    },
-    {
       id: 'requested' as const,
       label: 'Requested Rentals',
       icon: Clock,
@@ -29,6 +21,15 @@ const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, onTabChange, count
       color: 'text-blue-600',
       activeColor: 'border-blue-500 bg-blue-50 text-blue-700'
     },
+    {
+      id: 'current' as const,
+      label: 'Current Rentals',
+      icon: Calendar,
+      count: counts.current,
+      color: 'text-green-600',
+      activeColor: 'border-green-500 bg-green-50 text-green-700'
+    },
+    
     {
       id: 'past' as const,
       label: 'Past Rentals',
