@@ -27,7 +27,7 @@ exports.getAllBookings = async (req, res) => {
     // Create the query
     const bookings = await Booking.find(filter)
       .populate('userId', 'firstName lastName email phone')
-      .populate('bikeId', 'name type brand model images pricing')
+      .populate('bikeId', 'name type brand model images pricing location')
       .populate('partnerId', 'companyName email phone location')
       .sort({ createdAt: -1 });
     
@@ -47,9 +47,8 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('userId', 'firstName lastName email phone')
-      .populate('bikeId', 'name type brand model images pricing')
-      .populate('partnerId', 'companyName email phone location')
-      .populate('paymentId');
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location');
       
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -368,8 +367,13 @@ exports.recordPayment = async (req, res) => {
     await payment.save();
     
     // Update booking with payment information
-    booking.paymentId = payment._id;
     booking.paymentStatus = 'paid';
+    booking.paymentInfo = {
+      method: paymentMethod,
+      transactionId: transactionId,
+      paid: true,
+      paymentDate: new Date()
+    };
     await booking.save();
     
     res.status(201).json(payment);

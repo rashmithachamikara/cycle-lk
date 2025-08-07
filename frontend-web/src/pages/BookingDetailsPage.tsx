@@ -41,22 +41,16 @@ const BookingDetailsPage = () => {
         setLoading(true);
         setError(null);
         
-        // In a real app, you would have a getBookingById endpoint
-        // For now, we'll get all bookings and find the specific one
-        const allBookings = await bookingService.getMyBookings();
+        const booking = await bookingService.getBookingById(id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedBookings = allBookings.map((booking: any) => 
-          transformBookingForUserDashboard(booking)
-        );
-        
-        const foundBooking = transformedBookings.find((b: UserDashboardBooking) => b.id === id);
-        
-        if (!foundBooking) {
+        const transformedBooking = transformBookingForUserDashboard(booking);
+
+        if (!transformedBooking) {
           setError('Booking not found');
           return;
         }
-        
-        setBooking(foundBooking);
+
+        setBooking(transformedBooking);
       } catch (err) {
         console.error('Error fetching booking details:', err);
         setError('Failed to load booking details. Please try again.');
