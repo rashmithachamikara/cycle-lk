@@ -4,25 +4,17 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Breadcrumb, BackButton } from '../ui';
 import { Loader } from '../ui';
-import { 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  User, 
-  Phone, 
-  CreditCard, 
-  Download, 
-  Star, 
-  MessageCircle,
-  Navigation,
-  QrCode,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { bookingService, UserDashboardBooking, transformBookingForUserDashboard } from '../services/bookingService';
+import {
+  BookingHeader,
+  BikeImageGallery,
+  BookingDetailsGrid,
+  RatingAndReviewSection,
+  QuickActions,
+  BookingTimeline,
+  AdditionalInfo
+} from '../components/BookingDetailsPage';
 
 const BookingDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +22,6 @@ const BookingDetailsPage = () => {
   const [booking, setBooking] = useState<UserDashboardBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Fetch booking details
   useEffect(() => {
@@ -65,48 +56,6 @@ const BookingDetailsPage = () => {
 
     fetchBookingDetails();
   }, [id, navigate]);
-
-  // Get status configuration
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'active':
-      case 'confirmed':
-        return {
-          icon: CheckCircle,
-          color: 'text-green-600',
-          bgColor: 'bg-green-100',
-          label: status === 'active' ? 'Active' : 'Confirmed'
-        };
-      case 'requested':
-        return {
-          icon: Clock,
-          color: 'text-yellow-600',
-          bgColor: 'bg-yellow-100',
-          label: 'Requested'
-        };
-      case 'completed':
-        return {
-          icon: CheckCircle,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-100',
-          label: 'Completed'
-        };
-      case 'cancelled':
-        return {
-          icon: XCircle,
-          color: 'text-red-600',
-          bgColor: 'bg-red-100',
-          label: 'Cancelled'
-        };
-      default:
-        return {
-          icon: AlertTriangle,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-100',
-          label: status
-        };
-    }
-  };
 
   // Show loading state
   if (loading) {
@@ -148,9 +97,6 @@ const BookingDetailsPage = () => {
     );
   }
 
-  const statusConfig = getStatusConfig(booking.status);
-  const StatusIcon = statusConfig.icon;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -171,301 +117,27 @@ const BookingDetailsPage = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Main Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Booking Header */}
+            {/* Booking Header with Image Gallery and Details */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{booking.bikeName}</h1>
-                  <div className="flex items-center text-gray-600">
-                    <span className="text-sm">Booking #{booking.bookingNumber}</span>
-                  </div>
-                </div>
-
-               
-
-                <div className={`flex items-center px-4 py-2 rounded-full ${statusConfig.bgColor}`}>
-                    
-                  <StatusIcon className={`h-5 w-5 mr-2 ${statusConfig.color}`} />
-                  <span className={`font-medium ${statusConfig.color}`}>
-                    {statusConfig.label}
-                  </span>
-                </div>
-              </div>
-
-              {/* Bike Image Gallery */}
-              {booking.bikeImages && booking.bikeImages.length > 0 && (
-                <div className="mb-6">
-                  <div className="relative">
-                    <img
-                      src={booking.bikeImages[currentImageIndex].url}
-                      alt={`${booking.bikeName} - Image ${currentImageIndex + 1}`}
-                      className="w-full h-64 md:h-80 object-cover rounded-lg"
-                    />
-                    
-                    {/* Navigation Arrows */}
-                    {booking.bikeImages.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => setCurrentImageIndex(
-                            currentImageIndex === 0 ? booking.bikeImages.length - 1 : currentImageIndex - 1
-                          )}
-                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => setCurrentImageIndex(
-                            currentImageIndex === booking.bikeImages.length - 1 ? 0 : currentImageIndex + 1
-                          )}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                      </>
-                    )}
-                    
-                    {/* Image Counter */}
-                    {booking.bikeImages.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                        {currentImageIndex + 1} / {booking.bikeImages.length}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Booking Details Grid */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <MapPin className="h-5 w-5 text-gray-400 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Pickup Location</div>
-                      <div className="text-gray-600">{booking.location}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 text-gray-400 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Rental Period</div>
-                      <div className="text-gray-600">{booking.startDate} to {booking.endDate}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 text-gray-400 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Partner</div>
-                      <div className="text-gray-600">{booking.partner}</div>
-                    </div>
-                  </div>
-                  
-                  {booking.partnerPhone && (
-                    <div className="flex items-center">
-                      <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <div className="font-medium text-gray-900">Contact</div>
-                        <a 
-                          href={`tel:${booking.partnerPhone}`} 
-                          className="text-emerald-600 hover:underline"
-                        >
-                          {booking.partnerPhone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {booking.value && (
-                    <div className="flex items-center">
-                      <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <div className="font-medium text-gray-900">Total Cost</div>
-                        <div className="text-gray-600 font-semibold">
-                          {booking.value}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <BookingHeader booking={booking} />
+              <BikeImageGallery bikeImages={booking.bikeImages} bikeName={booking.bikeName} />
+              <BookingDetailsGrid booking={booking} />
             </div>
 
             {/* Rating and Review Section */}
-            {booking.status === 'completed' && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Experience</h3>
-                
-                {booking.rating && booking.rating > 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-700 mr-3">Your Rating:</span>
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-5 w-5 ${
-                              i < (booking.rating || 0) 
-                                ? 'text-yellow-400 fill-current' 
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                        <span className="ml-2 text-sm text-gray-600">
-                          {booking.rating}/5
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {booking.review && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Your Review:</span>
-                        <p className="mt-2 text-gray-600 italic">"{booking.review}"</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Star className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-600 mb-4">Share your experience with this rental</p>
-                    <button className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors">
-                      Leave a Review
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            <RatingAndReviewSection booking={booking} />
           </div>
 
           {/* Right Column - Actions & Info */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              
-              <div className="space-y-3">
-                {/* Status-specific actions */}
-                {(booking.status === 'active' || booking.status === 'confirmed') && (
-                  <>
-                    <button className="w-full flex items-center justify-center bg-emerald-500 text-white px-4 py-3 rounded-lg hover:bg-emerald-600 transition-colors">
-                      <QrCode className="h-4 w-4 mr-2" />
-                      Show QR Code
-                    </button>
-                    <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                      <Navigation className="h-4 w-4 mr-2" />
-                      Get Directions
-                    </button>
-                    {booking.partnerPhone && (
-                      <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Call Partner
-                      </button>
-                    )}
-                  </>
-                )}
-                
-                {booking.status === 'requested' && (
-                  <>
-                    <button className="w-full flex items-center justify-center bg-gray-500 text-white px-4 py-3 rounded-lg hover:bg-gray-600 transition-colors">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Voucher
-                    </button>
-                    <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                      Modify Booking
-                    </button>
-                  </>
-                )}
-                
-                {(booking.status === 'completed' || booking.status === 'cancelled') && (
-                  <>
-                    <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Receipt
-                    </button>
-                    {booking.status === 'completed' && (
-                      <button 
-                        onClick={() => navigate('/booking')}
-                        className="w-full flex items-center justify-center bg-emerald-500 text-white px-4 py-3 rounded-lg hover:bg-emerald-600 transition-colors"
-                      >
-                        Book Again
-                      </button>
-                    )}
-                  </>
-                )}
-                
-                <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Contact Support
-                </button>
-              </div>
-            </div>
+            <QuickActions booking={booking} />
 
             {/* Booking Timeline */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Timeline</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3 mt-1">
-                    <CheckCircle className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">Booking Created</div>
-                    <div className="text-sm text-gray-600">Request submitted successfully</div>
-                    <div className="text-xs text-gray-400 mt-1">{booking.startDate}</div>
-                  </div>
-                </div>
-                
-                {booking.status !== 'requested' && (
-                  <div className="flex items-start">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3 mt-1">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">Booking Confirmed</div>
-                      <div className="text-sm text-gray-600">Partner accepted your request</div>
-                    </div>
-                  </div>
-                )}
-                
-                {booking.status === 'completed' && (
-                  <div className="flex items-start">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3 mt-1">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">Rental Completed</div>
-                      <div className="text-sm text-gray-600">Bike returned successfully</div>
-                      <div className="text-xs text-gray-400 mt-1">{booking.endDate}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <BookingTimeline booking={booking} />
 
             {/* Additional Info */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Booking ID:</span>
-                  <span className="font-medium">{booking.bookingNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-medium">{booking.startDate}</span>
-                </div>
-                {booking.value && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Amount:</span>
-                    <span className="font-medium">{booking.value}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            <AdditionalInfo booking={booking} />
           </div>
         </div>
       </div>
