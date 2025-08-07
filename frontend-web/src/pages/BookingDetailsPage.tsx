@@ -18,7 +18,9 @@ import {
   QrCode,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { bookingService, UserDashboardBooking, transformBookingForUserDashboard } from '../services/bookingService';
 
@@ -28,6 +30,7 @@ const BookingDetailsPage = () => {
   const [booking, setBooking] = useState<UserDashboardBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Fetch booking details
   useEffect(() => {
@@ -51,6 +54,7 @@ const BookingDetailsPage = () => {
         }
 
         setBooking(transformedBooking);
+
       } catch (err) {
         console.error('Error fetching booking details:', err);
         setError('Failed to load booking details. Please try again.');
@@ -176,13 +180,59 @@ const BookingDetailsPage = () => {
                     <span className="text-sm">Booking #{booking.bookingNumber}</span>
                   </div>
                 </div>
+
+               
+
                 <div className={`flex items-center px-4 py-2 rounded-full ${statusConfig.bgColor}`}>
+                    
                   <StatusIcon className={`h-5 w-5 mr-2 ${statusConfig.color}`} />
                   <span className={`font-medium ${statusConfig.color}`}>
                     {statusConfig.label}
                   </span>
                 </div>
               </div>
+
+              {/* Bike Image Gallery */}
+              {booking.bikeImages && booking.bikeImages.length > 0 && (
+                <div className="mb-6">
+                  <div className="relative">
+                    <img
+                      src={booking.bikeImages[currentImageIndex].url}
+                      alt={`${booking.bikeName} - Image ${currentImageIndex + 1}`}
+                      className="w-full h-64 md:h-80 object-cover rounded-lg"
+                    />
+                    
+                    {/* Navigation Arrows */}
+                    {booking.bikeImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === 0 ? booking.bikeImages.length - 1 : currentImageIndex - 1
+                          )}
+                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === booking.bikeImages.length - 1 ? 0 : currentImageIndex + 1
+                          )}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Image Counter */}
+                    {booking.bikeImages.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                        {currentImageIndex + 1} / {booking.bikeImages.length}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Booking Details Grid */}
               <div className="grid md:grid-cols-2 gap-6">
