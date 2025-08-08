@@ -44,7 +44,7 @@ const Inventory = ({
               <Search className="h-5 w-5 text-gray-400" />
             </div>
           </div>
-          <Link to="/add-bike" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center">
+          <Link to="/partner-dashboard/add-bike" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center">
             <PlusCircle className="h-4 w-4 mr-2" />
             Add Bike
           </Link>
