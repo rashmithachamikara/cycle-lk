@@ -63,13 +63,13 @@ const HomePage = () => {
   const locations = [
   {
     name: 'Colombo',
-    bikes: 45,
+    bikes: 20,
     text: 'Modern cityscape with colonial architecture',
     img: 'https://wowiwalkers.com/wp-content/uploads/2023/02/Header_Colombo_Sri-Lanka_Blog.jpg'
   },
   {
     name: 'Kandy',
-    bikes: 32,
+    bikes: 27,
     text: 'Temple of the Tooth and lush hills',
     img: 'https://whc.unesco.org/uploads/thumbs/site_0450_0020-1200-630-20151105154018.jpg'
   },
@@ -81,7 +81,7 @@ const HomePage = () => {
   },
   {
     name: 'Ella',
-    bikes: 24,
+    bikes: 23,
     text: 'Tea plantations and mountain vistas',
     img: 'https://lk.lakpura.com/cdn/shop/files/demodara-nine-arch-bridge-ella-sri-lanka-scaled-1_77c0b1eb-4170-472a-b6df-950903726734.jpg?v=1654085052&width=3840'
   },
@@ -93,7 +93,7 @@ const HomePage = () => {
   },
   {
     name: 'Negombo',
-    bikes: 35,
+    bikes: 29,
     text: 'Beach town with fishing boats',
     img: 'https://www.talesofceylon.com/wp-content/uploads/2019/10/Negombo_1920x700.jpg'
   }
