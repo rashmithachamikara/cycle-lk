@@ -47,10 +47,6 @@ const BookingPage = () => {
             available: true,
             location: pickupLocation.name
           });
-
-          if( bikes.length === 0) {
-            setError('No bikes available at this location');
-          }
           setAvailableBikes(bikes);
         } catch (err) {
           setError('Failed to load available bikes');
@@ -64,6 +60,20 @@ const BookingPage = () => {
     }
   }, [currentStep, pickupLocation]);
 
+  // Show no bikes available message if no bikes found
+ if(availableBikes.length === 0 && currentStep === 2) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+     <Header />
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+         <h2 className="text-center text-lg font-semibold mt-10">
+           No bikes available today at this location
+         </h2>
+         </div>
+        <Footer />
+    </div>
+  );
+ }
   // Calculate total price based on selected bike and duration
   const calculateTotalPrice = () => {
     if (!selectedBike || !startDate || !endDate) return 0;
@@ -167,6 +177,8 @@ const BookingPage = () => {
     { number: 3, title: 'Rental Period', description: 'Set dates and delivery info' },
     { number: 4, title: 'Confirmation', description: 'Review and confirm booking' }
   ];
+
+  
 
   // Show loading spinner only when fetching bikes
   if (loading && currentStep === 2) {
