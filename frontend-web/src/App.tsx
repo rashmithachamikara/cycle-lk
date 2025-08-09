@@ -90,6 +90,7 @@ import AddBikePage from './pages/PartnerDashboardPage/AddBikePage';
 import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
 import TestPage from './pages/TestPage';
 
 // Protected route component with support for multiple roles
@@ -153,6 +154,7 @@ function App() {
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
       <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
+      <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
       <Route path="/support" element={<SupportPage />} />
       

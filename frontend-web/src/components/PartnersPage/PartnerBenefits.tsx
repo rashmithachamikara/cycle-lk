@@ -61,7 +61,7 @@ const PartnerBenefits: React.FC<PartnerBenefitsProps> = ({ className = '' }) => 
 
       <div className="text-center mt-12">
         <Link
-          to="/support"
+          to="/partner-registration"
           className="bg-emerald-500 text-white px-8 py-4 rounded-xl hover:bg-emerald-600 transition-colors font-semibold text-lg inline-flex items-center"
         >
           Become a Partner
