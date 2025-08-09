@@ -125,7 +125,7 @@ const LocationsPage = () => {
   // Filter bikes based on search query and availability
   const filteredBikes = bikes.filter(bike => {
     // Only show available bikes
-    if (!bike.availability?.status) {
+    if (bike.availability?.status !== 'available') {
       return false;
     }
     
