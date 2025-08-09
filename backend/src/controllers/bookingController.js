@@ -96,7 +96,7 @@ exports.createBooking = async (req, res) => {
       return res.status(404).json({ message: 'Bike not found' });
     }
     
-    if (!bike.availability.status) {
+    if (bike.availability.status !== 'available') {
       console.log('ERROR: Bike is not available');
       return res.status(400).json({ message: 'Bike is not available for booking' });
     }
@@ -320,12 +320,12 @@ exports.updateBookingStatus = async (req, res) => {
     // Handle bike availability for cancellation or completion
     if (status === 'cancelled' || status === 'completed') {
       await Bike.findByIdAndUpdate(booking.bikeId, {
-        'availability.status': true
+        'availability.status': 'available'
       });
     } else if (status === 'confirmed') {
       // When booking is confirmed, set the bike as unavailable for the booking period
       await Bike.findByIdAndUpdate(booking.bikeId, {
-        'availability.status': false
+        'availability.status': 'unavailable'
       });
     }
     
@@ -406,7 +406,7 @@ exports.cancelBooking = async (req, res) => {
     
     // Make bike available again
     await Bike.findByIdAndUpdate(booking.bikeId, {
-      'availability.status': true
+      'availability.status': 'available'
     });
     
     res.json({ message: 'Booking cancelled successfully', booking });
