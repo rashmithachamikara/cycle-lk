@@ -91,6 +91,7 @@ export interface PartnerDashboardBooking {
   customerEmail: string;
   bikeName: string;
   bikeId: string;
+  bikeImages: string[];
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -100,6 +101,25 @@ export interface PartnerDashboardBooking {
   dropoffLocation: string;
   packageType: string;
   rating?: number;
+}
+
+export interface UserDashboardBooking {
+  id: string;
+  bikeName: string;
+  bikeImages: string[];
+  startDate: string;
+  endDate: string;
+  status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
+  value: string;
+  bookingNumber: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  packageType: string;
+  rating?: number;
+  location?: string; // For backward compatibility
+  partner?: string; // Partner name
+  partnerPhone?: string; // Partner phone
+  review?: string; // User review text
 }
 
 // Interface for new booking data
@@ -136,6 +156,7 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     customerEmail: booking.userId?.email || '',
     bikeName: booking.bikeId?.name || 'Unknown Bike',
     bikeId: booking.bikeId?._id || '',
+    bikeImages: booking.bikeId?.images || [],
     startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
     endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
     status: booking.status || 'unknown',
@@ -146,6 +167,56 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     packageType: booking.package?.name || '',
     rating: booking.review?.rating
   };
+};
+
+export const transformBookingForUserDashboard = (booking: BackendBooking): UserDashboardBooking => {
+  console.log('Transform function input:', booking);
+  
+  try {
+    const transformed = {
+      id: booking._id || '',
+      bikeImages: booking.bikeId?.images || [],
+      bikeName: booking.bikeId?.name || 'Unknown Bike',
+      startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
+      endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
+      status: booking.status || 'requested',
+      value: booking.pricing?.total ? `$${booking.pricing.total}` : '$0',
+      bookingNumber: booking.bookingNumber || '',
+      pickupLocation: booking.locations?.pickup || '',
+      dropoffLocation: booking.locations?.dropoff || '',
+      packageType: booking.package?.name || '',
+      rating: booking.review?.rating,
+      location: booking.locations?.pickup || '', // For backward compatibility
+      partner: booking.partnerId?.companyName || 'Unknown Partner',
+      partnerPhone: booking.partnerId?.phone || '',
+      review: booking.review?.comment || ''
+    };
+    
+    console.log('Transform function output:', transformed);
+    return transformed;
+  } catch (error) {
+    console.error('Error in transform function:', error);
+    console.log('Problematic booking object:', booking);
+    
+    // Return a safe fallback object
+    return {
+      id: booking._id || 'unknown',
+      bikeName: 'Unknown Bike',
+      bikeImages: [],
+      startDate: '',
+      endDate: '',
+      status: 'requested' as const,
+      value: '$0',
+      bookingNumber: '',
+      pickupLocation: '',
+      dropoffLocation: '',
+      packageType: '',
+      location: '',
+      partner: 'Unknown Partner',
+      partnerPhone: '',
+      review: ''
+    };
+  }
 };
 
 // Booking service object

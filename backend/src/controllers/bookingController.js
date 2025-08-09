@@ -27,7 +27,7 @@ exports.getAllBookings = async (req, res) => {
     // Create the query
     const bookings = await Booking.find(filter)
       .populate('userId', 'firstName lastName email phone')
-      .populate('bikeId', 'name type brand model images pricing')
+      .populate('bikeId', 'name type brand model images pricing location')
       .populate('partnerId', 'companyName email phone location')
       .sort({ createdAt: -1 });
     
@@ -47,9 +47,8 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('userId', 'firstName lastName email phone')
-      .populate('bikeId', 'name type brand model images pricing')
-      .populate('partnerId', 'companyName email phone location')
-      .populate('paymentId');
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location');
       
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -97,7 +96,7 @@ exports.createBooking = async (req, res) => {
       return res.status(404).json({ message: 'Bike not found' });
     }
     
-    if (!bike.availability.status) {
+    if (bike.availability.status !== 'available') {
       console.log('ERROR: Bike is not available');
       return res.status(400).json({ message: 'Bike is not available for booking' });
     }
@@ -211,9 +210,16 @@ exports.getMyBookings = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // For partners, use their own partnerId
-    if (user.role === 'partner') {
+
+    if(user.role === 'user') {
+      // Users can only see their own bookings
+      const bookings = await Booking.find({ userId: req.user.id })
+        .populate('bikeId', 'name type brand model images pricing location')
+        .populate('partnerId', 'companyName email phone location');
+      
+      // Return empty array if no bookings found (don't return 404)
+      res.json(bookings || []);
+    } else if (user.role === 'partner') { // For partners, use their own partnerId
       if (!req.user.partnerId) {
         return res.status(403).json({ message: 'Partner profile not found.' });
       }
@@ -314,12 +320,12 @@ exports.updateBookingStatus = async (req, res) => {
     // Handle bike availability for cancellation or completion
     if (status === 'cancelled' || status === 'completed') {
       await Bike.findByIdAndUpdate(booking.bikeId, {
-        'availability.status': true
+        'availability.status': 'available'
       });
     } else if (status === 'confirmed') {
       // When booking is confirmed, set the bike as unavailable for the booking period
       await Bike.findByIdAndUpdate(booking.bikeId, {
-        'availability.status': false
+        'availability.status': 'unavailable'
       });
     }
     
@@ -361,8 +367,13 @@ exports.recordPayment = async (req, res) => {
     await payment.save();
     
     // Update booking with payment information
-    booking.paymentId = payment._id;
     booking.paymentStatus = 'paid';
+    booking.paymentInfo = {
+      method: paymentMethod,
+      transactionId: transactionId,
+      paid: true,
+      paymentDate: new Date()
+    };
     await booking.save();
     
     res.status(201).json(payment);
@@ -395,7 +406,7 @@ exports.cancelBooking = async (req, res) => {
     
     // Make bike available again
     await Bike.findByIdAndUpdate(booking.bikeId, {
-      'availability.status': true
+      'availability.status': 'available'
     });
     
     res.json({ message: 'Booking cancelled successfully', booking });

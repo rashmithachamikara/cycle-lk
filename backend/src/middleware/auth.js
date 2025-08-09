@@ -92,6 +92,7 @@ exports.auth = (allowedRoles = []) => {
       }
       
       const user = await User.findById(req.user.id);
+      console.log(`Auth middleware: User found - ID: ${user._id}, Role: ${user.role}`);
       
       if (!user) {
         console.error(`Auth middleware: User not found - ID: ${req.user.id}`);
