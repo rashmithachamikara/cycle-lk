@@ -11,7 +11,7 @@ const cloudinary = require('../config/cloudinary');
  */
 exports.getAllBikes = async (req, res) => {
   try {
-    const { location, type, minPrice, maxPrice, available, partnerId, limit, sort } = req.query;
+    const { location, type, minPrice, maxPrice, availability, partnerId, limit, sort } = req.query;
     
     // Build filter object based on query parameters
     const filter = {};
@@ -19,8 +19,8 @@ exports.getAllBikes = async (req, res) => {
     if (location) filter.location = location;
     if (type) filter.type = type;
     if (partnerId) filter.partnerId = partnerId;
-    if (available === 'true') filter['availability.status'] = true;
-    
+    filter['availability.status'] = availability || 'available';
+
     if (minPrice || maxPrice) {
       filter['pricing.perDay'] = {};
       if (minPrice) filter['pricing.perDay'].$gte = Number(minPrice);

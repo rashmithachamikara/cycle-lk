@@ -45,7 +45,7 @@ const BookingPage = () => {
         try {
           setLoading(true);
           const bikes = await bikeService.getAllBikes({ 
-            available: true,
+            availability: 'available',
             location: pickupLocation.name
           });
           setAvailableBikes(bikes);
