@@ -11,7 +11,7 @@ const cloudinary = require('../config/cloudinary');
  */
 exports.getAllBikes = async (req, res) => {
   try {
-    const { location, type, minPrice, maxPrice, available, partnerId, limit, sort } = req.query;
+    const { location, type, minPrice, maxPrice, availability, partnerId, limit, sort } = req.query;
     
     // Build filter object based on query parameters
     const filter = {};
@@ -19,8 +19,8 @@ exports.getAllBikes = async (req, res) => {
     if (location) filter.location = location;
     if (type) filter.type = type;
     if (partnerId) filter.partnerId = partnerId;
-    if (available === 'true') filter['availability.status'] = true;
-    
+    filter['availability.status'] = availability || 'available';
+
     if (minPrice || maxPrice) {
       filter['pricing.perDay'] = {};
       if (minPrice) filter['pricing.perDay'].$gte = Number(minPrice);
@@ -195,7 +195,7 @@ exports.addBike = async (req, res) => {
         specifications,
         coordinates,
         images: imageUrls,
-        'availability.status': availability.status === 'true'
+        'availability.status': availability.status 
     });
 
     
@@ -301,7 +301,7 @@ exports.getFeaturedBikes = async (req, res) => {
     const { limit = 4 } = req.query;
     
     // Get top rated bikes that are available
-    const bikes = await Bike.find({ 'availability.status': true })
+    const bikes = await Bike.find({ 'availability.status': 'available' })
       .sort({ rating: -1 })
       .limit(Number(limit))
       .populate('partnerId', 'companyName rating');
@@ -392,10 +392,10 @@ exports.updateBikeAvailability = async (req, res) => {
     // Update availability status
     bike.availability.status = req.body.status;
     
-    // Update unavailable reason if status is false
-    if (req.body.status === false && req.body.reason) {
+    // Update unavailable reason if status is unavailable
+    if (req.body.status === 'unavailable' && req.body.reason) {
       bike.availability.reason = req.body.reason;
-    } else if (req.body.status === true) {
+    } else if (req.body.status === 'available') {
       bike.availability.reason = ''; // Clear reason if available
     }
     

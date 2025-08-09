@@ -14,9 +14,10 @@ router.get('/', auth(), bookingController.getAllBookings);
 /**
  * @route   GET /api/bookings/my-bookings
  * @desc    Get all bookings for the authenticated partner
- * @access  Private/Partner/Admin
+ * @access  Private/Partner/Admin/user
+ * @note    This route allows users to see their own bookings, partners to see their bookings
  */
-router.get('/my-bookings', auth(['partner', 'admin']), bookingController.getMyBookings);
+router.get('/my-bookings', auth(['user', 'partner', 'admin']), bookingController.getMyBookings);
 
 /**
  * @route   GET /api/bookings/partner/:partnerId
@@ -30,7 +31,7 @@ router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.
  * @desc    Get booking by ID
  * @access  Private
  */
-router.get('/:id', auth(), bookingController.getBookingById);
+router.get('/:id', auth('user', 'partner', 'admin'), bookingController.getBookingById);
 
 /**
  * @route   POST /api/bookings

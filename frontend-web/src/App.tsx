@@ -76,6 +76,7 @@ import { useAuth } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import DashboardPage from './pages/DashboardPage';
+import BookingDetailsPage from './pages/BookingDetailsPage';
 import BikeDetailsPage from './pages/BikeDetailsPage';
 import LocationsPage from './pages/LocationsPage';
 import LocationPage from './pages/LocationPage';
@@ -145,7 +146,8 @@ function App() {
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} />} />
+      <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} requiredRoles={["user"]} />} />
+      <Route path="/booking-details/:id" element={<ProtectedRoute element={<BookingDetailsPage />} requiredRoles={["admin", "partner", "user"]} />} />
       <Route path="/bike/:id" element={<BikeDetailsPage />} />
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
@@ -156,13 +158,10 @@ function App() {
       
       {/* Partner-only routes */}
       <Route path="/partner-dashboard" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
-      <Route path="/partner-dashboard" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/:section" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
-      <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/edit-bike/:id" element={<ProtectedRoute element={<EditBikePage />} requiredRole="partner" />} />
-      
-      {/* Admin dashboard routes - accessible by both admin and partner roles */}
       <Route 
         path="/admin-dashboard" 
         element={<ProtectedRoute element={<AdminDashboardPage />} requiredRoles={["admin", "partner"]} />} 

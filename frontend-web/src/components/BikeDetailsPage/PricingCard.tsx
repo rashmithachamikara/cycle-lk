@@ -33,8 +33,10 @@ const PricingCard = ({ bike, formatPrice }: PricingCardProps) => {
       <div className="space-y-3 mb-6">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Available now:</span>
-          <span className={`font-medium ${bike.availability?.status ? 'text-green-600' : 'text-red-600'}`}>
-            {bike.availability?.status ? 'Yes' : 'No'}
+          <span className={`font-medium ${bike.availability?.status === 'available' ? 'text-green-600' : 'text-red-600'}`}>
+            {bike.availability?.status === 'available' ? 'Yes' :
+             bike.availability?.status === 'unavailable' ? 'No' :
+             bike.availability?.status === 'requested' ? 'Requested' : 'No'}
           </span>
         </div>
         {monthlyPrice && (

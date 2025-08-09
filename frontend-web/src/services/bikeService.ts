@@ -8,7 +8,7 @@ export interface BikeFilterParams {
   type?: string;
   minPrice?: number;
   maxPrice?: number;
-  available?: boolean;
+  availability?: string; // 'available' | 'unavailable' | 'requested'
   partnerId?: string;
   limit?: number;
   sort?: 'price-asc' | 'price-desc' | 'rating';
@@ -44,7 +44,7 @@ export interface BikeCoordinates {
 
 // Interface for bike availability
 export interface BikeAvailability {
-  status: boolean;
+  status: string; // 'available' | 'unavailable' | 'requested'
   unavailableDates?: string[];
 }
 
@@ -206,7 +206,7 @@ export const bikeService = {
   },
 
   // Update bike availability (requires partner role)
-  updateBikeAvailability: async (id: string, status: boolean, unavailableDates?: string[]) => {
+  updateBikeAvailability: async (id: string, status: string, unavailableDates?: string[]) => {
     const response = await api.put(`/bikes/${id}/availability`, {
       status,
       unavailableDates

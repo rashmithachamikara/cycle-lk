@@ -14,7 +14,7 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
         <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center relative">
           {bike.images && bike.images.length > 0 ? (
             <img 
-              src={bike.images[0]} 
+              src={bike.images[0].url} 
               alt={bike.name} 
               className="w-full h-full object-cover rounded-lg"
             />
@@ -26,9 +26,10 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">{bike.name}</h3>
-            {!bike.availability?.status && (
+            {bike.availability?.status !== 'available' && (
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                Unavailable
+                {bike.availability?.status === 'unavailable' ? 'Unavailable' :
+                 bike.availability?.status === 'requested' ? 'Requested' : 'Not Available'}
               </span>
             )}
           </div>
@@ -67,12 +68,14 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
             <Link
               to={`/booking/${bike.id}`}
               className={`py-2 px-4 rounded-lg font-medium text-center transition-colors ${
-                bike.availability?.status
+                bike.availability?.status === 'available'
                   ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {bike.availability?.status ? 'Book Now' : 'Unavailable'}
+              {bike.availability?.status === 'available' ? 'Book Now' :
+               bike.availability?.status === 'unavailable' ? 'Unavailable' :
+               bike.availability?.status === 'requested' ? 'Requested' : 'Not Available'}
             </Link>
           </div>
         </div>
