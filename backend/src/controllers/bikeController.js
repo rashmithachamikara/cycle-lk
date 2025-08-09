@@ -301,7 +301,7 @@ exports.getFeaturedBikes = async (req, res) => {
     const { limit = 4 } = req.query;
     
     // Get top rated bikes that are available
-    const bikes = await Bike.find({ 'availability.status': true })
+    const bikes = await Bike.find({ 'availability.status': 'available' })
       .sort({ rating: -1 })
       .limit(Number(limit))
       .populate('partnerId', 'companyName rating');
@@ -392,10 +392,10 @@ exports.updateBikeAvailability = async (req, res) => {
     // Update availability status
     bike.availability.status = req.body.status;
     
-    // Update unavailable reason if status is false
-    if (req.body.status === false && req.body.reason) {
+    // Update unavailable reason if status is unavailable
+    if (req.body.status === 'unavailable' && req.body.reason) {
       bike.availability.reason = req.body.reason;
-    } else if (req.body.status === true) {
+    } else if (req.body.status === 'available') {
       bike.availability.reason = ''; // Clear reason if available
     }
     
