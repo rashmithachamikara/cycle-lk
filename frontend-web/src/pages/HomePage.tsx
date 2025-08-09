@@ -51,14 +51,54 @@ const HomePage = () => {
     }
   ];
 
+  // const locations = [
+  //   { name: 'Colombo', bikes: 45, text: 'Modern cityscape with colonial architecture' },
+  //   { name: 'Kandy', bikes: 32, text: 'Temple of the Tooth and lush hills' },
+  //   { name: 'Galle', bikes: 28, text: 'Historic fort and coastal views' },
+  //   { name: 'Ella', bikes: 24, text: 'Tea plantations and mountain vistas' },
+  //   { name: 'Sigiriya', bikes: 18, text: 'Ancient rock fortress' },
+  //   { name: 'Negombo', bikes: 35, text: 'Beach town with fishing boats' }
+  // ];
+
   const locations = [
-    { name: 'Colombo', bikes: 45, image: 'Modern cityscape with colonial architecture' },
-    { name: 'Kandy', bikes: 32, image: 'Temple of the Tooth and lush hills' },
-    { name: 'Galle', bikes: 28, image: 'Historic fort and coastal views' },
-    { name: 'Ella', bikes: 24, image: 'Tea plantations and mountain vistas' },
-    { name: 'Sigiriya', bikes: 18, image: 'Ancient rock fortress' },
-    { name: 'Negombo', bikes: 35, image: 'Beach town with fishing boats' }
-  ];
+  {
+    name: 'Colombo',
+    bikes: 20,
+    text: 'Modern cityscape with colonial architecture',
+    img: 'https://wowiwalkers.com/wp-content/uploads/2023/02/Header_Colombo_Sri-Lanka_Blog.jpg'
+  },
+  {
+    name: 'Kandy',
+    bikes: 27,
+    text: 'Temple of the Tooth and lush hills',
+    img: 'https://whc.unesco.org/uploads/thumbs/site_0450_0020-1200-630-20151105154018.jpg'
+  },
+  {
+    name: 'Galle',
+    bikes: 28,
+    text: 'Historic fort and coastal views',
+    img: 'https://do6raq9h04ex.cloudfront.net/sites/8/2021/07/galle-fort-1050x700-1.jpg'
+  },
+  {
+    name: 'Ella',
+    bikes: 23,
+    text: 'Tea plantations and mountain vistas',
+    img: 'https://lk.lakpura.com/cdn/shop/files/demodara-nine-arch-bridge-ella-sri-lanka-scaled-1_77c0b1eb-4170-472a-b6df-950903726734.jpg?v=1654085052&width=3840'
+  },
+  {
+    name: 'Sigiriya',
+    bikes: 18,
+    text: 'Ancient rock fortress',
+    img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/ed/85/6b/um-palacio-no-topo-da.jpg?w=900&h=500&s=1'
+  },
+  {
+    name: 'Negombo',
+    bikes: 29,
+    text: 'Beach town with fishing boats',
+    img: 'https://www.talesofceylon.com/wp-content/uploads/2019/10/Negombo_1920x700.jpg'
+  }
+];
+
 
   const features = [
     {
@@ -355,10 +395,16 @@ const HomePage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {locations.slice(0, 6).map((location, index) => (
               <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+                {/* add image to these cards */}
                 <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
+                  <img
+                    src={location.img}
+                    alt={location.name}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-black/20"></div>
                   <div className="absolute bottom-4 left-6 text-white">
-                    <div className="text-sm opacity-90">{location.image}</div>
+                    <div className="text-sm opacity-90">{location.text}</div>
                   </div>
                 </div>
                 <div className="p-6">

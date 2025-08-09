@@ -1,41 +1,72 @@
-import React, { useState } from 'react';
+//frontend-web/src/pages/ProfilePage.tsx
+import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   User, 
-  Mail, 
-  Phone, 
-  MapPin, 
   Calendar, 
   CreditCard,
   Bell,
   Shield,
-  Globe,
-  Camera,
   Edit3,
   Save,
   X,
   CheckCircle,
-  AlertCircle,
   Settings,
-  Key,
   Trash2
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { userService } from '../services/authService';
 
 const ProfilePage = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+94 77 123 4567',
-    dateOfBirth: '1990-05-15',
-    nationality: 'Australian',
-    address: '123 Main Street, Sydney, Australia',
-    emergencyContact: '+61 2 9876 5432',
-    emergencyName: 'Jane Doe'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+    dateOfBirth: '',
+    nationality: '',
+    address: '',
+    emergencyContact: '',
+    emergencyName: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          setLoading(true);
+          setError(null);
+          const userData = await userService.getUserById(user.id);
+          setProfileData({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            role: userData.role || '',
+            dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
+            nationality: userData.nationality || '',
+            address: userData.address || '',
+            emergencyName: userData.emergencyContact?.name || '',
+            emergencyContact: userData.emergencyContact?.phone || '',
+          });
+        } catch (err) {
+          setError('Failed to fetch profile data. Please try again.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const [notifications, setNotifications] = useState({
     bookingUpdates: true,
@@ -62,9 +93,30 @@ const ProfilePage = () => {
     }
   ]);
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    
+    const updatedData = {
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      phone: profileData.phone,
+      role: profileData.role,
+      dateOfBirth: profileData.dateOfBirth,
+      nationality: profileData.nationality,
+      address: profileData.address,
+      emergencyContact: profileData.emergencyContact, // send as string
+      // If you want to send emergencyName, add a separate field if supported by backend
+    };
+
+    try {
+      await userService.updateProfile(user.id, updatedData);
+      setIsEditing(false);
+      // Optionally show a success message
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      // Optionally show an error message
+    }
   };
 
   const handleNotificationChange = (key: string) => {
@@ -126,7 +178,12 @@ const ProfilePage = () => {
             {activeTab === 'profile' && (
               <div className="bg-white rounded-2xl shadow-sm p-8">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
+                    <span className="inline-block mt-2 px-3 py-1 text-sm font-medium bg-emerald-100 text-emerald-800 rounded-full">
+                      {profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1)}
+                    </span>
+                  </div>
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
@@ -155,106 +212,112 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input
-                      type="text"
-                      value={profileData.firstName}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                {loading ? (
+                  <p>Loading profile...</p>
+                ) : error ? (
+                  <p className="text-red-500">{error}</p>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                      <input
+                        type="text"
+                        value={profileData.firstName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input
-                      type="text"
-                      value={profileData.lastName}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                      <input
+                        type="text"
+                        value={profileData.lastName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input
-                      type="tel"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                    <input
-                      type="date"
-                      value={profileData.dateOfBirth}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={profileData.dateOfBirth}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
-                    <input
-                      type="text"
-                      value={profileData.nationality}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, nationality: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
+                      <input
+                        type="text"
+                        value={profileData.nationality}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, nationality: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <input
-                      type="text"
-                      value={profileData.address}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, address: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                      <input
+                        type="text"
+                        value={profileData.address}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, address: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name</label>
-                    <input
-                      type="text"
-                      value={profileData.emergencyName}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, emergencyName: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name</label>
+                      <input
+                        type="text"
+                        value={profileData.emergencyName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, emergencyName: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Number</label>
-                    <input
-                      type="tel"
-                      value={profileData.emergencyContact}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, emergencyContact: e.target.value }))}
-                      disabled={!isEditing}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Number</label>
+                      <input
+                        type="tel"
+                        value={profileData.emergencyContact}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, emergencyContact: e.target.value }))}
+                        disabled={!isEditing}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none disabled:bg-gray-50"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 

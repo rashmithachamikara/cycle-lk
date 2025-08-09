@@ -103,17 +103,19 @@ const Header = () => {
 
                   {isDashboardOpen && (
                     <div className="absolute right-0 w-60 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                      <Link 
-                        to="/dashboard" 
-                        className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50"
-                        onClick={() => setIsDashboardOpen(false)}
-                      >
-                        <User className="h-5 w-5 text-emerald-600" />
-                        <div>
-                          <div className="font-medium">User Dashboard</div>
-                          <div className="text-xs text-gray-500">Manage your bookings</div>
-                        </div>
-                      </Link>
+                      {user?.role === 'user' && (
+                        <Link 
+                         to="/dashboard" 
+                         className="flex items-center space-x-3 p-4 text-gray-700 hover:bg-gray-50"
+                         onClick={() => setIsDashboardOpen(false)}
+                       >
+                         <User className="h-5 w-5 text-emerald-600" />
+                         <div>
+                           <div className="font-medium">User Dashboard</div>
+                           <div className="text-xs text-gray-500">Manage your bookings</div>
+                         </div>
+                        </Link>
+                      )}
                       
                       {user?.role === 'partner' && (
                         <Link 
