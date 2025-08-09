@@ -174,8 +174,8 @@ const BookingPage = () => {
         </>
         );
       }
-      // Navigate to booking confirmation or dashboard
-      navigate('/dashboard');
+    
+      
       
     } catch (err: unknown) {
       let errorMessage = 'Failed to create booking';

@@ -167,7 +167,7 @@ const AddBikePage = () => {
         Object.entries(formData.specifications).forEach(([key, value]) => {
             data.append(`specifications[${key}]`, value);
         });
-        data.append('availability[status]', String(formData.availability));
+        data.append('availability[status]', String(formData.availability ? 'available' : 'unavailable'));
         formData.images.forEach(image => {
             data.append('images', image);
         });

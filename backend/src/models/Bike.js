@@ -57,8 +57,8 @@ const bikeSchema = new mongoose.Schema({
   }],  
   availability: {
     status: {
-      type: Boolean,
-      default: true
+      type: String,
+      default: 'available'
     },
     reason: {
       type: String,

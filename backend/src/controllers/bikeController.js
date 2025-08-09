@@ -195,7 +195,7 @@ exports.addBike = async (req, res) => {
         specifications,
         coordinates,
         images: imageUrls,
-        'availability.status': availability.status === 'true'
+        'availability.status': availability.status 
     });
 
     
