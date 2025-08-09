@@ -78,7 +78,25 @@ exports.getPartnerById = async (req, res) => {
  */
 exports.registerPartner = async (req, res) => {
   try {
-    const { userId, companyName, companyAddress, businessRegNumber, contactPhone } = req.body;
+    const { 
+      userId, 
+      companyName, 
+      category,
+      description,
+      location,
+      address,
+      contactPerson,
+      phone,
+      email,
+      businessHours,
+      specialties,
+      features,
+      yearsActive,
+      // Legacy support
+      companyAddress, 
+      businessRegNumber, 
+      contactPhone 
+    } = req.body;
     
     console.log('Registering new partner for user:', userId);
     
@@ -94,20 +112,32 @@ exports.registerPartner = async (req, res) => {
       return res.status(400).json({ message: 'This user is already a partner' });
     }
     
-    // Create partner profile
-    const partner = new Partner({
+    // Create partner profile with all fields
+    const partnerData = {
       userId,
       companyName,
-      companyAddress,
-      businessRegNumber,
-      contact: {
-        email: user.email,
-        phone: contactPhone || user.phone
-      },
-      verificationStatus: 'pending',
-      joinDate: new Date()
+      category: category || undefined,
+      description: description || undefined,
+      location,
+      address: address || companyAddress, // Support both field names
+      contactPerson: contactPerson || undefined,
+      phone: phone || contactPhone || user.phone,
+      email: email || user.email,
+      businessHours: businessHours || undefined,
+      specialties: specialties || [],
+      features: features || [],
+      yearsActive: yearsActive || 0,
+      status: 'pending'
+    };
+
+    // Remove undefined fields
+    Object.keys(partnerData).forEach(key => {
+      if (partnerData[key] === undefined) {
+        delete partnerData[key];
+      }
     });
     
+    const partner = new Partner(partnerData);
     await partner.save();
     
     // Update user role to partner
