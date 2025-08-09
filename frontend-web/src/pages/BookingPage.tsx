@@ -14,6 +14,7 @@ import {
   FinalConfirmationStep,
   LoadingSpinner
 } from '../components/BookingPage';
+import { Button } from '../ui';
 
 const BookingPage = () => {
   const navigate = useNavigate();
@@ -149,8 +150,30 @@ const BookingPage = () => {
         deliveryAddress: deliveryAddress || undefined
       };
 
-      await bookingService.createBooking(bookingPayload);
-      
+      const response = await bookingService.createBooking(bookingPayload);
+      if(!response || !response.id) {
+        throw new Error('Booking creation failed');
+      }else{
+        // Booking created successfully
+        console.log('Booking created:', response);
+
+        return(
+        <>
+        <div className='min-h-screen bg-gray-50'>
+          <Header />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <h2 className="text-center text-lg font-semibold mt-10">
+              Booking created successfully!
+            </h2>
+            <Button variant="primary" onClick={() => navigate('/dashboard')}>
+              Go to Dashboard
+            </Button>
+          </div>
+          <Footer />
+        </div>
+        </>
+        );
+      }
       // Navigate to booking confirmation or dashboard
       navigate('/dashboard');
       
