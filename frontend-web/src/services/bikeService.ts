@@ -8,7 +8,7 @@ export interface BikeFilterParams {
   type?: string;
   minPrice?: number;
   maxPrice?: number;
-  available?: boolean;
+  availability?: string; // 'available' | 'unavailable' | 'requested'
   partnerId?: string;
   limit?: number;
   sort?: 'price-asc' | 'price-desc' | 'rating';
