@@ -10,7 +10,7 @@ import CompanyInformationStep from './CompanyInformationStep';
 import ContactInformationStep from './ContactInformationStep';
 import BusinessHoursStep from './BusinessHoursStep';
 import ServicesAndFeaturesStep from './ServicesAndFeaturesStep';
-import { PartnerRegistrationForm as FormData } from './types';
+import { PartnerRegistrationForm as FormData, type CityServiceData } from './types';
 
 interface PartnerRegistrationFormProps {
   onSuccess: () => void;
@@ -36,7 +36,9 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     companyName: '',
     category: '',
     description: '',
-    location: '',
+    // Updated location system
+    serviceCities: [],
+    serviceLocations: [],
     address: '',
     contactPerson: '',
     phone: '',
@@ -63,10 +65,17 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     }));
   };
 
-  const handleLocationChange = (value: string) => {
+  const handleServiceCitiesChange = (cities: string[]) => {
     setFormData(prev => ({
       ...prev,
-      location: value
+      serviceCities: cities
+    }));
+  };
+
+  const handleServiceLocationsChange = (locations: CityServiceData[]) => {
+    setFormData(prev => ({
+      ...prev,
+      serviceLocations: locations
     }));
   };
 
@@ -106,10 +115,10 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
             formData.password === formData.confirmPassword
           );
         }
-        return !!(formData.companyName && formData.category && formData.location);
+        return !!(formData.companyName && formData.category && formData.serviceCities.length > 0);
       case 2:
         if (!isUserAuthenticated) {
-          return !!(formData.companyName && formData.category && formData.location);
+          return !!(formData.companyName && formData.category && formData.serviceCities.length > 0);
         }
         return !!(formData.address && formData.contactPerson && formData.phone);
       case 3:
@@ -178,7 +187,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         companyName: formData.companyName,
         category: formData.category,
         description: formData.description,
-        location: formData.location,
+        serviceCities: formData.serviceCities,
+        serviceLocations: formData.serviceLocations,
         address: formData.address,
         contactPerson: formData.contactPerson,
         phone: formData.phone || formData.userPhone,
@@ -208,7 +218,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
   const stepProps = {
     formData,
     onInputChange: handleInputChange,
-    onLocationChange: handleLocationChange,
+    onServiceCitiesChange: handleServiceCitiesChange,
+    onServiceLocationsChange: handleServiceLocationsChange,
     onBusinessHourChange: handleBusinessHourChange,
     onArrayFieldChange: handleArrayFieldChange,
     isUserAuthenticated: !!isUserAuthenticated

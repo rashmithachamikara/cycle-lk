@@ -83,7 +83,21 @@ export interface PartnerRegistrationFormData {
   companyName: string;
   category?: string;
   description?: string;
-  location: string;
+  serviceCities?: string[];
+  serviceLocations?: Array<{
+    cityName: string;
+    locations: Array<{
+      id: string;
+      name: string;
+      address: string;
+      coordinates: {
+        lat: number;
+        lng: number;
+      };
+      placeId?: string;
+      isMainLocation?: boolean;
+    }>;
+  }>;
   address: string;
   contactPerson?: string;
   phone?: string;

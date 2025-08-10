@@ -1,5 +1,24 @@
 import { type BusinessHours } from '../../services/partnerService';
 
+// Service location interface for individual service stations
+export interface ServiceLocation {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  placeId?: string;
+  isMainLocation?: boolean;
+}
+
+// City with multiple service locations
+export interface CityServiceData {
+  cityName: string;
+  locations: ServiceLocation[];
+}
+
 export interface PartnerRegistrationForm {
   // User fields for non-authenticated users
   firstName: string;
@@ -12,7 +31,10 @@ export interface PartnerRegistrationForm {
   companyName: string;
   category: string;
   description: string;
-  location: string;
+  // Updated location system
+  serviceCities: string[]; // Cities where they provide services
+  serviceLocations: CityServiceData[]; // Detailed locations for each city
+  // Contact information
   address: string;
   contactPerson: string;
   phone: string;
@@ -26,7 +48,8 @@ export interface PartnerRegistrationForm {
 export interface StepProps {
   formData: PartnerRegistrationForm;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onLocationChange: (value: string) => void;
+  onServiceCitiesChange: (cities: string[]) => void;
+  onServiceLocationsChange: (locations: CityServiceData[]) => void;
   onBusinessHourChange: (day: keyof BusinessHours, field: 'open' | 'close', value: string) => void;
   onArrayFieldChange: (field: 'specialties' | 'features', value: string) => void;
   isUserAuthenticated: boolean;
