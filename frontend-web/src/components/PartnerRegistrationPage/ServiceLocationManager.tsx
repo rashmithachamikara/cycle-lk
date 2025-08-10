@@ -133,8 +133,8 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
         <p className="text-gray-600">Specify the cities and exact locations where you provide bike rental services</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left Side - Cities Selection */}
+      <div className="grid lg:grid-cols-1 gap-8">
+        {/* Top  - Cities Selection */}
         <div className="space-y-4">
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
             <h4 className="font-medium text-emerald-800 mb-3 flex items-center">
@@ -224,7 +224,7 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
           </div>
         </div>
 
-        {/* Right Side - Location Details */}
+        {/* Bottom  - Location Details */}
         <div className="space-y-4">
           {selectedCity ? (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
