@@ -91,7 +91,7 @@ import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
-import TestPage from './pages/TestPage';
+import LocationTestPage from './pages/LocationTestPage';
 
 // Protected route component with support for multiple roles
 const ProtectedRoute = ({ 
@@ -176,7 +176,7 @@ function App() {
       {/* Test route - accessible by both admin and partner roles */}
       <Route 
         path="/test" 
-        element={<ProtectedRoute element={<TestPage />} requiredRoles={["admin", "partner"]} />} 
+        element={<ProtectedRoute element={<LocationTestPage />}  />} 
       />
     </Routes>
   );
