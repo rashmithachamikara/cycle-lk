@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, MapPin, Building, Star } from 'lucide-react';
-import { MapLocationInput } from '../forms';
+import GoogleMapsPlacesInput from '../forms/GoogleMapsPlacesInput';
 import { type ServiceLocation, type CityServiceData } from './types';
 import { SRI_LANKAN_LOCATIONS } from './constants';
 
@@ -302,9 +302,9 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Search & Select Location
                           </label>
-                          <MapLocationInput
+                          <GoogleMapsPlacesInput
                             value={location.address}
-                            onChange={(value, locationData) => {
+                            onChange={(value: string, locationData?: { coordinates: { lat: number; lng: number }; placeId?: string }) => {
                               const updates: Partial<ServiceLocation> = { address: value };
                               if (locationData) {
                                 updates.coordinates = {
