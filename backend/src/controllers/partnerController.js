@@ -83,7 +83,8 @@ exports.registerPartner = async (req, res) => {
       companyName, 
       category,
       description,
-      location,
+      serviceCities,
+      serviceLocations,
       address,
       contactPerson,
       phone,
@@ -93,6 +94,7 @@ exports.registerPartner = async (req, res) => {
       features,
       yearsActive,
       // Legacy support
+      location,
       companyAddress, 
       businessRegNumber, 
       contactPhone 
@@ -118,7 +120,11 @@ exports.registerPartner = async (req, res) => {
       companyName,
       category: category || undefined,
       description: description || undefined,
-      location,
+      // New location system
+      serviceCities: serviceCities || [],
+      serviceLocations: serviceLocations || [],
+      // Legacy location field for backward compatibility
+      location: location || (serviceCities && serviceCities.length > 0 ? serviceCities[0] : undefined),
       address: address || companyAddress, // Support both field names
       contactPerson: contactPerson || undefined,
       phone: phone || contactPhone || user.phone,
@@ -136,6 +142,8 @@ exports.registerPartner = async (req, res) => {
         delete partnerData[key];
       }
     });
+    
+    console.log('Partner data to save:', partnerData);
     
     const partner = new Partner(partnerData);
     await partner.save();
