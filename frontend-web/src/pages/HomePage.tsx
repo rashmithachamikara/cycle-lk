@@ -161,7 +161,7 @@ const HomePage = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/src/assests/vecteezy_sri-lanka-colorful-text-sketch-writing-video-animation-4k_12900350.mp4" type="video/mp4" />
+          <source src="/src/assests/Sri lanka Video_4.mp4" type="video/mp4" />
         </video>
         
         {/* Overlay for better text readability */}
