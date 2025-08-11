@@ -30,6 +30,8 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(5);
 
   // Booking form data
   const [startDate, setStartDate] = useState('');
@@ -37,6 +39,14 @@ const BookingPage = () => {
   const [endDate, setEndDate] = useState('');
   const [endTime, setEndTime] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+
+  // Steps configuration
+  const steps = [
+    { number: 1, title: 'Select Locations', description: 'Choose pickup and drop-off points' },
+    { number: 2, title: 'Choose Bike', description: 'Select your preferred bike' },
+    { number: 3, title: 'Rental Period', description: 'Set dates and delivery info' },
+    { number: 4, title: 'Confirmation', description: 'Review and confirm booking' }
+  ];
 
   // Fetch bikes when locations are selected
   useEffect(() => {
@@ -61,20 +71,110 @@ const BookingPage = () => {
     }
   }, [currentStep, pickupLocation]);
 
-  // Show no bikes available message if no bikes found
- if(availableBikes.length === 0 && currentStep === 2) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-     <Header />
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-         <h2 className="text-center text-lg font-semibold mt-10">
-           No bikes available today at this location
-         </h2>
-         </div>
+  // Countdown effect for success page
+  useEffect(() => {
+    if (bookingSuccess && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (bookingSuccess && countdown === 0) {
+      navigate('/dashboard');
+    }
+  }, [bookingSuccess, countdown, navigate]);
+
+  // Show no bikes available page if no bikes found
+  if(availableBikes.length === 0 && currentStep === 2 && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        
+        {/* Progress Steps */}
+        <BookingProgressSteps currentStep={currentStep} steps={steps} />
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            {/* Icon */}
+            <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-orange-100 mb-8">
+              <svg className="h-12 w-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+
+            {/* Main Message */}
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              No Bikes Available
+            </h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Unfortunately, there are no bikes available at <span className="font-semibold text-emerald-600">{pickupLocation?.name}</span> for your selected dates. 
+              Don't worry, we have other options for you!
+            </p>
+
+            {/* Suggestions */}
+            <div className="bg-blue-50 rounded-xl p-6 mb-8 text-left max-w-2xl mx-auto">
+              <h3 className="font-semibold text-gray-900 mb-4 text-center">What you can do:</h3>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                    <span className="text-white text-sm font-semibold">1</span>
+                  </div>
+                  <p className="text-gray-700">Try selecting a different pickup location nearby</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                    <span className="text-white text-sm font-semibold">2</span>
+                  </div>
+                  <p className="text-gray-700">Check availability for different dates or times</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                    <span className="text-white text-sm font-semibold">3</span>
+                  </div>
+                  <p className="text-gray-700">Contact our support team for assistance finding alternatives</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                variant="primary" 
+                onClick={() => setCurrentStep(1)}
+                className="px-8 py-3 text-lg"
+              >
+                Choose Different Location
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/locations')}
+                className="px-8 py-3 text-lg"
+              >
+                View All Locations
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate('/support')}
+                className="px-8 py-3 text-lg"
+              >
+                Contact Support
+              </Button>
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-500">
+                New bikes are added regularly. Try checking back later or 
+                <a href="/support" className="text-emerald-600 hover:text-emerald-700 font-medium ml-1">contact us</a> 
+                for updates on availability.
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <Footer />
-    </div>
-  );
- }
+      </div>
+    );
+  }
   // Calculate total price based on selected bike and duration
   const calculateTotalPrice = () => {
     if (!selectedBike || !startDate || !endDate) return 0;
@@ -151,28 +251,13 @@ const BookingPage = () => {
       };
 
       const response = await bookingService.createBooking(bookingPayload);
-      if(!response || !response.id) {
+      if(!response) {
         throw new Error('Booking creation failed');
-      }else{
+      } else {
         // Booking created successfully
         console.log('Booking created:', response);
-
-        return(
-        <>
-        <div className='min-h-screen bg-gray-50'>
-          <Header />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h2 className="text-center text-lg font-semibold mt-10">
-              Booking created successfully!
-            </h2>
-            <Button variant="primary" onClick={() => navigate('/dashboard')}>
-              Go to Dashboard
-            </Button>
-          </div>
-          <Footer />
-        </div>
-        </>
-        );
+        setBookingSuccess(true);
+        setCountdown(5); // Reset countdown
       }
     
       
@@ -194,13 +279,6 @@ const BookingPage = () => {
     }
   };
 
-  const steps = [
-    { number: 1, title: 'Select Locations', description: 'Choose pickup and drop-off points' },
-    { number: 2, title: 'Choose Bike', description: 'Select your preferred bike' },
-    { number: 3, title: 'Rental Period', description: 'Set dates and delivery info' },
-    { number: 4, title: 'Confirmation', description: 'Review and confirm booking' }
-  ];
-
   
 
   // Show loading spinner only when fetching bikes
@@ -209,6 +287,99 @@ const BookingPage = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <LoadingSpinner />
+        <Footer />
+      </div>
+    );
+  }
+
+  // If booking is successful, show success page
+  if (bookingSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            {/* Success Icon */}
+            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-8">
+              <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            {/* Success Message */}
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Booking Confirmed! 🎉
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Your bike rental has been successfully booked. Get ready for an amazing cycling experience!
+            </p>
+
+            {/* Booking Details Summary */}
+            <div className="bg-blue-50 rounded-xl p-6 mb-8 text-left max-w-2xl mx-auto">
+              <h3 className="font-semibold text-gray-900 mb-4">Booking Summary:</h3>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex justify-between">
+                  <span>Bike:</span>
+                  <span className="font-medium text-gray-900">{selectedBike?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pickup:</span>
+                  <span className="font-medium text-gray-900">{pickupLocation?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Drop-off:</span>
+                  <span className="font-medium text-gray-900">{dropoffLocation?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Start Date:</span>
+                  <span className="font-medium text-gray-900">{new Date(`${startDate}T${startTime}`).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>End Date:</span>
+                  <span className="font-medium text-gray-900">{new Date(`${endDate}T${endTime}`).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between border-t border-blue-200 pt-2 mt-3">
+                  <span className="font-semibold">Total:</span>
+                  <span className="font-bold text-blue-600">LKR {calculateTotalPrice().toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <Button 
+                variant="primary" 
+                onClick={() => navigate('/dashboard')}
+                className="px-8 py-3 text-lg"
+              >
+                Go to Dashboard
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setBookingSuccess(false);
+                  setCurrentStep(1);
+                  setSelectedBike(null);
+                  setPickupLocation(null);
+                  setDropoffLocation(null);
+                  setStartDate('');
+                  setEndDate('');
+                  setDeliveryAddress('');
+                }}
+                className="px-8 py-3 text-lg"
+              >
+                Book Another Bike
+              </Button>
+            </div>
+
+            {/* Countdown */}
+            <div className="text-gray-500 text-sm">
+              <p>Automatically redirecting to dashboard in <span className="font-semibold text-blue-600">{countdown}</span> seconds...</p>
+            </div>
+          </div>
+        </div>
+
         <Footer />
       </div>
     );

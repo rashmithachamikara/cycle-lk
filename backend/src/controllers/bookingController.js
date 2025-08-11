@@ -188,7 +188,13 @@ exports.createBooking = async (req, res) => {
     });
     
     await booking.save();
-    
+
+    await Bike.findByIdAndUpdate(bikeId, {
+      'availability.status': 'requested',
+      'availability.reason': 'Booked'
+    });
+    console.log('Booking created successfully:', booking);
+
     res.status(201).json(booking);
   } catch (err) {
     console.error('Booking creation error:', err);

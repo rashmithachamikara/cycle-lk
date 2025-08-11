@@ -77,6 +77,37 @@ export interface PartnerRegistrationData {
   contactPhone: string;
 }
 
+// Extended interface for complete partner registration
+export interface PartnerRegistrationFormData {
+  userId: string;
+  companyName: string;
+  category?: string;
+  description?: string;
+  serviceCities?: string[];
+  serviceLocations?: Array<{
+    cityName: string;
+    locations: Array<{
+      id: string;
+      name: string;
+      address: string;
+      coordinates: {
+        lat: number;
+        lng: number;
+      };
+      placeId?: string;
+      isMainLocation?: boolean;
+    }>;
+  }>;
+  address: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  businessHours?: BusinessHours;
+  specialties?: string[];
+  features?: string[];
+  yearsActive?: number;
+}
+
 // Interface for bank details
 export interface BankDetails {
   bankName: string;
@@ -185,7 +216,7 @@ export const isPartnerOpen = (businessHours: BusinessHours | undefined): boolean
 // Partner service object
 export const partnerService = {
   // Register as a partner
-  registerPartner: async (partnerData: PartnerRegistrationData) => {
+  registerPartner: async (partnerData: PartnerRegistrationData | PartnerRegistrationFormData) => {
     const response = await api.post('/partners', partnerData);
     return transformPartner(response.data);
   },
