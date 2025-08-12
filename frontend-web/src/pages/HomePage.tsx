@@ -1,22 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   MapPin, 
   Calendar, 
-  Users, 
   Star, 
   Bike, 
   Navigation, 
   Shield, 
   Globe, 
-  ChevronDown,
   CheckCircle,
   Clock,
-  CreditCard,
-  Search,
-  Filter
+  ShieldCheck
 } from 'lucide-react';
 
 const HomePage = () => {
@@ -150,9 +146,9 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-
+      
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden h-[800px]">
         {/* Video Background */}
         <video 
           autoPlay 
@@ -165,43 +161,76 @@ const HomePage = () => {
         </video>
         
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+        {/* Content Container - Centered Vertically */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
+            
+            {/* Left Content Column */}
+            <div className="space-y-6 sm:space-y-8 text-white">
+              {/* Trust Badge */}
               <div className="inline-flex items-center bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
                 <CheckCircle className="h-4 w-4 text-emerald-500 mr-2" />
                 <span className="text-sm font-medium text-gray-700">Trusted by 10,000+ travelers</span>
               </div>
-              
-              <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg">
+
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
                 Explore
                 <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent drop-shadow-lg"> Sri Lanka</span>
                 <br />
                 Your Way
               </h1>
               
-              <p className="text-xl text-white leading-relaxed max-w-lg drop-shadow-md">
+              {/* Intro Paragraph */}
+              <p className="text-lg text-gray-200 leading-relaxed max-w-lg drop-shadow-md">
                 Discover the pearl of the Indian Ocean with our flexible bike rental network. 
                 Pick up in one city, drop off in another, and explore at your own pace.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Mini Feature List */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 max-w-md pt-2">
+                  <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                      <span>Island-wide pick-up</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                      <Shield className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                      <span>Safe & insured rides</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                      <span>24/7 Support</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                      <Globe className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                      <span>Eco-friendly travel</span>
+                  </div>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
                 <Link 
                   to="/booking"
                   className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold text-lg text-center"
                 >
                   Start Your Journey
                 </Link>
-                <button className="border-2 border-white/60 text-white px-8 py-4 rounded-xl hover:border-emerald-400 hover:bg-emerald-400 hover:text-white transition-all duration-300 font-semibold text-lg backdrop-blur-sm">
-                  Watch Video
+                <button className="border-2 border-white/60 text-white px-8 py-4 rounded-xl hover:border-emerald-400 hover:bg-emerald-400/20 transition-all duration-300 font-semibold text-lg backdrop-blur-sm text-center">
+                  View Destinations
                 </button>
               </div>
+
+              {/* Extra note */}
+              <p className="text-sm text-gray-300 pt-2">
+                  🌍 Every trip supports local communities & sustainable tourism.
+              </p>
             </div>
 
-            {/* Quick Booking Widget */}
-            {/* <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+            {/* Right Booking Widget Column (Commented Out) */}
+            {/* 
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-gray-100">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Booking</h3>
               
               <div className="space-y-6">
@@ -209,7 +238,7 @@ const HomePage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Pick-up Location</label>
                   <button
                     onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                    className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-xl hover:border-emerald-500 transition-colors"
+                    className="w-full flex items-center justify-between p-4 border border-gray-300 bg-white rounded-xl hover:border-emerald-500 transition-colors"
                   >
                     <div className="flex items-center">
                       <MapPin className="h-5 w-5 text-emerald-500 mr-3" />
@@ -237,14 +266,14 @@ const HomePage = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                       <input
                         type="date"
-                        className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl hover:border-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
+                        className="w-full pl-12 pr-4 py-4 border border-gray-300 bg-white rounded-xl hover:border-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
                       />
                     </div>
                   </div>
@@ -252,11 +281,12 @@ const HomePage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <select className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl hover:border-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors appearance-none">
+                      <select className="w-full pl-12 pr-4 py-4 border border-gray-300 bg-white rounded-xl hover:border-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors appearance-none">
                         <option>1 Day</option>
                         <option>1 Week</option>
                         <option>1 Month</option>
                       </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -268,12 +298,13 @@ const HomePage = () => {
                   Search Available Bikes
                 </Link>
 
-                <div className="flex items-center justify-center text-sm text-gray-500">
-                  <Shield className="h-4 w-4 mr-2" />
+                <div className="flex items-center justify-center text-sm text-gray-600">
+                  <ShieldCheck className="h-4 w-4 mr-2 text-gray-500" />
                   Free cancellation up to 24 hours before
                 </div>
               </div>
-            </div> */}
+            </div> 
+            */}
           </div>
         </div>
       </section>
