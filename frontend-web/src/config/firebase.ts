@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getFirestore } from 'firebase/firestore';
 
 // Your Firebase configuration
 // Replace these with your actual Firebase project configuration
@@ -19,7 +20,10 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Cloud Messaging and get a reference to the service
 const messaging = getMessaging(app);
 
-export { messaging, getToken, onMessage };
+// Initialize Firestore
+const db = getFirestore(app);
+
+export { messaging, getToken, onMessage, db };
 export default app;
 
 // // Import the functions you need from the SDKs you need

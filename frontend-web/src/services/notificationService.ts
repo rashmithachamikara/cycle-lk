@@ -47,6 +47,16 @@ class NotificationService {
         return null;
       }
 
+      // Check if VAPID key is configured
+      if (!this.vapidKey || this.vapidKey === 'YOUR_VAPID_KEY_HERE') {
+        console.warn('VAPID key is not configured. FCM push notifications will not work.');
+        console.log('To fix this:');
+        console.log('1. Go to Firebase Console > Project Settings > Cloud Messaging');
+        console.log('2. In Web Push certificates section, click "Generate key pair"');
+        console.log('3. Copy the key and set it as VITE_FIREBASE_VAPID_KEY in .env.local');
+        return null;
+      }
+
       // Request permission
       const permission = await Notification.requestPermission();
       

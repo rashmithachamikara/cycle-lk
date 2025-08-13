@@ -23,6 +23,7 @@ import {
   transformBookingForPartnerDashboard 
 } from '../../services/bookingService';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
@@ -30,6 +31,13 @@ const PartnerDashboardPage = () => {
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Real-time events hook for partner
+  const { 
+    newBookingRequests, 
+    isConnected: realtimeConnected,
+    clearProcessedRequests 
+  } = usePartnerRealtimeEvents();
   
   // Add delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -69,6 +77,29 @@ const PartnerDashboardPage = () => {
       setLoading(false);
     }
   }, [user]);
+
+  // Handle real-time new booking requests
+  useEffect(() => {
+    if (newBookingRequests.length > 0) {
+      console.log('Processing real-time booking requests:', newBookingRequests);
+      
+      // Refresh bookings when we get new requests
+      const refreshBookings = async () => {
+        try {
+          const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+          const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
+          setBookings(transformedBookings);
+          
+          // Clear processed requests after refreshing
+          clearProcessedRequests();
+        } catch (err) {
+          console.error('Error refreshing bookings after real-time update:', err);
+        }
+      };
+
+      refreshBookings();
+    }
+  }, [newBookingRequests, clearProcessedRequests]);
 
   // Filter bookings by status
   const requestedBookings = bookings.filter(booking => booking.status === 'requested');
@@ -115,6 +146,24 @@ const PartnerDashboardPage = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Real-time Connection Status */}
+        {!realtimeConnected && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="text-yellow-800 text-sm">
+              ⚠️ Real-time updates are not connected. You may not receive live booking requests.
+            </div>
+          </div>
+        )}
+
+        {/* New Booking Request Alert */}
+        {newBookingRequests.length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+            <div className="text-green-800 text-sm font-medium">
+              🔔 {newBookingRequests.length} new booking request{newBookingRequests.length > 1 ? 's' : ''} received!
+            </div>
+          </div>
+        )}
+
         {/* Error Display */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">

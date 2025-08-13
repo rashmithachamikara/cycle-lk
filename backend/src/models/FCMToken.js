@@ -8,8 +8,8 @@ const fcmTokenSchema = new mongoose.Schema({
   },
   token: {
     type: String,
-    required: true,
-    unique: true
+    required: true
+    // Removed unique: true since we're creating the index separately
   },
   userRole: {
     type: String,

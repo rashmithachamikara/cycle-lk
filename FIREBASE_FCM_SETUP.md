@@ -80,7 +80,7 @@ firebase.initializeApp({
   projectId: "your_project_id",
   storageBucket: "your_project_id.appspot.com",
   messagingSenderId: "your_messaging_sender_id",
-  appId: "your_app_id"
+  appId: "your_app_id",
 });
 ```
 
@@ -141,7 +141,7 @@ curl -X POST http://localhost:5000/api/notifications/test \
 ## Browser Support
 
 - **Chrome**: Full support
-- **Firefox**: Full support  
+- **Firefox**: Full support
 - **Safari**: Limited support (iOS 16.4+)
 - **Edge**: Full support
 

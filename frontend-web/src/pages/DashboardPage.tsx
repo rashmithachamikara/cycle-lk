@@ -8,6 +8,7 @@ import {
   UserDashboardBooking
 } from '../services/bookingService';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 // Import our new dashboard components
 import {
@@ -34,6 +35,13 @@ const DashboardPage = () => {
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Real-time events hook
+  const { 
+    bookingUpdates, 
+    isConnected: realtimeConnected,
+    clearProcessedUpdates
+  } = useUserRealtimeEvents();
 
   // Mock notifications - in real app, this would come from an API
   const [notifications] = useState<NotificationProps[]>([
@@ -96,6 +104,29 @@ const DashboardPage = () => {
       setLoading(false);
     }
   }, [user]);
+
+  // Handle real-time booking updates
+  useEffect(() => {
+    if (bookingUpdates.length > 0) {
+      console.log('Processing real-time booking updates:', bookingUpdates);
+      
+      // Refresh bookings when we get real-time updates
+      const refreshBookings = async () => {
+        try {
+          const response = await bookingService.getMyBookings();
+          const transformedBookings = response.map(transformBookingForUserDashboard);
+          setBookings(transformedBookings);
+          
+          // Clear processed updates after refreshing
+          clearProcessedUpdates();
+        } catch (err) {
+          console.error('Error refreshing bookings after real-time update:', err);
+        }
+      };
+
+      refreshBookings();
+    }
+  }, [bookingUpdates, clearProcessedUpdates]);
 
   // Filter bookings by status for each tab
   const filterBookingsByTab = (tab: 'current' | 'requested' | 'past') => {
@@ -174,6 +205,15 @@ const DashboardPage = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Real-time Connection Status */}
+        {!realtimeConnected && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="text-yellow-800 text-sm">
+              ⚠️ Real-time updates are not connected. You may not receive live booking updates.
+            </div>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <WelcomeSection 
           userName={user?.firstName || 'User'} 
