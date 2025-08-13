@@ -1,6 +1,7 @@
 // frontend-web/src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, setAuthToken } from '../services/authService';
+import { notificationService } from '../services/notificationService';
 
 // Define types
 export interface User {
@@ -78,6 +79,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     checkAuth();
   }, []);
+
+  // Initialize FCM when user is authenticated
+  useEffect(() => {
+    const initializeFCM = async () => {
+      if (user && token) {
+        try {
+          // Request permission and get FCM token
+          const fcmToken = await notificationService.requestPermissionAndGetToken();
+          
+          if (fcmToken) {
+            // Send token to backend
+            await notificationService.sendTokenToBackend(fcmToken, user.id, user.role as 'user' | 'partner' | 'admin');
+            console.log('FCM initialized successfully');
+          }
+        } catch (error) {
+          console.error('Error initializing FCM:', error);
+        }
+      }
+    };
+
+    initializeFCM();
+  }, [user, token]);
 
   // Login function
   const login = async (email: string, password: string) => {

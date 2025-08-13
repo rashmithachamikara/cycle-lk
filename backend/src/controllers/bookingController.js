@@ -1,4 +1,5 @@
 const { Booking, Bike, User, Payment, Partner } = require('../models');
+const { notificationService } = require('../services/notificationService');
 
 /**
  * Get all bookings with optional filtering
@@ -195,6 +196,15 @@ exports.createBooking = async (req, res) => {
     });
     console.log('Booking created successfully:', booking);
 
+    // Send notification to partner about new booking request
+    try {
+      await notificationService.notifyBookingCreated(booking, bike.partnerId);
+      console.log('Notification sent to partner successfully');
+    } catch (notificationError) {
+      console.error('Error sending notification to partner:', notificationError);
+      // Don't fail the booking if notification fails
+    }
+
     res.status(201).json(booking);
   } catch (err) {
     console.error('Booking creation error:', err);
@@ -314,16 +324,21 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
     
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id)
+      .populate('userId', 'firstName lastName email')
+      .populate('bikeId', 'name partnerId')
+      .populate('partnerId', 'companyName');
     
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
+
+    const previousStatus = booking.status;
     
     // Update status
     booking.status = status;
     
-    // Handle bike availability for cancellation or completion
+    // Handle bike availability for different status changes
     if (status === 'cancelled' || status === 'completed') {
       await Bike.findByIdAndUpdate(booking.bikeId, {
         'availability.status': 'available'
@@ -336,6 +351,30 @@ exports.updateBookingStatus = async (req, res) => {
     }
     
     await booking.save();
+
+    // Send notifications based on status change
+    try {
+      if (status === 'confirmed' && previousStatus === 'requested') {
+        // Booking accepted - notify user
+        await notificationService.notifyBookingAccepted(booking, booking.userId._id);
+        
+        // Also send payment required notification
+        await notificationService.notifyPaymentRequired(booking, booking.userId._id);
+        
+        console.log('Booking acceptance and payment notifications sent to user');
+      } else if (status === 'cancelled' && previousStatus === 'requested') {
+        // Booking rejected - notify user
+        await notificationService.notifyBookingRejected(booking, booking.userId._id);
+        console.log('Booking rejection notification sent to user');
+      } else if (status === 'completed') {
+        // Booking completed - notify both user and partner
+        await notificationService.notifyBookingCompleted(booking, booking.userId._id, booking.partnerId._id);
+        console.log('Booking completion notifications sent to user and partner');
+      }
+    } catch (notificationError) {
+      console.error('Error sending status update notification:', notificationError);
+      // Don't fail the status update if notification fails
+    }
     
     res.json(booking);
   } catch (err) {

@@ -9,6 +9,7 @@ const Notification = require('./Notification');
 const Support = require('./Support');
 const PaymentMethod = require('./PaymentMethod');
 const FAQ = require('./FAQ');
+const FCMToken = require('./FCMToken');
 
 module.exports = {
   User,
@@ -21,5 +22,6 @@ module.exports = {
   Notification,
   Support,
   PaymentMethod,
-  FAQ
+  FAQ,
+  FCMToken
 };
