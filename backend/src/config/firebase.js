@@ -13,7 +13,7 @@ const initializeFirebase = () => {
   try {
     // Option 1: Using service account key file (recommended for development)
     try {
-      const serviceAccount = require('./cycle-lk-8e21b-firebase-adminsdk-fbsvc-f6174ba518.json');
+      const serviceAccount = require('../../../../cycle-lk-8e21b-firebase-adminsdk-fbsvc-f6174ba518.json');
       
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
