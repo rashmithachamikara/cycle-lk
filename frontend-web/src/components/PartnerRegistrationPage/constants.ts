@@ -60,7 +60,6 @@
 
 
 // frontend-web/components/PartnerRegistrationPage/constants.ts
-
 export const BUSINESS_CATEGORIES = [
   'Bike Rental Shop',
   'Tour Operator',
