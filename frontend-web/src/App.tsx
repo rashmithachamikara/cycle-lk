@@ -72,6 +72,7 @@
 
 // React import is automatically included in JSX files
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
@@ -84,9 +85,14 @@ import PartnersPage from './pages/PartnersPage';
 import PartnerBikesPage from './pages/PartnerBikesPage';
 import ProfilePage from './pages/ProfilePage';
 import SupportPage from './pages/SupportPage';
-import PartnerDashboardPage from './pages/PartnerDashboardPage/PartnerDashboardPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
+import { 
+  PartnerDashboardPage,
+  CurrentRentalsPage,
+  BookingRequestsPage,
+  CompletedRentalsPage 
+} from './pages/PartnerDashboardPage';
 import AddBikePage from './pages/PartnerDashboardPage/AddBikePage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -142,7 +148,8 @@ function App() {
   const { isAuthenticated } = useAuth();
   
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
@@ -160,6 +167,9 @@ function App() {
       
       {/* Partner-only routes */}
       <Route path="/partner-dashboard" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/current-rentals" element={<ProtectedRoute element={<CurrentRentalsPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/booking-requests" element={<ProtectedRoute element={<BookingRequestsPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/completed-rentals" element={<ProtectedRoute element={<CompletedRentalsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/:section" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
@@ -179,6 +189,31 @@ function App() {
         element={<ProtectedRoute element={<LocationTestPage />}  />} 
       />
     </Routes>
+    
+    {/* Global Toast Notifications */}
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        duration: 4000,
+        style: {
+          background: '#363636',
+          color: '#fff',
+        },
+        success: {
+          duration: 3000,
+          style: {
+            background: '#22c55e',
+          },
+        },
+        error: {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+          },
+        },
+      }}
+    />
+    </>
   );
 }
 
