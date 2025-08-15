@@ -324,9 +324,9 @@ const PartnerDashboardPage = () => {
                   Add New Bike
                 </Link>
                 <button
-                  className="w-full border border-blue-500 text-blue-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
+                  className="w-full border border-red-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
                 >
-                  Generate Reports
+                  Inventory
                 </button>
                 <button
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
