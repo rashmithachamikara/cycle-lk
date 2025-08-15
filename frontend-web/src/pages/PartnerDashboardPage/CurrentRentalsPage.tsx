@@ -95,7 +95,7 @@ const CurrentRentalsPage = () => {
           </div>
           
           <div className="p-6">
-            <CurrentRentals />
+            <CurrentRentals rentals={currentBookings} />
           </div>
         </div>
       </div>

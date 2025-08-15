@@ -92,35 +92,33 @@
 
 import { Calendar, Users, Phone, Settings } from 'lucide-react';
 
-const CurrentRentals = () => {
-  const currentBookings = [
-    {
-      id: 'CL2025001',
-      customerName: 'John Doe',
-      customerPhone: '+94 77 123 4567',
-      bikeName: 'City Cruiser',
-      bikeId: 'BIKE-1234',
-      startDate: '2025-03-15',
-      endDate: '2025-03-22',
-      status: 'active',
-      value: '$105'
-    },
-    {
-      id: 'CL2025002',
-      customerName: 'Sarah Johnson',
-      customerPhone: '+94 77 234 5678',
-      bikeName: 'Mountain Explorer',
-      bikeId: 'BIKE-2345',
-      startDate: '2025-03-18',
-      endDate: '2025-03-25',
-      status: 'active',
-      value: '$140'
-    }
-  ];
+type CurrentRental = {
+    id: string;
+  customerName: string;
+  bikeName: string;
+  bikeId: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  rating?: number;
+  value: string;
+  bookingNumber: string;
+  customerPhone: string;
+  customerEmail: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  packageType: string;
+}
+
+type CurrentRentalsProps = {
+  rentals: CurrentRental[];
+}
+
+const CurrentRentals = ({ rentals }: CurrentRentalsProps) => {
 
   return (
     <div className="space-y-6">
-      {currentBookings.map((booking) => (
+      {rentals.map((booking) => (
         <div key={booking.id} className="border border-gray-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
