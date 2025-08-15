@@ -77,6 +77,7 @@ import { useAuth } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import DashboardPage from './pages/DashboardPage';
+import PaymentsPage from './pages/PaymentsPage';
 import BookingDetailsPage from './pages/BookingDetailsPage';
 import BikeDetailsPage from './pages/BikeDetailsPage';
 import LocationsPage from './pages/LocationsPage';
@@ -158,6 +159,7 @@ function App() {
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} requiredRoles={["user"]} />} />
+      <Route path="/payments" element={<ProtectedRoute element={<PaymentsPage />} requiredRoles={["user"]} />} />
       <Route path="/booking-details/:id" element={<ProtectedRoute element={<BookingDetailsPage />} requiredRoles={["admin", "partner", "user"]} />} />
       <Route path="/bike/:id" element={<BikeDetailsPage />} />
       <Route path="/locations" element={<LocationsPage />} />

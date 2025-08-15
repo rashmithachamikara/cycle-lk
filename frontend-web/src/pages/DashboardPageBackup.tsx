@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -11,7 +10,8 @@ import {
 } from '../services/bookingService';
 import { 
   paymentService, 
-  PaymentPendingBooking
+  PaymentPendingBooking,
+  InitialPaymentRequest
 } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserRealtimeEvents } from '../hooks/useRealtimeEvents';
@@ -24,6 +24,7 @@ import {
   BookingList,
   DashboardSidebar
 } from '../components/DashboardPage';
+import PaymentsSection from '../components/DashboardPage/PaymentsSection';
 
 // Notification interface for sidebar
 interface NotificationProps {
@@ -37,11 +38,11 @@ interface NotificationProps {
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past'>('requested');
+  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past' | 'payments'>('requested');
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PaymentPendingBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Real-time events hook
@@ -108,11 +109,14 @@ const DashboardPage = () => {
 
     const fetchPendingPayments = async () => {
       try {
+        setPaymentsLoading(true);
         const payments = await paymentService.getPendingPayments();
         setPendingPayments(payments);
       } catch (err) {
         console.error('Error fetching pending payments:', err);
         // Don't show error for payments, just log it
+      } finally {
+        setPaymentsLoading(false);
       }
     };
 
@@ -122,70 +126,101 @@ const DashboardPage = () => {
     }
   }, [user]);
 
+  // Handle payment processing
+  const handlePayNow = async (bookingId: string) => {
+    try {
+      // Find the booking to get payment amount
+      const booking = pendingPayments.find(b => b.id === bookingId);
+      if (!booking) {
+        toast.error('Booking not found');
+        return;
+      }
+
+      // For demo purposes, we'll simulate a payment process
+      // In a real app, this would integrate with a payment gateway
+      const paymentRequest: InitialPaymentRequest = {
+        bookingId,
+        amount: booking.totalAmount,
+        paymentMethod: 'card', // This would come from user selection
+        paymentDetails: {
+          cardNumber: '4111111111111111', // Demo card
+          expiryDate: '12/25',
+          cvv: '123',
+          cardHolderName: user?.firstName + ' ' + user?.lastName
+        }
+      };
+
+      const response = await paymentService.processInitialPayment(paymentRequest);
+      
+      if (response.success) {
+        toast.success('Payment processed successfully!');
+        
+        // Remove from pending payments
+        setPendingPayments(prev => prev.filter(p => p.id !== bookingId));
+        
+        // Refresh bookings to show updated status
+        const bookingResponse = await bookingService.getMyBookings();
+        const transformedBookings = bookingResponse.map(transformBookingForUserDashboard);
+        setBookings(transformedBookings);
+        
+      } else {
+        toast.error(response.message || 'Payment failed. Please try again.');
+      }
+      
+    } catch (err) {
+      console.error('Payment error:', err);
+      toast.error('Payment failed. Please try again.');
+    }
+  };
+
+    if (user) {
+      fetchBookings();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Handle real-time booking updates
   useEffect(() => {
     if (bookingUpdates.length > 0) {
       console.log('Processing real-time booking updates:', bookingUpdates);
       
-      // Check for payment-relevant updates
-      const paymentRelevantUpdates = bookingUpdates.filter(update => 
-        update.type === 'BOOKING_UPDATED' || update.type === 'PAYMENT_COMPLETED'
-      );
+      // Refresh bookings when we get real-time updates
+      const refreshBookings = async () => {
+        try {
+          const response = await bookingService.getMyBookings();
+          const transformedBookings = response.map(transformBookingForUserDashboard);
+          setBookings(transformedBookings);
+          
+          // Clear processed updates after refreshing
+          clearProcessedUpdates();
+        } catch (err) {
+          console.error('Error refreshing bookings after real-time update:', err);
+        }
+      };
 
-      if (paymentRelevantUpdates.length > 0) {
-        // Refresh both bookings and pending payments
-        const refreshData = async () => {
-          try {
-            const [bookingResponse, paymentsResponse] = await Promise.all([
-              bookingService.getMyBookings(),
-              paymentService.getPendingPayments()
-            ]);
-            
-            const transformedBookings = bookingResponse.map(transformBookingForUserDashboard);
-            setBookings(transformedBookings);
-            setPendingPayments(paymentsResponse);
-            
-            // Show notification for new payments due
-            const newAcceptedBookings = paymentRelevantUpdates.filter(u => u.type === 'BOOKING_UPDATED');
-            if (newAcceptedBookings.length > 0) {
-              toast.success(`${newAcceptedBookings.length} booking(s) updated! Check payments.`);
-            }
-            
-          } catch (err) {
-            console.error('Error refreshing data after real-time update:', err);
-          }
-        };
-        
-        refreshData();
-      }
-      
-      // Clear processed updates
-      clearProcessedUpdates();
+      refreshBookings();
     }
   }, [bookingUpdates, clearProcessedUpdates]);
 
-  // Filter bookings by tab (excluding payments)
+  // Filter bookings by status for each tab
   const filterBookingsByTab = (tab: 'current' | 'requested' | 'past') => {
-    return bookings.filter(booking => {
-      switch (tab) {
-        case 'current':
-          return booking.status === 'confirmed';
-        case 'requested':
-          return booking.status === 'requested';
-        case 'past':
-          return booking.status === 'completed' || booking.status === 'cancelled';
-        default:
-          return false;
-      }
-    });
+    switch (tab) {
+      case 'current':
+        return bookings.filter(booking => booking.status === 'confirmed' || booking.status === 'active');
+      case 'requested':
+        return bookings.filter(booking => booking.status === 'requested');
+      case 'past':
+        return bookings.filter(booking => booking.status === 'completed' || booking.status === 'cancelled');
+      default:
+        return [];
+    }
   };
 
   // Calculate stats for the stats grid
   const calculateStats = () => {
-    const activeRentals = bookings.filter(
-      booking => booking.status === 'confirmed'
-    ).length;
     const totalBookings = bookings.length;
+    const activeRentals = bookings.filter(b => b.status === 'confirmed' || b.status === 'active').length;
     const avgRating = bookings
       .filter(booking => booking.rating && booking.rating > 0)
       .reduce((sum, booking, _, arr) => sum + (booking.rating || 0) / arr.length, 0);
@@ -238,31 +273,7 @@ const DashboardPage = () => {
     }
   };
 
-  // Get current content based on active tab
-  const getCurrentContent = () => {
-    const currentBookings = filterBookingsByTab(activeTab);
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">My Rentals</h2>
-        
-        {/* Booking Tabs */}
-        <BookingTabs 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          counts={bookingCounts}
-        />
-
-        {/* Booking List */}
-        <BookingList
-          bookings={currentBookings}
-          loading={loading}
-          error={error}
-          type={activeTab}
-          onRetry={handleRetryFetch}
-        />
-      </div>
-    );
-  };
+  const currentBookings = filterBookingsByTab(activeTab);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -278,29 +289,9 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Pending Payments Alert */}
-        {pendingPayments.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="text-blue-800">
-                  <strong>Payment Required:</strong> You have {pendingPayments.length} booking(s) requiring payment.
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/payments')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-              >
-                View Payments
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Welcome Section */}
         <WelcomeSection 
           userName={user?.firstName || 'User'} 
-          pendingPaymentsCount={pendingPayments.length}
         />
 
         {/* Stats Grid */}
@@ -314,9 +305,27 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Main Content */}
+          {/* Main Content - Bookings */}
           <div className="lg:col-span-3">
-            {getCurrentContent()}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">My Rentals</h2>
+              
+              {/* Booking Tabs */}
+              <BookingTabs 
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                counts={bookingCounts}
+              />
+
+              {/* Booking List */}
+              <BookingList
+                bookings={currentBookings}
+                loading={loading}
+                error={error}
+                type={activeTab}
+                onRetry={handleRetryFetch}
+              />
+            </div>
           </div>
 
           {/* Sidebar */}
