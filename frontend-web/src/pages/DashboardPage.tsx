@@ -129,7 +129,10 @@ const DashboardPage = () => {
       
       // Check for payment-relevant updates
       const paymentRelevantUpdates = bookingUpdates.filter(update => 
-        update.type === 'BOOKING_UPDATED' || update.type === 'PAYMENT_COMPLETED'
+        update.type === 'BOOKING_UPDATED' || 
+        update.type === 'BOOKING_ACCEPTED' || 
+        update.type === 'BOOKING_REJECTED' || 
+        update.type === 'PAYMENT_COMPLETED'
       );
 
       if (paymentRelevantUpdates.length > 0) {
@@ -146,9 +149,22 @@ const DashboardPage = () => {
             setPendingPayments(paymentsResponse);
             
             // Show notification for new payments due
-            const newAcceptedBookings = paymentRelevantUpdates.filter(u => u.type === 'BOOKING_UPDATED');
+            const newAcceptedBookings = paymentRelevantUpdates.filter(u => u.type === 'BOOKING_ACCEPTED');
+            const newUpdatedBookings = paymentRelevantUpdates.filter(u => u.type === 'BOOKING_UPDATED');
+            const newRejectedBookings = paymentRelevantUpdates.filter(u => u.type === 'BOOKING_REJECTED');
+            const newPayments = paymentRelevantUpdates.filter(u => u.type === 'PAYMENT_COMPLETED');
+            
             if (newAcceptedBookings.length > 0) {
-              toast.success(`${newAcceptedBookings.length} booking(s) updated! Check payments.`);
+              toast.success(`${newAcceptedBookings.length} booking(s) confirmed! Check payments.`);
+            }
+            if (newUpdatedBookings.length > 0) {
+              toast.success(`${newUpdatedBookings.length} booking(s) updated! Check payments.`);
+            }
+            if (newRejectedBookings.length > 0) {
+              toast.error(`${newRejectedBookings.length} booking(s) rejected.`);
+            }
+            if (newPayments.length > 0) {
+              toast.success(`${newPayments.length} payment(s) completed!`);
             }
             
           } catch (err) {
