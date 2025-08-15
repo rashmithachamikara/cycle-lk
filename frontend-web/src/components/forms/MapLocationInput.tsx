@@ -1,3 +1,4 @@
+//frontend-web/components/forms/MapLocationInput.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapPin, Map, Search, X, Loader2 } from 'lucide-react';
 import { googleMapsService } from '../../services/googleMapsService';
