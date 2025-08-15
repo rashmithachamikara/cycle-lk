@@ -90,7 +90,8 @@
 
 
 
-import { Calendar, Users, Phone, Settings } from 'lucide-react';
+import { Calendar, Users, Phone, Settings, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type CurrentRental = {
     id: string;
@@ -125,9 +126,18 @@ const CurrentRentals = ({ rentals }: CurrentRentalsProps) => {
               <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
               <span className="text-lg font-semibold text-gray-900">Active Rental</span>
             </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              In Progress
-            </span>
+            <div className="flex items-center space-x-2">
+              <Link 
+                to={`/partner-dashboard/current-rentals/${booking.id}`}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                View Details
+              </Link>
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                In Progress
+              </span>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6">

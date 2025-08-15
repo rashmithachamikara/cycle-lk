@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Calendar, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar, Users, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { bookingService } from '../../services/bookingService';
 import { toast } from 'react-hot-toast';
 
@@ -129,9 +130,18 @@ const BookingRequests = ({ bookings, onBookingUpdate }: BookingRequestsProps) =>
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
                 <span className="text-lg font-semibold text-gray-900">New Booking Request</span>
               </div>
-              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-                Awaiting Approval
-              </span>
+              <div className="flex items-center space-x-2">
+                <Link 
+                  to={`/partner-dashboard/booking-requests/${booking.id}`}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View Details
+                </Link>
+                <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                  Awaiting Approval
+                </span>
+              </div>
             </div>
             
             <div className="grid md:grid-cols-2 gap-6">

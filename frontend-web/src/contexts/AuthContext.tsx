@@ -55,24 +55,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('token');
-      if (storedToken) {
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedToken && storedUser) {
         try {
           // Set auth token using helper
           setAuthToken(storedToken);
           
-          // Get user data
-          const userData = localStorage.getItem('user');
-          if (userData) {
-            setUser(JSON.parse(userData));
-          }
+          // Parse and set user data
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
           setToken(storedToken);
+          
+          console.log('Authentication restored from localStorage:', { userId: userData.id, role: userData.role });
         } catch (err) {
           console.error('Authentication error:', err);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setToken(null);
           setUser(null);
+          setAuthToken(null);
         }
+      } else {
+        console.log('No stored authentication found');
       }
       setIsLoading(false);
     };

@@ -91,6 +91,9 @@ import {
   BookingRequestsPage,
   CompletedRentalsPage 
 } from './pages/PartnerDashboardPage';
+import BookingRequestDetailPage from './pages/BookingRequestDetailPage';
+import CurrentRentalDetailPage from './pages/CurrentRentalDetailPage';
+import CompletedRentalDetailPage from './pages/CompletedRentalDetailPage';
 import AddBikePage from './pages/PartnerDashboardPage/AddBikePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import EditBikePage from './pages/EditBikePage';
@@ -170,6 +173,12 @@ function App() {
       <Route path="/partner-dashboard/current-rentals" element={<ProtectedRoute element={<CurrentRentalsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/booking-requests" element={<ProtectedRoute element={<BookingRequestsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/completed-rentals" element={<ProtectedRoute element={<CompletedRentalsPage />} requiredRole="partner" />} />
+      
+      {/* Partner detail pages */}
+      <Route path="/partner-dashboard/booking-requests/:id" element={<ProtectedRoute element={<BookingRequestDetailPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/current-rentals/:id" element={<ProtectedRoute element={<CurrentRentalDetailPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/completed-rentals/:id" element={<ProtectedRoute element={<CompletedRentalDetailPage />} requiredRole="partner" />} />
+      
       <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/add-bike" element={<ProtectedRoute element={<AddBikePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/:section" element={<ProtectedRoute element={<PartnerDashboardPage />} requiredRole="partner" />} />
