@@ -1,3 +1,4 @@
+//frontend-web/PartnersPage/PartnersGrid.tsx
 import React from 'react';
 import { Bike } from 'lucide-react';
 import { PartnersGridProps } from './types';
