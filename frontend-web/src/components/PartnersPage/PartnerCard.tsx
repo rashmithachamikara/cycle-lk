@@ -1,3 +1,4 @@
+//frontend-web/PartnersPage/PartnerCard.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -15,16 +16,73 @@ import { PartnerCardProps, getCategoryStyle } from './types';
 import { formatBusinessHours } from '../../services/partnerService';
 
 const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
+  // Helper function to get main location coordinates
+  const getMainLocationCoordinates = () => {
+    // First try to find a main location
+    if (partner.serviceLocations && partner.serviceLocations.length > 0) {
+      for (const cityService of partner.serviceLocations) {
+        const mainLocation = cityService.locations.find(loc => loc.isMainLocation);
+        if (mainLocation) {
+          return {
+            lat: mainLocation.coordinates.lat,
+            lng: mainLocation.coordinates.lng
+          };
+        }
+      }
+      
+      // If no main location found, use the first location
+      const firstCity = partner.serviceLocations[0];
+      if (firstCity.locations && firstCity.locations.length > 0) {
+        return {
+          lat: firstCity.locations[0].coordinates.lat,
+          lng: firstCity.locations[0].coordinates.lng
+        };
+      }
+    }
+    
+    // Fallback to legacy coordinates if they exist
+    if (partner.coordinates) {
+      return {
+        lat: partner.coordinates.latitude,
+        lng: partner.coordinates.longitude
+      };
+    }
+    
+    return null;
+  };
+
+  // Helper function to get display location
+  const getDisplayLocation = () => {
+    // Try to get from service cities first
+    if (partner.serviceCities && partner.serviceCities.length > 0) {
+      return partner.serviceCities.join(', ');
+    }
+    
+    // Fallback to legacy location field
+    return partner.location || 'Location not specified';
+  };
+
+  // Get coordinates for navigation
+  const coordinates = getMainLocationCoordinates();
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       {/* Partner Header */}
       <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
-        {partner.images?.storefront && (
+        {partner.images?.storefront?.url ? (
           <img 
-            src={partner.images.storefront} 
+            src={partner.images.storefront.url} 
             alt={partner.companyName}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to gradient background if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
           />
+        ) : (
+          // Show gradient background if no storefront image
+          <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500"></div>
         )}
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute top-4 left-4 flex space-x-2">
@@ -52,7 +110,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             <h3 className="text-xl font-bold text-gray-900 mb-1">{partner.companyName}</h3>
             <div className="flex items-center text-gray-600 mb-2">
               <MapPin className="h-4 w-4 mr-1" />
-              <span className="text-sm">{partner.location}</span>
+              <span className="text-sm">{getDisplayLocation()}</span>
             </div>
             {partner.rating && (
               <div className="flex items-center">
@@ -167,9 +225,9 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
               <MessageCircle className="h-4 w-4" />
             </a>
           )}
-          {partner.coordinates && (
+          {coordinates && (
             <a
-              href={`https://maps.google.com/?q=${partner.coordinates.latitude},${partner.coordinates.longitude}`}
+              href={`https://maps.google.com/?q=${coordinates.lat},${coordinates.lng}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 transition-colors"

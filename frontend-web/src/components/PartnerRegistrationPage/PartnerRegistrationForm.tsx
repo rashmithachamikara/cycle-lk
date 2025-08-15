@@ -1,3 +1,4 @@
+// frontend-web/components/PartnerRegistrationPage/PartnerRegistrationForm.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Loader, ErrorDisplay } from '../../ui';
@@ -10,7 +11,8 @@ import CompanyInformationStep from './CompanyInformationStep';
 import ContactInformationStep from './ContactInformationStep';
 import BusinessHoursStep from './BusinessHoursStep';
 import ServicesAndFeaturesStep from './ServicesAndFeaturesStep';
-import { PartnerRegistrationForm as FormData, type CityServiceData } from './types';
+import { PartnerRegistrationForm as FormData, type CityServiceData, type ImageFile } from './types';
+import { DEFAULT_BUSINESS_HOURS } from './constants';
 
 interface PartnerRegistrationFormProps {
   onSuccess: () => void;
@@ -43,25 +45,22 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     contactPerson: '',
     phone: '',
     email: user?.email || '',
-    businessHours: {
-      monday: { open: '09:00', close: '18:00' },
-      tuesday: { open: '09:00', close: '18:00' },
-      wednesday: { open: '09:00', close: '18:00' },
-      thursday: { open: '09:00', close: '18:00' },
-      friday: { open: '09:00', close: '18:00' },
-      saturday: { open: '09:00', close: '18:00' },
-      sunday: { open: '09:00', close: '18:00' }
-    },
+    businessHours: DEFAULT_BUSINESS_HOURS,
     specialties: [],
     features: [],
-    yearsActive: 0
+    yearsActive: 0,
+    // Image fields
+    logoImage: undefined,
+    storefrontImage: undefined,
+    galleryImages: []
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'number' ? (value === '' ? 0 : Number(value)) : value
     }));
   };
 
@@ -101,44 +100,127 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     }));
   };
 
+  const handleImageChange = (field: 'logo' | 'storefront' | 'gallery', files: ImageFile | ImageFile[] | null) => {
+    setFormData(prev => {
+      if (field === 'logo' || field === 'storefront') {
+        return {
+          ...prev,
+          [`${field}Image`]: files as ImageFile | undefined
+        };
+      } else if (field === 'gallery') {
+        return {
+          ...prev,
+          galleryImages: files as ImageFile[] || []
+        };
+      }
+      return prev;
+    });
+  };
+
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
         if (!isUserAuthenticated) {
           return !!(
-            formData.firstName && 
-            formData.lastName && 
-            formData.userEmail && 
-            formData.userPhone &&
+            formData.firstName.trim() && 
+            formData.lastName.trim() && 
+            formData.userEmail.trim() && 
+            formData.userPhone.trim() &&
             formData.password &&
             formData.confirmPassword &&
-            formData.password === formData.confirmPassword
+            formData.password === formData.confirmPassword &&
+            formData.userEmail.includes('@')
           );
         }
-        return !!(formData.companyName && formData.category && formData.serviceCities.length > 0);
+        return !!(
+          formData.companyName.trim() && 
+          formData.category && 
+          formData.serviceCities.length > 0 &&
+          formData.storefrontImage // Storefront image is required
+        );
       case 2:
         if (!isUserAuthenticated) {
-          return !!(formData.companyName && formData.category && formData.serviceCities.length > 0);
+          return !!(
+            formData.companyName.trim() && 
+            formData.category && 
+            formData.serviceCities.length > 0 &&
+            formData.storefrontImage // Storefront image is required
+          );
         }
-        return !!(formData.address && formData.contactPerson && formData.phone);
+        return !!(
+          formData.address.trim() && 
+          formData.contactPerson.trim() && 
+          formData.phone.trim()
+        );
       case 3:
         if (!isUserAuthenticated) {
-          return !!(formData.address && formData.contactPerson && formData.phone);
+          return !!(
+            formData.address.trim() && 
+            formData.contactPerson.trim() && 
+            formData.phone.trim()
+          );
         }
-        return true; // Optional fields
+        return true; // Business hours are optional
       case 4:
-        return true; // Optional fields for both
+        return true; // Services and features are optional
       default:
         return true;
     }
   };
 
+  const getValidationErrors = (step: number): string[] => {
+    const errors: string[] = [];
+    
+    switch (step) {
+      case 1:
+        if (!isUserAuthenticated) {
+          if (!formData.firstName.trim()) errors.push('First name is required');
+          if (!formData.lastName.trim()) errors.push('Last name is required');
+          if (!formData.userEmail.trim()) errors.push('Email is required');
+          if (!formData.userEmail.includes('@')) errors.push('Valid email is required');
+          if (!formData.userPhone.trim()) errors.push('Phone number is required');
+          if (!formData.password) errors.push('Password is required');
+          if (!formData.confirmPassword) errors.push('Password confirmation is required');
+          if (formData.password !== formData.confirmPassword) errors.push('Passwords do not match');
+        } else {
+          if (!formData.companyName.trim()) errors.push('Company name is required');
+          if (!formData.category) errors.push('Business category is required');
+          if (formData.serviceCities.length === 0) errors.push('At least one service city is required');
+          if (!formData.storefrontImage) errors.push('Storefront image is required');
+        }
+        break;
+      case 2:
+        if (!isUserAuthenticated) {
+          if (!formData.companyName.trim()) errors.push('Company name is required');
+          if (!formData.category) errors.push('Business category is required');
+          if (formData.serviceCities.length === 0) errors.push('At least one service city is required');
+          if (!formData.storefrontImage) errors.push('Storefront image is required');
+        } else {
+          if (!formData.address.trim()) errors.push('Business address is required');
+          if (!formData.contactPerson.trim()) errors.push('Contact person is required');
+          if (!formData.phone.trim()) errors.push('Phone number is required');
+        }
+        break;
+      case 3:
+        if (!isUserAuthenticated) {
+          if (!formData.address.trim()) errors.push('Business address is required');
+          if (!formData.contactPerson.trim()) errors.push('Contact person is required');
+          if (!formData.phone.trim()) errors.push('Phone number is required');
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(currentStep)) {
+    const errors = getValidationErrors(currentStep);
+    
+    if (errors.length === 0) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
       setError(null);
     } else {
-      setError('Please fill in all required fields before proceeding.');
+      setError(errors.join('. '));
     }
   };
 
@@ -166,11 +248,11 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         const { authService } = await import('../../services/authService');
         
         const userData = {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.userEmail,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.userEmail.trim(),
           password: formData.password,
-          phone: formData.userPhone
+          phone: formData.userPhone.trim()
         };
 
         const authResult = await authService.register(userData);
@@ -182,21 +264,46 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         return;
       }
 
+      // Validate required fields
+      if (!formData.companyName.trim()) {
+        setError('Company name is required.');
+        return;
+      }
+
+      if (!formData.category) {
+        setError('Business category is required.');
+        return;
+      }
+
+      if (formData.serviceCities.length === 0) {
+        setError('At least one service city is required.');
+        return;
+      }
+
+      if (!formData.storefrontImage) {
+        setError('Storefront image is required.');
+        return;
+      }
+
       const registrationData = {
         userId,
-        companyName: formData.companyName,
+        companyName: formData.companyName.trim(),
         category: formData.category,
-        description: formData.description,
+        description: formData.description.trim(),
         serviceCities: formData.serviceCities,
         serviceLocations: formData.serviceLocations,
-        address: formData.address,
-        contactPerson: formData.contactPerson,
-        phone: formData.phone || formData.userPhone,
-        email: formData.email || formData.userEmail,
+        address: formData.address.trim(),
+        contactPerson: formData.contactPerson.trim(),
+        phone: formData.phone.trim() || formData.userPhone.trim(),
+        email: formData.email.trim() || formData.userEmail.trim(),
         businessHours: formData.businessHours,
         specialties: formData.specialties,
         features: formData.features,
-        yearsActive: formData.yearsActive
+        yearsActive: formData.yearsActive,
+        // Include image files
+        logoImage: formData.logoImage,
+        storefrontImage: formData.storefrontImage,
+        galleryImages: formData.galleryImages
       };
 
       await partnerService.registerPartner(registrationData);
@@ -222,6 +329,7 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     onServiceLocationsChange: handleServiceLocationsChange,
     onBusinessHourChange: handleBusinessHourChange,
     onArrayFieldChange: handleArrayFieldChange,
+    onImageChange: handleImageChange,
     isUserAuthenticated: !!isUserAuthenticated
   };
 
@@ -244,6 +352,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
       }
     }
   };
+
+  const currentStepValid = validateStep(currentStep);
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-8">
@@ -282,7 +392,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
                 type="button"
                 variant="primary"
                 onClick={handleNextStep}
-                disabled={!validateStep(currentStep)}
+                disabled={!currentStepValid}
+                className={!currentStepValid ? 'opacity-50 cursor-not-allowed' : ''}
               >
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -299,6 +410,15 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
             )}
           </div>
         </div>
+
+        {/* Step validation feedback */}
+        {!currentStepValid && currentStep < 4 && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-500">
+              Please complete all required fields to continue
+            </p>
+          </div>
+        )}
       </form>
     </div>
   );
