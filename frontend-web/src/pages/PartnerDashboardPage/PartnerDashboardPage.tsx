@@ -238,10 +238,10 @@ const PartnerDashboardPage = () => {
 
             {/* Management Overview Cards */}
             <div className="bg-white rounded-2xl shadow-sm">
-              <div className="p-6 border-b border-gray-200">
+              {/* <div className="p-6 border-b border-gray-200">
                 <h3 className="text-xl font-semibold text-gray-900">Management Overview</h3>
                 <p className="text-gray-600 mt-1">Quick access to your rental management</p>
-              </div>
+              </div> */}
 
               <div className="p-6">
                 <div className="grid md:grid-cols-3 gap-6">
