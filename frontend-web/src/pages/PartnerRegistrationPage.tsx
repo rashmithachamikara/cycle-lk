@@ -1,9 +1,11 @@
+// frontend-web/pages/PartnerRegistrationPage.tsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { PartnerRegistrationForm, RegistrationSuccess } from '../components/PartnerRegistrationPage';
+import PartnerRegistrationForm from '../components/PartnerRegistrationPage/PartnerRegistrationForm';
+import RegistrationSuccess from '../components/PartnerRegistrationPage/RegistrationSuccess';
 
 const PartnerRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +23,15 @@ const PartnerRegistrationPage: React.FC = () => {
   };
 
   if (success) {
-    return <RegistrationSuccess />;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <RegistrationSuccess />
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
