@@ -11,37 +11,22 @@ const initializeFirebase = () => {
 //   }
 
   try {
-    // Option 1: Using service account key file (recommended for development)
-    try {
-      const serviceAccount = require('../../../../cycle-lk-8e21b-firebase-adminsdk-fbsvc-f6174ba518.json');
-      
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: process.env.FIREBASE_PROJECT_ID
-      });
-
-      console.log('✅ Firebase Admin initialized successfully with service account file');
-      return admin;
-    } catch (fileError) {
-      console.log('Service account file not found, trying environment variables...');
-      
-      // Option 2: Using environment variables (recommended for production)
-      if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
-        throw new Error('Firebase environment variables not configured');
-      }
-
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        }),
-        projectId: process.env.FIREBASE_PROJECT_ID
-      });
-
-      console.log('✅ Firebase Admin initialized successfully with environment variables');
-      return admin;
+    // Using environment variables for Firebase configuration
+    if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+      throw new Error('Firebase environment variables not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY');
     }
+
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      }),
+      projectId: process.env.FIREBASE_PROJECT_ID
+    });
+
+    console.log('✅ Firebase Admin initialized successfully with environment variables');
+    return admin;
   } catch (error) {
     console.error('❌ Firebase Admin initialization failed:', error.message);
     console.log('   Real-time features and push notifications will be disabled');
