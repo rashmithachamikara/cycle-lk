@@ -4,8 +4,8 @@ import { Location } from '../../services/locationService';
 
 interface LocationCardProps {
   location: Location;
-  onViewBikes: (locationId: string) => void;
-  onMoreDetails: (locationId: string) => void;
+  onViewBikes?: (locationId: string) => void;
+  onMoreDetails?: (locationId: string) => void;
 }
 
 const LocationCard: React.FC<LocationCardProps> = ({ 
@@ -16,7 +16,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
   return (
     <div 
       className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer"
-      onClick={() => onMoreDetails(location.id)}
+      onClick={() => onMoreDetails?.(location.id)}
     >
       <div
         className="h-48 relative overflow-hidden"
@@ -63,26 +63,32 @@ const LocationCard: React.FC<LocationCardProps> = ({
           </div>
         </div>
         
-        <div className="flex space-x-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewBikes(location.id);
-            }}
-            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
-          >
-            View Bikes
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoreDetails(location.id);
-            }}
-            className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors duration-300 font-medium"
-          >
-            More Details
-          </button>
-        </div>
+        {(onViewBikes || onMoreDetails) && (
+          <div className="flex space-x-3">
+            {onViewBikes && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewBikes(location.id);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
+              >
+                View Bikes
+              </button>
+            )}
+            {onMoreDetails && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoreDetails(location.id);
+                }}
+                className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors duration-300 font-medium"
+              >
+                More Details
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
