@@ -148,7 +148,7 @@ const HomePage = () => {
       <Header />
       
       {/* Hero Section */}
-        <section className="relative overflow-hidden h-[800px]">
+        <section className="relative overflow-hidden h-[94vh]">
         {/* Video Background */}
         <video 
           autoPlay 
