@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -14,11 +14,16 @@ import {
   Clock,
   ShieldCheck
 } from 'lucide-react';
+import { locationService, Location } from '../services/locationService';
+import LocationCard from '../components/LocationsPage/LocationCard';
 
 const HomePage = () => {
   const [selectedPackage, setSelectedPackage] = useState('week');
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('Colombo');
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [locationsError, setLocationsError] = useState<string | null>(null);
 
   const packages = [
     {
@@ -47,54 +52,20 @@ const HomePage = () => {
     }
   ];
 
-  // const locations = [
-  //   { name: 'Colombo', bikes: 45, text: 'Modern cityscape with colonial architecture' },
-  //   { name: 'Kandy', bikes: 32, text: 'Temple of the Tooth and lush hills' },
-  //   { name: 'Galle', bikes: 28, text: 'Historic fort and coastal views' },
-  //   { name: 'Ella', bikes: 24, text: 'Tea plantations and mountain vistas' },
-  //   { name: 'Sigiriya', bikes: 18, text: 'Ancient rock fortress' },
-  //   { name: 'Negombo', bikes: 35, text: 'Beach town with fishing boats' }
-  // ];
-
-  const locations = [
-  {
-    name: 'Colombo',
-    bikes: 20,
-    text: 'Modern cityscape with colonial architecture',
-    img: 'https://wowiwalkers.com/wp-content/uploads/2023/02/Header_Colombo_Sri-Lanka_Blog.jpg'
-  },
-  {
-    name: 'Kandy',
-    bikes: 17,
-    text: 'Temple of the Tooth and lush hills',
-    img: 'https://whc.unesco.org/uploads/thumbs/site_0450_0020-1200-630-20151105154018.jpg'
-  },
-  {
-    name: 'Galle',
-    bikes: 28,
-    text: 'Historic fort and coastal views',
-    img: 'https://do6raq9h04ex.cloudfront.net/sites/8/2021/07/galle-fort-1050x700-1.jpg'
-  },
-  {
-    name: 'Ella',
-    bikes: 43,
-    text: 'Tea plantations and mountain vistas',
-    img: 'https://lk.lakpura.com/cdn/shop/files/demodara-nine-arch-bridge-ella-sri-lanka-scaled-1_77c0b1eb-4170-472a-b6df-950903726734.jpg?v=1654085052&width=3840'
-  },
-  {
-    name: 'Sigiriya',
-    bikes: 18,
-    text: 'Ancient rock fortress',
-    img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/ed/85/6b/um-palacio-no-topo-da.jpg?w=900&h=500&s=1'
-  },
-  {
-    name: 'Negombo',
-    bikes: 39,
-    text: 'Beach town with fishing boats',
-    img: 'https://www.talesofceylon.com/wp-content/uploads/2019/10/Negombo_1920x700.jpg'
-  }
-];
-
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setLocationsLoading(true);
+        const data = await locationService.getAllLocations();
+        setLocations(data);
+      } catch (err) {
+        setLocationsError('Failed to load locations.');
+      } finally {
+        setLocationsLoading(false);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const features = [
     {
@@ -142,6 +113,12 @@ const HomePage = () => {
       avatar: 'ET'
     }
   ];
+
+  // Handler for LocationCard (no-op for View Bikes, navigate for More Details)
+  const handleMoreDetails = (locationId: string) => {
+    // You can use a navigation hook if needed, or just link to /location/:id
+    window.location.href = `/location/${locationId}`;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -436,39 +413,21 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {locations.slice(0, 6).map((location, index) => (
-              <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-                {/* add image to these cards */}
-                <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
-                  <img
-                    src={location.img}
-                    alt={location.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/20"></div>
-                  <div className="absolute bottom-4 left-6 text-white">
-                    <div className="text-sm opacity-90">{location.text}</div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900">{location.name}</h3>
-                    <div className="flex items-center text-emerald-600">
-                      <Bike className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-medium">{location.bikes} bikes</span>
-                    </div>
-                  </div>
-                  <Link 
-                    to="/locations"
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors duration-300 font-medium text-center block"
-                  >
-                    View Available Bikes
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+          {locationsLoading ? (
+            <div className="text-center py-12 text-gray-500">Loading locations...</div>
+          ) : locationsError ? (
+            <div className="text-center py-12 text-red-500">{locationsError}</div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {locations.slice(0, 6).map((location) => (
+                <LocationCard
+                  key={location.id}
+                  location={location}
+                  onMoreDetails={handleMoreDetails}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link 
