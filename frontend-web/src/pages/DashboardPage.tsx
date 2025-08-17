@@ -52,7 +52,7 @@ const DashboardPage = () => {
   } = useUserRealtimeEvents();
 
   // Mock notifications - in real app, this would come from an API
-  const [notifications] = useState<NotificationProps[]>([
+  const [notifications, setNotifications] = useState<NotificationProps[]>([
     {
       id: '1',
       title: 'Booking Confirmed',
@@ -156,6 +156,17 @@ const DashboardPage = () => {
             
             if (newAcceptedBookings.length > 0) {
               toast.success(`${newAcceptedBookings.length} booking(s) confirmed! Check payments.`);
+              // setNotifications(prev => [
+              //   ...prev,
+              //   {
+              //     id: Date.now().toString(),
+              //     title: 'Booking Confirmed',
+              //     timestamp: new Date().toISOString(),
+              //     message: `Your bike rental at ${newAcceptedBookings[0].data.bookingData.pickupLocation} confirmed! Please check payments.`,
+              //     read: false,
+              //     type: 'success'
+              //   }
+              // ]);
             }
             if (newUpdatedBookings.length > 0) {
               toast.success(`${newUpdatedBookings.length} booking(s) updated! Check payments.`);
@@ -185,7 +196,7 @@ const DashboardPage = () => {
     return bookings.filter(booking => {
       switch (tab) {
         case 'current':
-          return booking.status === 'confirmed';
+          return booking.status === 'active';
         case 'requested':
           return booking.status === 'requested';
         case 'past':
