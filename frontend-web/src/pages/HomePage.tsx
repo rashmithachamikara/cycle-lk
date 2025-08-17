@@ -134,7 +134,7 @@ const HomePage = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/src/assests/Sri lanka Video_4.mp4" type="video/mp4" />
+          <source src="/assets/Sri lanka Video_4.mp4" type="video/mp4" />
         </video>
         
         {/* Overlay for better text readability */}
