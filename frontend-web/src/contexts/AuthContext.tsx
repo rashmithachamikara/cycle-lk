@@ -1,7 +1,7 @@
 // frontend-web/src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, setAuthToken } from '../services/authService';
-import { notificationService } from '../services/notificationService';
+import { notificationIntegrationService } from '../services/notificationIntegrationService';
 
 // Define types
 export interface User {
@@ -85,26 +85,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  // Initialize FCM when user is authenticated
+  // Initialize FCM and notification integration when user is authenticated
   useEffect(() => {
-    const initializeFCM = async () => {
+    const initializeNotifications = async () => {
       if (user && token) {
         try {
-          // Request permission and get FCM token
-          const fcmToken = await notificationService.requestPermissionAndGetToken();
+          // Initialize notification integration service
+          await notificationIntegrationService.initialize(
+            user.id, 
+            user.role as 'user' | 'partner' | 'admin'
+          );
           
-          if (fcmToken) {
-            // Send token to backend
-            await notificationService.sendTokenToBackend(fcmToken, user.id, user.role as 'user' | 'partner' | 'admin');
-            console.log('FCM initialized successfully');
-          }
+          console.log('Notification integration initialized successfully');
         } catch (error) {
-          console.error('Error initializing FCM:', error);
+          console.error('Error initializing notifications:', error);
         }
       }
     };
 
-    initializeFCM();
+    initializeNotifications();
   }, [user, token]);
 
   // Login function
@@ -163,6 +162,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Logout function
   const logout = () => {
+    // Cleanup notification integration
+    notificationIntegrationService.cleanup();
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);

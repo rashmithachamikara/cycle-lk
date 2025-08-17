@@ -1,6 +1,85 @@
-const { Booking, Bike, User, Payment, Partner } = require('../models');
+const { Booking, Bike, User, Payment, Partner, Notification } = require('../models');
 const { notificationService } = require('../services/notificationService');
 const firebaseAdmin = require('../config/firebase');
+
+/**
+ * Create a database notification for booking events
+ */
+const createBookingNotification = async (booking, targetUserId, eventType) => {
+  try {
+    let notificationData = {
+      userId: targetUserId,
+      sentVia: ['app'],
+      relatedTo: {
+        type: 'booking',
+        id: booking._id.toString()
+      }
+    };
+
+    switch (eventType) {
+      case 'BOOKING_CREATED':
+        notificationData = {
+          ...notificationData,
+          type: 'partner',
+          title: 'New Booking Request',
+          message: `New booking request for ${booking.bikeId?.name || 'bike'} from ${booking.userId?.firstName} ${booking.userId?.lastName}`
+        };
+        break;
+
+      case 'BOOKING_ACCEPTED':
+        notificationData = {
+          ...notificationData,
+          type: 'system',
+          title: 'Booking Confirmed!',
+          message: `Your booking for ${booking.bikeId?.name || 'bike'} has been confirmed. Please complete payment.`
+        };
+        break;
+
+      case 'BOOKING_REJECTED':
+        notificationData = {
+          ...notificationData,
+          type: 'system',
+          title: 'Booking Declined',
+          message: `Your booking request for ${booking.bikeId?.name || 'bike'} has been declined.`
+        };
+        break;
+
+      case 'BOOKING_COMPLETED':
+        notificationData = {
+          ...notificationData,
+          type: 'system',
+          title: 'Booking Completed',
+          message: `Your rental of ${booking.bikeId?.name || 'bike'} has been completed. Please rate your experience!`
+        };
+        break;
+
+      case 'PAYMENT_REQUIRED':
+        notificationData = {
+          ...notificationData,
+          type: 'payment',
+          title: 'Payment Required',
+          message: `Please complete payment of LKR ${booking.pricing?.total || 0} for your booking.`,
+          relatedTo: {
+            type: 'payment',
+            id: booking._id.toString()
+          }
+        };
+        break;
+
+      default:
+        return null;
+    }
+
+    const notification = new Notification(notificationData);
+    await notification.save();
+    
+    console.log(`[Notification] Created ${eventType} notification for user ${targetUserId}`);
+    return notification;
+  } catch (error) {
+    console.error('[Notification] Error creating booking notification:', error);
+    return null;
+  }
+};
 
 /**
  * Get all bookings with optional filtering
@@ -252,6 +331,9 @@ exports.createBooking = async (req, res) => {
           }
         });
         console.log('Real-time event sent to partner dashboard');
+        
+        // Create database notification for partner
+        await createBookingNotification(booking, partner.userId.toString(), 'BOOKING_CREATED');
       } else {
         console.log('Firebase not available - real-time events disabled');
       }
@@ -447,6 +529,10 @@ exports.updateBookingStatus = async (req, res) => {
             }
           });
           console.log('Real-time booking acceptance event sent to user dashboard');
+          
+          // Create database notifications for user
+          await createBookingNotification(booking, booking.userId._id.toString(), 'BOOKING_ACCEPTED');
+          await createBookingNotification(booking, booking.userId._id.toString(), 'PAYMENT_REQUIRED');
         }
       } else if (status === 'cancelled' && previousStatus === 'requested') {
         // Booking rejected - notify user
@@ -478,6 +564,9 @@ exports.updateBookingStatus = async (req, res) => {
             }
           });
           console.log('Real-time booking rejection event sent to user dashboard');
+          
+          // Create database notification for user
+          await createBookingNotification(booking, booking.userId._id.toString(), 'BOOKING_REJECTED');
         }
       } else if (status === 'completed') {
         // Booking completed - notify both user and partner
@@ -516,6 +605,10 @@ exports.updateBookingStatus = async (req, res) => {
             })
           ]);
           console.log('Real-time booking completion events sent to both dashboards');
+          
+          // Create database notifications for both user and partner
+          await createBookingNotification(booking, booking.userId._id.toString(), 'BOOKING_COMPLETED');
+          await createBookingNotification(booking, booking.partnerId._id.toString(), 'BOOKING_COMPLETED');
         }
       }
     } catch (notificationError) {
