@@ -27,6 +27,19 @@ export enum EventType {
   BIKE_AVAILABILITY_CHANGED = 'BIKE_AVAILABILITY_CHANGED'
 }
 
+// type bookingData = {
+//   id: string;
+//   userId: string;
+//   bikeName: string;
+//   pickupLocation: string;
+//   dropoffLocation: string;
+//   startDate: Timestamp;
+//   endDate: Timestamp;
+//   status: 'active' | 'completed' | 'cancelled' | 'confirmed';
+//   createdAt: Timestamp;
+//   updatedAt: Timestamp;
+// };
+
 // Real-time event interface
 export interface RealtimeEvent {
   id?: string;
