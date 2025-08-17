@@ -150,25 +150,13 @@ export const useUserRealtimeEvents = () => {
       console.log('[UserRealtime] Booking accepted:', event);
       setBookingUpdates(prev => [event, ...prev]);
       
-      // Show browser notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Booking Confirmed!', {
-          body: `Your booking for ${event.data.bookingData?.bikeName} has been confirmed`,
-          icon: '/logo192.png'
-        });
-      }
+      // Don't show browser notification here - handled by NotificationIntegrationService
     },
     onBookingRejected: (event) => {
       console.log('[UserRealtime] Booking rejected:', event);
       setBookingUpdates(prev => [event, ...prev]);
       
-      // Show browser notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Booking Declined', {
-          body: `Your booking request has been declined`,
-          icon: '/logo192.png'
-        });
-      }
+      // Don't show browser notification here - handled by NotificationIntegrationService
     },
     onBookingCompleted: (event) => {
       console.log('[UserRealtime] Booking completed:', event);

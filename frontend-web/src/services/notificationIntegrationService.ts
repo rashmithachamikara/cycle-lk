@@ -11,37 +11,36 @@ class NotificationIntegrationService {
   private userId: string | null = null;
   private userRole: 'user' | 'partner' | 'admin' | null = null;
   private listenerId: string | null = null;
+  private isInitialized: boolean = false;
+  private processedEventIds: Set<string> = new Set();
 
   /**
    * Initialize the notification integration for a user
    */
   async initialize(userId: string, userRole: 'user' | 'partner' | 'admin') {
+    // Prevent multiple initializations
+    if (this.isInitialized && this.userId === userId) {
+      console.log('[NotificationIntegration] Already initialized for user:', userId);
+      return;
+    }
+
+    // Cleanup previous initialization
+    if (this.isInitialized) {
+      this.cleanup();
+    }
+
     this.userId = userId;
     this.userRole = userRole;
+    this.isInitialized = true;
+    this.processedEventIds.clear();
 
-    // Setup real-time event listeners
-    this.setupRealtimeEventListeners();
+    console.log('[NotificationIntegration] Initializing for user:', userId, 'role:', userRole);
 
     // Register FCM token if available
     await this.registerFCMToken();
 
     // Subscribe to real-time events
     this.subscribeToRealtimeEvents();
-  }
-
-  /**
-   * Setup event listeners for different event types
-   */
-  private setupRealtimeEventListeners() {
-    // Booking-related events
-    realtimeEventService.onEvent(EventType.BOOKING_CREATED, this.handleBookingCreated.bind(this));
-    realtimeEventService.onEvent(EventType.BOOKING_ACCEPTED, this.handleBookingAccepted.bind(this));
-    realtimeEventService.onEvent(EventType.BOOKING_REJECTED, this.handleBookingRejected.bind(this));
-    realtimeEventService.onEvent(EventType.BOOKING_COMPLETED, this.handleBookingCompleted.bind(this));
-    realtimeEventService.onEvent(EventType.BOOKING_CANCELLED, this.handleBookingCancelled.bind(this));
-    
-    // Payment-related events
-    realtimeEventService.onEvent(EventType.PAYMENT_COMPLETED, this.handlePaymentCompleted.bind(this));
   }
 
   /**
@@ -62,14 +61,64 @@ class NotificationIntegrationService {
    */
   private handleRealtimeEvents(events: RealtimeEvent[]) {
     events.forEach(event => {
-      // Create MongoDB notification for each real-time event
-      this.createDatabaseNotification(event);
+      // Prevent duplicate processing
+      if (!event.id || this.processedEventIds.has(event.id)) {
+        console.log('[NotificationIntegration] Skipping already processed event:', event.id);
+        return;
+      }
+
+      console.log('[NotificationIntegration] Processing new event:', event.type, event.id);
+      this.processedEventIds.add(event.id);
+
+      // Show toast notification based on event type and user role
+      this.showToastNotification(event);
       
       // Mark the real-time event as processed
-      if (event.id) {
-        realtimeEventService.markEventAsProcessed(event.id);
-      }
+      realtimeEventService.markEventAsProcessed(event.id);
     });
+  }
+
+  /**
+   * Show appropriate toast notification based on event type
+   */
+  private showToastNotification(event: RealtimeEvent) {
+    // Only show toast if this event is meant for the current user
+    if (event.targetUserId !== this.userId) return;
+
+    switch (event.type) {
+      case EventType.BOOKING_CREATED:
+        if (this.userRole === 'partner') {
+          toast.success('New booking request received!');
+        }
+        break;
+
+      case EventType.BOOKING_ACCEPTED:
+        if (this.userRole === 'user') {
+          toast.success('Your booking has been confirmed!');
+        }
+        break;
+
+      case EventType.BOOKING_REJECTED:
+        if (this.userRole === 'user') {
+          toast.error('Your booking request was declined');
+        }
+        break;
+
+      case EventType.BOOKING_COMPLETED:
+        toast.success('Booking completed successfully!');
+        break;
+
+      case EventType.BOOKING_CANCELLED:
+        toast.error('Booking has been cancelled');
+        break;
+
+      case EventType.PAYMENT_COMPLETED:
+        toast.success('Payment completed successfully!');
+        break;
+
+      default:
+        break;
+    }
   }
 
   /**
@@ -89,124 +138,6 @@ class NotificationIntegrationService {
     }
   }
 
-  /**
-   * Create a notification in MongoDB database
-   */
-  private async createDatabaseNotification(event: RealtimeEvent) {
-    try {
-      const notification = this.mapEventToNotification(event);
-      if (notification) {
-        await api.post('/notifications', notification);
-        console.log('Database notification created for event:', event.type);
-      }
-    } catch (error) {
-      console.error('Error creating database notification:', error);
-    }
-  }
-
-  /**
-   * Map real-time event to notification format
-   */
-  private mapEventToNotification(event: RealtimeEvent) {
-    const baseNotification = {
-      userId: event.targetUserId,
-      sentVia: ['app'],
-      relatedTo: {
-        type: 'booking' as const,
-        id: event.data.bookingId
-      }
-    };
-
-    switch (event.type) {
-      case EventType.BOOKING_CREATED:
-        return {
-          ...baseNotification,
-          type: 'partner' as const,
-          title: 'New Booking Request',
-          message: `New booking request for ${event.data.bookingData?.bikeName || 'bike'}`
-        };
-
-      case EventType.BOOKING_ACCEPTED:
-        return {
-          ...baseNotification,
-          type: 'system' as const,
-          title: 'Booking Confirmed!',
-          message: `Your booking for ${event.data.bookingData?.bikeName || 'bike'} has been confirmed`
-        };
-
-      case EventType.BOOKING_REJECTED:
-        return {
-          ...baseNotification,
-          type: 'system' as const,
-          title: 'Booking Declined',
-          message: `Your booking request for ${event.data.bookingData?.bikeName || 'bike'} has been declined`
-        };
-
-      case EventType.BOOKING_COMPLETED:
-        return {
-          ...baseNotification,
-          type: 'system' as const,
-          title: 'Booking Completed',
-          message: `Your rental of ${event.data.bookingData?.bikeName || 'bike'} has been completed. Please rate your experience!`
-        };
-
-      case EventType.BOOKING_CANCELLED:
-        return {
-          ...baseNotification,
-          type: 'system' as const,
-          title: 'Booking Cancelled',
-          message: `Booking for ${event.data.bookingData?.bikeName || 'bike'} has been cancelled`
-        };
-
-      case EventType.PAYMENT_COMPLETED:
-        return {
-          ...baseNotification,
-          type: 'payment' as const,
-          title: 'Payment Confirmed',
-          message: `Payment of LKR ${event.data.paymentData?.amount || 'amount'} has been processed successfully`,
-          relatedTo: {
-            type: 'payment' as const,
-            id: event.data.bookingId || ''
-          }
-        };
-
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Event handlers for specific event types
-   */
-  private handleBookingCreated(_event: RealtimeEvent) {
-    if (this.userRole === 'partner') {
-      toast.success('New booking request received!');
-    }
-  }
-
-  private handleBookingAccepted(_event: RealtimeEvent) {
-    if (this.userRole === 'user') {
-      toast.success('Your booking has been confirmed!');
-    }
-  }
-
-  private handleBookingRejected(_event: RealtimeEvent) {
-    if (this.userRole === 'user') {
-      toast.error('Your booking request was declined');
-    }
-  }
-
-  private handleBookingCompleted(_event: RealtimeEvent) {
-    toast.success('Booking completed successfully!');
-  }
-
-  private handleBookingCancelled(_event: RealtimeEvent) {
-    toast.error('Booking has been cancelled');
-  }
-
-  private handlePaymentCompleted(_event: RealtimeEvent) {
-    toast.success('Payment completed successfully!');
-  }
 
   /**
    * Get unread notification count
@@ -251,16 +182,17 @@ class NotificationIntegrationService {
    * Cleanup when user logs out or component unmounts
    */
   cleanup() {
+    console.log('[NotificationIntegration] Cleaning up...');
+    
     if (this.listenerId) {
       realtimeEventService.unsubscribe(this.listenerId);
+      this.listenerId = null;
     }
-    
-    // Clear event listeners
-    realtimeEventService.disconnectAll();
     
     this.userId = null;
     this.userRole = null;
-    this.listenerId = null;
+    this.isInitialized = false;
+    this.processedEventIds.clear();
   }
 }
 
