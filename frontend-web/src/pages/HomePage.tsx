@@ -319,19 +319,19 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-3">
             {[
-              { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
-              { step: '02', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
-              { step: '03', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
-              { step: '04', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
+              // { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
+              { step: '01', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
+              { step: '02', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
+              { step: '03', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
             ].map((item, index) => (
               <div key={index} className="text-center group">
                 <div className="relative mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mx-auto flex items-center justify-center text-white mb-4 transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     {item.icon}
                   </div>
-                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-0.5 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
                     {item.step}
                   </div>
                 </div>
@@ -344,7 +344,7 @@ const HomePage = () => {
       </section>
 
       {/* Package Plans */}
-      <section className="py-20">
+      {/* <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Adventure</h2>
@@ -400,7 +400,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features */}
       <section className="py-20 bg-gradient-to-br from-emerald-50 to-teal-50">
