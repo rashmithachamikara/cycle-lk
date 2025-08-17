@@ -25,25 +25,3 @@ const db = getFirestore(app);
 
 export { messaging, getToken, onMessage, db };
 export default app;
-
-// // Import the functions you need from the SDKs you need
-// import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
-// // TODO: Add SDKs for Firebase products that you want to use
-// // https://firebase.google.com/docs/web/setup#available-libraries
-
-// // Your web app's Firebase configuration
-// // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// const firebaseConfig = {
-//   apiKey: "AIzaSyB72bAGgG7LG4D4uuTTqWYn_t03zE6adjI",
-//   authDomain: "cycle-lk-8e21b.firebaseapp.com",
-//   projectId: "cycle-lk-8e21b",
-//   storageBucket: "cycle-lk-8e21b.firebasestorage.app",
-//   messagingSenderId: "389992409367",
-//   appId: "1:389992409367:web:ae9a4175a341769ba6ef52",
-//   measurementId: "G-DHPLWTJ1KE"
-// };
-
-// // Initialize Firebase
-// const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
