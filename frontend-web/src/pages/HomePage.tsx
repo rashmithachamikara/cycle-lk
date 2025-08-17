@@ -132,7 +132,7 @@ const HomePage = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/assets/Sri lanka Video_4.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.mp4" type="video/mp4" />
         </video>
         
         {/* Overlay for better text readability */}
