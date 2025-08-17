@@ -20,7 +20,9 @@ const HomePage = () => {
   // const [selectedPackage, setSelectedPackage] = useState('week');
   // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   // const [selectedLocation, setSelectedLocation] = useState('Colombo');
-
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [locationsError, setLocationsError] = useState<string | null>(null);
   // const packages = [
   //   {
   //     id: 'day',
@@ -54,8 +56,8 @@ const HomePage = () => {
         setLocationsLoading(true);
         const data = await locationService.getAllLocations();
         setLocations(data);
-      } catch (err) {
-        setLocationsError('Failed to load locations.');
+      } catch (err:any) {
+        setLocationsError(`Failed to load locations. ${err.message}`);
       } finally {
         setLocationsLoading(false);
       }
