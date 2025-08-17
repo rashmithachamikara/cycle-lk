@@ -172,7 +172,12 @@ const NotificationsPage: React.FC = () => {
 
     switch (notification.relatedTo.type) {
       case 'booking':
-        return `/booking-details/${notification.relatedTo.id}`;
+        if(user?.role === 'partner') {
+          return `/partner-dashboard/booking-requests`;
+        } else if(user?.role === 'user') {
+          return `/dashboard`;
+        }
+     break;
       case 'payment':
         return '/payments';
       case 'bike':
