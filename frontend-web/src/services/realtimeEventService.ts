@@ -27,18 +27,17 @@ export enum EventType {
   BIKE_AVAILABILITY_CHANGED = 'BIKE_AVAILABILITY_CHANGED'
 }
 
-// type bookingData = {
-//   id: string;
-//   userId: string;
-//   bikeName: string;
-//   pickupLocation: string;
-//   dropoffLocation: string;
-//   startDate: Timestamp;
-//   endDate: Timestamp;
-//   status: 'active' | 'completed' | 'cancelled' | 'confirmed';
-//   createdAt: Timestamp;
-//   updatedAt: Timestamp;
-// };
+type bookingData = {
+  id: string;
+  bikeName: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  status: 'active' | 'completed' | 'cancelled' | 'confirmed';
+  partnerName: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
+  total: number;
+};
 
 // Real-time event interface
 export interface RealtimeEvent {
@@ -51,7 +50,7 @@ export interface RealtimeEvent {
     bikeId?: string;
     partnerId?: string;
     userId?: string;
-    bookingData?: Record<string, unknown>;
+    bookingData?: bookingData;
     bikeData?: Record<string, unknown>;
     paymentData?: Record<string, unknown>;
     previousStatus?: string;
@@ -242,7 +241,7 @@ export const createBookingEvent = (
   targetUserId: string,
   targetUserRole: 'user' | 'partner',
   eventType: EventType,
-  bookingData: Record<string, unknown>,
+  bookingData: bookingData,
   metadata?: Record<string, unknown>
 ) => {
   return realtimeEventService.sendEvent({
@@ -250,7 +249,7 @@ export const createBookingEvent = (
     targetUserId,
     targetUserRole,
     data: {
-      bookingId: (bookingData._id as string) || (bookingData.id as string),
+      bookingId: bookingData.id,
       bookingData,
       ...metadata
     },
