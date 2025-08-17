@@ -1,7 +1,9 @@
+// frontend-web/config/googleMaps.ts
+
 // Google Maps Configuration
 export const GOOGLE_MAPS_CONFIG = {
-  // Replace with your actual Google Maps API key
-  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
+  // Google Maps API key from environment
+  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   
   // Default map options
   defaultMapOptions: {
@@ -11,6 +13,7 @@ export const GOOGLE_MAPS_CONFIG = {
     streetViewControl: false,
     mapTypeControl: false,
     fullscreenControl: false,
+    gestureHandling: 'cooperative',
   },
 
   // Sri Lanka bounds for search bias
@@ -46,4 +49,30 @@ export interface LocationData {
   coordinates: LocationCoordinates;
   placeId?: string;
   formattedAddress?: string;
+  name?: string;
+  types?: string[];
 }
+
+// Service location interfaces
+export interface ServiceLocation {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  placeId?: string;
+  isMainLocation?: boolean;
+}
+
+export interface CityServiceData {
+  cityName: string;
+  locations: ServiceLocation[];
+}
+
+// Validate API key
+export const validateGoogleMapsApiKey = (): boolean => {
+  const apiKey = GOOGLE_MAPS_CONFIG.apiKey;
+  return !!(apiKey && apiKey.length > 10 && apiKey !== 'YOUR_GOOGLE_MAPS_API_KEY');
+};
