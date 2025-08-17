@@ -101,7 +101,8 @@ import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
-import LocationTestPage from './pages/LocationTestPage';
+import Notifications from './pages/Notifications';
+
 
 // Protected route component with support for multiple roles
 const ProtectedRoute = ({ 
@@ -165,6 +166,7 @@ function App() {
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
+      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["user", "partner"]} />} />
       <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
       <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
@@ -194,11 +196,8 @@ function App() {
         element={<ProtectedRoute element={<AdminDashboardPage />} requiredRoles={["admin", "partner"]} />} 
       />
       
-      {/* Test route - accessible by both admin and partner roles */}
-      <Route 
-        path="/test" 
-        element={<ProtectedRoute element={<LocationTestPage />}  />} 
-      />
+      {/* Test routes - accessible by both admin and partner roles */}
+    
     </Routes>
     
     {/* Global Toast Notifications */}

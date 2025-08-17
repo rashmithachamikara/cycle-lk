@@ -4,53 +4,49 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   MapPin, 
-  Calendar, 
   Star, 
   Bike, 
   Navigation, 
   Shield, 
   Globe, 
   CheckCircle,
-  Clock,
-  ShieldCheck
+  Clock
 } from 'lucide-react';
 import { locationService, Location } from '../services/locationService';
 import LocationCard from '../components/LocationsPage/LocationCard';
 
 const HomePage = () => {
-  const [selectedPackage, setSelectedPackage] = useState('week');
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Colombo');
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [locationsLoading, setLocationsLoading] = useState(true);
-  const [locationsError, setLocationsError] = useState<string | null>(null);
 
-  const packages = [
-    {
-      id: 'day',
-      name: '1-Day Explorer',
-      price: '$15',
-      duration: '24 hours',
-      features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
-      popular: false
-    },
-    {
-      id: 'week',
-      name: '1-Week Adventure',
-      price: '$89',
-      duration: '7 days',
-      features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
-      popular: true
-    },
-    {
-      id: 'month',
-      name: '1-Month Journey',
-      price: '$299',
-      duration: '30 days',
-      features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
-      popular: false
-    }
-  ];
+  // const [selectedPackage, setSelectedPackage] = useState('week');
+  // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // const [selectedLocation, setSelectedLocation] = useState('Colombo');
+
+  // const packages = [
+  //   {
+  //     id: 'day',
+  //     name: '1-Day Explorer',
+  //     price: '$15',
+  //     duration: '24 hours',
+  //     features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
+  //     popular: false
+  //   },
+  //   {
+  //     id: 'week',
+  //     name: '1-Week Adventure',
+  //     price: '$89',
+  //     duration: '7 days',
+  //     features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
+  //     popular: true
+  //   },
+  //   {
+  //     id: 'month',
+  //     name: '1-Month Journey',
+  //     price: '$299',
+  //     duration: '30 days',
+  //     features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
+  //     popular: false
+  //   }
+  // ];
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -296,19 +292,19 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-3">
             {[
-              { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
-              { step: '02', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
-              { step: '03', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
-              { step: '04', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
+              // { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
+              { step: '01', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
+              { step: '02', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
+              { step: '03', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
             ].map((item, index) => (
               <div key={index} className="text-center group">
                 <div className="relative mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mx-auto flex items-center justify-center text-white mb-4 transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     {item.icon}
                   </div>
-                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-0.5 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
                     {item.step}
                   </div>
                 </div>
@@ -321,7 +317,7 @@ const HomePage = () => {
       </section>
 
       {/* Package Plans */}
-      <section className="py-20">
+      {/* <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Adventure</h2>
@@ -377,7 +373,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features */}
       <section className="py-20 bg-gradient-to-br from-emerald-50 to-teal-50">

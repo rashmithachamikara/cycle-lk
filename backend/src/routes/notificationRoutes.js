@@ -158,16 +158,16 @@ router.get('/:id', auth(), notificationController.getNotificationById);
 /**
  * @route   POST /api/notifications
  * @desc    Create a new notification
- * @access  Private/Admin
+ * @access  Private
  */
-router.post('/', auth(), admin, notificationController.createNotification);
+router.post('/', auth(), notificationController.createNotification);
 
 /**
  * @route   POST /api/notifications/bulk
  * @desc    Create bulk notifications
- * @access  Private/Admin
+ * @access  Private
  */
-router.post('/bulk', auth(), admin, notificationController.createBulkNotifications);
+router.post('/bulk', auth(), notificationController.createBulkNotifications);
 
 /**
  * @route   PUT /api/notifications/:id/mark-read
