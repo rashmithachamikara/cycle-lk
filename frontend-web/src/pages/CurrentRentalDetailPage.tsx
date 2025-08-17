@@ -16,7 +16,7 @@ import {
   ExternalLink,
   AlertCircle
 } from 'lucide-react';
-import { bookingService, transformBookingForPartnerDashboard } from '../services/bookingService';
+import { bookingService } from '../services/bookingService';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
