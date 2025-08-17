@@ -430,6 +430,8 @@ exports.updateBookingStatus = async (req, res) => {
               bookingData: {
                 id: booking._id.toString(),
                 bikeName: booking.bikeId.name || 'Unknown Bike',
+                pickupLocation: booking.locations.pickup || 'Unknown Location',
+                dropoffLocation: booking.locations.dropoff || 'Unknown Location',
                 status: 'confirmed',
                 partnerName: booking.partnerId.companyName || 'Unknown Partner',
                 startDate: booking.dates.startDate,
