@@ -29,7 +29,6 @@ const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, onTabChange, count
       color: 'text-green-600',
       activeColor: 'border-green-500 bg-green-50 text-green-700'
     },
-    
     {
       id: 'past' as const,
       label: 'Past Rentals',

@@ -20,6 +20,45 @@ export interface PaymentData {
   transactionId: string;
 }
 
+// Interface for initial payment request
+export interface InitialPaymentRequest {
+  bookingId: string;
+  amount: number;
+  paymentMethod: 'card' | 'bank_transfer' | 'mobile_payment';
+  paymentDetails?: {
+    cardNumber?: string;
+    expiryDate?: string;
+    cvv?: string;
+    cardHolderName?: string;
+    bankAccount?: string;
+    mobileNumber?: string;
+  };
+}
+
+// Interface for payment response
+export interface PaymentResponse {
+  success: boolean;
+  transactionId: string;
+  paymentStatus: 'completed' | 'pending' | 'failed';
+  message: string;
+  booking?: object;
+}
+
+// Interface for pending payment booking
+export interface PaymentPendingBooking {
+  id: string;
+  bikeName: string;
+  bikeImage?: string;
+  partnerName: string;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  status: 'requested' | 'confirmed' | 'active';
+  bookingNumber: string;
+  dueDate?: string;
+}
+
 // Payment service object
 export const paymentService = {
   // Process payment
@@ -27,6 +66,20 @@ export const paymentService = {
     debugLog('Processing payment', paymentData);
     const response = await api.post('/payments', paymentData);
     return response.data;
+  },
+
+  // Process initial payment for booking
+  processInitialPayment: async (paymentRequest: InitialPaymentRequest): Promise<PaymentResponse> => {
+    debugLog('Processing initial payment', paymentRequest);
+    const response = await api.post('/payments/initial', paymentRequest);
+    return response.data;
+  },
+
+  // Get pending payments for current user
+  getPendingPayments: async (): Promise<PaymentPendingBooking[]> => {
+    debugLog('Fetching pending payments');
+    const response = await api.get('/payments/pending');
+    return response.data.pendingPayments || [];
   },
 
   // Get all payments
@@ -59,6 +112,13 @@ export const paymentService = {
       reason,
       amount
     });
+    return response.data;
+  },
+
+  // Verify payment status
+  verifyPayment: async (transactionId: string): Promise<PaymentResponse> => {
+    debugLog('Verifying payment', { transactionId });
+    const response = await api.get(`/payments/verify/${transactionId}`);
     return response.data;
   }
 };
