@@ -18,11 +18,14 @@ const createBookingNotification = async (booking, targetUserId, eventType) => {
 
     switch (eventType) {
       case 'BOOKING_CREATED':
+        const userName = booking.userId?.firstName && booking.userId?.lastName 
+          ? `${booking.userId.firstName} ${booking.userId.lastName}`
+          : 'a customer';
         notificationData = {
           ...notificationData,
           type: 'partner',
           title: 'New Booking Request',
-          message: `New booking request for ${booking.bikeId?.name || 'bike'} from ${booking.userId?.firstName} ${booking.userId?.lastName}`
+          message: `New booking request for ${booking.bikeId?.name || 'bike'} from ${userName}`
         };
         break;
 
@@ -332,8 +335,13 @@ exports.createBooking = async (req, res) => {
         });
         console.log('Real-time event sent to partner dashboard');
         
+        // Populate booking with user details before creating notification
+        const populatedBooking = await Booking.findById(booking._id)
+          .populate('userId', 'firstName lastName email phone')
+          .populate('bikeId', 'name');
+        
         // Create database notification for partner
-        await createBookingNotification(booking, partner.userId.toString(), 'BOOKING_CREATED');
+        await createBookingNotification(populatedBooking, partner.userId.toString(), 'BOOKING_CREATED');
       } else {
         console.log('Firebase not available - real-time events disabled');
       }

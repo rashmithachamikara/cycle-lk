@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/apiUtils';
 import toast from 'react-hot-toast';
+import Header from '../components/Header';
 
 interface DatabaseNotification {
   _id: string;
@@ -39,16 +40,6 @@ const NotificationsPage: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment'>('all');
   const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [notifications, filter, typeFilter]);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -91,6 +82,16 @@ const NotificationsPage: React.FC = () => {
 
     setFilteredNotifications(filtered);
   }, [notifications, filter, typeFilter]);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -217,10 +218,11 @@ const NotificationsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 pb-8">
+         <Header />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between my-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
             <p className="text-gray-600 mt-1">
