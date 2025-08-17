@@ -1,51 +1,49 @@
-import { useState } from 'react';
+
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   MapPin, 
-  Calendar, 
   Star, 
   Bike, 
   Navigation, 
   Shield, 
   Globe, 
   CheckCircle,
-  Clock,
-  ShieldCheck
+  Clock
 } from 'lucide-react';
 
 const HomePage = () => {
-  const [selectedPackage, setSelectedPackage] = useState('week');
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Colombo');
+  // const [selectedPackage, setSelectedPackage] = useState('week');
+  // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // const [selectedLocation, setSelectedLocation] = useState('Colombo');
 
-  const packages = [
-    {
-      id: 'day',
-      name: '1-Day Explorer',
-      price: '$15',
-      duration: '24 hours',
-      features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
-      popular: false
-    },
-    {
-      id: 'week',
-      name: '1-Week Adventure',
-      price: '$89',
-      duration: '7 days',
-      features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
-      popular: true
-    },
-    {
-      id: 'month',
-      name: '1-Month Journey',
-      price: '$299',
-      duration: '30 days',
-      features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
-      popular: false
-    }
-  ];
+  // const packages = [
+  //   {
+  //     id: 'day',
+  //     name: '1-Day Explorer',
+  //     price: '$15',
+  //     duration: '24 hours',
+  //     features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
+  //     popular: false
+  //   },
+  //   {
+  //     id: 'week',
+  //     name: '1-Week Adventure',
+  //     price: '$89',
+  //     duration: '7 days',
+  //     features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
+  //     popular: true
+  //   },
+  //   {
+  //     id: 'month',
+  //     name: '1-Month Journey',
+  //     price: '$299',
+  //     duration: '30 days',
+  //     features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
+  //     popular: false
+  //   }
+  // ];
 
   // const locations = [
   //   { name: 'Colombo', bikes: 45, text: 'Modern cityscape with colonial architecture' },
