@@ -101,6 +101,7 @@ import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
+import Notifications from './pages/Notifications';
 import LocationTestPage from './pages/LocationTestPage';
 
 // Protected route component with support for multiple roles
@@ -165,6 +166,7 @@ function App() {
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
+      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["user", "partner"]} />} />
       <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
       <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
