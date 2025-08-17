@@ -196,11 +196,8 @@ function App() {
         element={<ProtectedRoute element={<AdminDashboardPage />} requiredRoles={["admin", "partner"]} />} 
       />
       
-      {/* Test route - accessible by both admin and partner roles */}
-      <Route 
-        path="/test" 
-        element={<ProtectedRoute element={<LocationTestPage />}  />} 
-      />
+      {/* Test routes - accessible by both admin and partner roles */}
+    
     </Routes>
     
     {/* Global Toast Notifications */}
