@@ -102,7 +102,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
 import Notifications from './pages/Notifications';
-import LocationTestPage from './pages/LocationTestPage';
+
 
 // Protected route component with support for multiple roles
 const ProtectedRoute = ({ 
