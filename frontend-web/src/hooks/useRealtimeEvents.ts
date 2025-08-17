@@ -110,12 +110,12 @@ export const usePartnerRealtimeEvents = () => {
       setNewBookingRequests(prev => [event, ...prev]);
       
       // Show browser notification if supported
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('New Booking Request!', {
-          body: `New booking request from ${event.data.bookingData?.customerName}`,
-          icon: '/logo192.png'
-        });
-      }
+      // if ('Notification' in window && Notification.permission === 'granted') {
+      //   new Notification('New Booking Request!', {
+      //     body: `New booking request from ${event.data.bookingData?.data.customerName}`,
+      //     icon: '/logo192.png'
+      //   });
+      // }
     },
     onBookingCompleted: (event) => {
       console.log('[PartnerRealtime] Booking completed:', event);

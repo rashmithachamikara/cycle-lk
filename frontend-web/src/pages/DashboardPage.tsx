@@ -53,30 +53,30 @@ const DashboardPage = () => {
 
   // Mock notifications - in real app, this would come from an API
   const [notifications, setNotifications] = useState<NotificationProps[]>([
-    {
-      id: '1',
-      title: 'Booking Confirmed',
-      message: 'Your bike rental at Colombo Fort has been confirmed',
-      timestamp: '2 hours ago',
-      read: false,
-      type: 'success'
-    },
-    {
-      id: '2',
-      title: 'Payment Reminder',
-      message: 'Payment due for your upcoming rental',
-      timestamp: '1 day ago',
-      read: false,
-      type: 'warning'
-    },
-    {
-      id: '3',
-      title: 'New Location Available',
-      message: 'Check out bikes available in Kandy',
-      timestamp: '3 days ago',
-      read: true,
-      type: 'info'
-    }
+    // {
+    //   id: '1',
+    //   title: 'Booking Confirmed',
+    //   message: 'Your bike rental at Colombo Fort has been confirmed',
+    //   timestamp: '2 hours ago',
+    //   read: false,
+    //   type: 'success'
+    // },
+    // {
+    //   id: '2',
+    //   title: 'Payment Reminder',
+    //   message: 'Payment due for your upcoming rental',
+    //   timestamp: '1 day ago',
+    //   read: false,
+    //   type: 'warning'
+    // },
+    // {
+    //   id: '3',
+    //   title: 'New Location Available',
+    //   message: 'Check out bikes available in Kandy',
+    //   timestamp: '3 days ago',
+    //   read: true,
+    //   type: 'info'
+    // }
   ]);
 
   // Fetch user bookings on component mount
@@ -156,26 +156,67 @@ const DashboardPage = () => {
             
             if (newAcceptedBookings.length > 0) {
               toast.success(`${newAcceptedBookings.length} booking(s) confirmed! Check payments.`);
-              // setNotifications(prev => [
-              //   ...prev,
-              //   {
-              //     id: Date.now().toString(),
-              //     title: 'Booking Confirmed',
-              //     timestamp: new Date().toISOString(),
-              //     message: `Your bike rental at ${newAcceptedBookings[0].data.bookingData.pickupLocation} confirmed! Please check payments.`,
-              //     read: false,
-              //     type: 'success'
-              //   }
-              // ]);
+              const firstBooking = newAcceptedBookings[0];
+              const location = firstBooking?.data?.bookingData?.pickupLocation || 'your selected location';
+              setNotifications(prev => [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  title: 'Booking Confirmed',
+                  timestamp: new Date().toISOString(),
+                  message: `Your bike rental at ${location} confirmed! Please proceed to the initial payment.`,
+                  read: false,
+                  type: 'success'
+                }
+              ]);
             }
             if (newUpdatedBookings.length > 0) {
               toast.success(`${newUpdatedBookings.length} booking(s) updated! Check payments.`);
+              const firstBooking = newUpdatedBookings[0];
+              const location = firstBooking?.data?.bookingData?.pickupLocation || 'your selected location';
+              setNotifications(prev => [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  title: 'Booking Updated',
+                  timestamp: new Date().toISOString(),
+                  message: `Your bike rental at ${location} has been updated. Please check the details.`,
+                  read: false,
+                  type: 'info'
+                }
+              ]);
             }
             if (newRejectedBookings.length > 0) {
               toast.error(`${newRejectedBookings.length} booking(s) rejected.`);
+              const firstBooking = newRejectedBookings[0];
+              const location = firstBooking?.data?.bookingData?.pickupLocation || 'your selected location';
+              setNotifications(prev => [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  title: 'Booking Rejected',
+                  timestamp: new Date().toISOString(),
+                  message: `Your bike rental at ${location} has been rejected due to unavailability of bikes ! Please contact support for assistance.`,
+                  read: false,
+                  type: 'warning'
+                }
+              ]);
             }
             if (newPayments.length > 0) {
               toast.success(`${newPayments.length} payment(s) completed!`);
+              const firstPayment = newPayments[0];
+              const location = firstPayment?.data?.bookingData?.pickupLocation || 'your selected location';
+              setNotifications(prev => [
+                ...prev,
+                {
+                  id: Date.now().toString(),
+                  title: 'Payment Completed',
+                  timestamp: new Date().toISOString(),
+                  message: `Your payment for the bike rental at ${location} has been completed successfully.`,
+                  read: false,
+                  type: 'success'
+                }
+              ]);
             }
             
           } catch (err) {
