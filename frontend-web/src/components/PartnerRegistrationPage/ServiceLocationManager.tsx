@@ -1,8 +1,9 @@
+// frontend-web/components/PartnerRegistrationPage/ServiceLocationManager.tsx
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, MapPin, Building, Star } from 'lucide-react';
 import GoogleMapsPlacesInput from '../forms/GoogleMapsPlacesInput';
-import { type ServiceLocation, type CityServiceData } from './types';
-import { SRI_LANKAN_LOCATIONS } from './constants';
+import { type ServiceLocation, type CityServiceData, type LocationData } from './types';
+import { SRI_LANKAN_LOCATIONS, POPULAR_CITIES } from './constants';
 
 interface ServiceLocationManagerProps {
   serviceCities: string[];
@@ -124,6 +125,20 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
     onServiceLocationsChange(updatedLocations);
   };
 
+  const handleLocationSelect = (cityName: string, locationId: string, address: string, locationData?: LocationData) => {
+    const updates: Partial<ServiceLocation> = { address };
+    
+    if (locationData) {
+      updates.coordinates = {
+        lat: locationData.coordinates.lat,
+        lng: locationData.coordinates.lng
+      };
+      updates.placeId = locationData.placeId;
+    }
+    
+    updateLocationInCity(cityName, locationId, updates);
+  };
+
   const currentCityData = serviceLocations.find(city => city.cityName === selectedCity);
 
   return (
@@ -134,7 +149,7 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
       </div>
 
       <div className="grid lg:grid-cols-1 gap-8">
-        {/* Top  - Cities Selection */}
+        {/* Cities Selection */}
         <div className="space-y-4">
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
             <h4 className="font-medium text-emerald-800 mb-3 flex items-center">
@@ -157,7 +172,8 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => addCity(newCityInput)}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center"
+                  disabled={!newCityInput.trim()}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -171,13 +187,13 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
 
               {/* Quick Add Popular Cities */}
               <div className="flex flex-wrap gap-2">
-                {['Colombo', 'Kandy', 'Galle', 'Negombo'].map(city => (
+                {POPULAR_CITIES.map(city => (
                   !serviceCities.includes(city) && (
                     <button
                       key={city}
                       type="button"
                       onClick={() => addCity(city)}
-                      className="px-3 py-1 text-sm bg-white border border-emerald-300 text-emerald-700 rounded-full hover:bg-emerald-50"
+                      className="px-3 py-1 text-sm bg-white border border-emerald-300 text-emerald-700 rounded-full hover:bg-emerald-50 transition-colors"
                     >
                       + {city}
                     </button>
@@ -190,41 +206,43 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
             {serviceCities.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium text-emerald-700">Selected Cities:</p>
-                {serviceCities.map(city => (
-                  <div
-                    key={city}
-                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedCity === city 
-                        ? 'bg-emerald-100 border-emerald-300' 
-                        : 'bg-white border-emerald-200 hover:bg-emerald-50'
-                    }`}
-                    onClick={() => setSelectedCity(city)}
-                  >
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-emerald-600 mr-2" />
-                      <span className="font-medium text-gray-900">{city}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({serviceLocations.find(loc => loc.cityName === city)?.locations.length || 0} locations)
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeCity(city);
-                      }}
-                      className="text-red-500 hover:text-red-700"
+                <div className="grid gap-2">
+                  {serviceCities.map(city => (
+                    <div
+                      key={city}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedCity === city 
+                          ? 'bg-emerald-100 border-emerald-300' 
+                          : 'bg-white border-emerald-200 hover:bg-emerald-50'
+                      }`}
+                      onClick={() => setSelectedCity(city)}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 text-emerald-600 mr-2" />
+                        <span className="font-medium text-gray-900">{city}</span>
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({serviceLocations.find(loc => loc.cityName === city)?.locations.length || 0} locations)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCity(city);
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Bottom  - Location Details */}
+        {/* Location Details */}
         <div className="space-y-4">
           {selectedCity ? (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -236,7 +254,7 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => addLocationToCity(selectedCity)}
-                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center text-sm"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center text-sm transition-colors"
                 >
                   <Plus className="h-3 w-3 mr-1" />
                   Add Location
@@ -269,7 +287,11 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                           <button
                             type="button"
                             onClick={() => toggleMainLocation(selectedCity, location.id)}
-                            className={`p-1 rounded ${location.isMainLocation ? 'text-yellow-600' : 'text-gray-400 hover:text-yellow-600'}`}
+                            className={`p-1 rounded transition-colors ${
+                              location.isMainLocation 
+                                ? 'text-yellow-600' 
+                                : 'text-gray-400 hover:text-yellow-600'
+                            }`}
                             title={location.isMainLocation ? 'Remove main location' : 'Set as main location'}
                           >
                             <Star className="h-4 w-4" />
@@ -277,7 +299,7 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                           <button
                             type="button"
                             onClick={() => removeLocationFromCity(selectedCity, location.id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -304,16 +326,8 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
                           </label>
                           <GoogleMapsPlacesInput
                             value={location.address}
-                            onChange={(value: string, locationData?: { coordinates: { lat: number; lng: number }; placeId?: string }) => {
-                              const updates: Partial<ServiceLocation> = { address: value };
-                              if (locationData) {
-                                updates.coordinates = {
-                                  lat: locationData.coordinates.lat,
-                                  lng: locationData.coordinates.lng
-                                };
-                                updates.placeId = locationData.placeId;
-                              }
-                              updateLocationInCity(selectedCity, location.id, updates);
+                            onChange={(value: string, locationData?: LocationData) => {
+                              handleLocationSelect(selectedCity, location.id, value, locationData);
                             }}
                             placeholder="Search for exact location or click on map"
                             showMap={true}
@@ -340,7 +354,7 @@ const ServiceLocationManager: React.FC<ServiceLocationManagerProps> = ({
               <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h4 className="font-medium text-gray-700 mb-2">Select a City</h4>
               <p className="text-gray-500">
-                Choose a city from the left to add your service locations
+                Choose a city from above to add your service locations
               </p>
             </div>
           )}
