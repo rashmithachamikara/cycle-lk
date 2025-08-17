@@ -56,44 +56,41 @@ const CurrentRentalDetailPage: React.FC = () => {
       console.log('Raw booking data:', bookingData);
       
       // Transform the backend booking data to match our interface
-      const rentalData: CurrentRental = transformBookingForPartnerDashboard(bookingData);
-      //   id: bookingData._id,
-      //   customerName: bookingData.userId ? `${bookingData.userId.firstName} ${bookingData.userId.lastName}` : 'Unknown Customer',
-      //   customerEmail: bookingData.userId?.email || '',
-      //   customerPhone: bookingData.userId?.phone || '',
-      //   bikeName: bookingData.bikeId?.name || 'Unknown Bike',
-      //   bikeId: bookingData.bikeId?._id || '',
-      //   bikeImage: bookingData.bikeId?.images?.[0] || '',
-      //   startDate: bookingData.dates?.startDate || '',
-      //   endDate: bookingData.dates?.endDate || '',
-      //   actualStartDate: bookingData.dates?.actualStartDate || bookingData.dates?.startDate,
-      //   totalAmount: bookingData.pricing?.total || 0,
-      //   status: bookingData.status || 'active',
-      //   pickupLocation: bookingData.locations?.pickup || '',
-      //   dropoffLocation: bookingData.locations?.dropoff || '',
-      //   duration: bookingData.package?.id === 'day' ? 1 : bookingData.package?.id === 'week' ? 7 : 30,
-      //   pricePerDay: bookingData.pricing?.basePrice || 0
-      // };
-      
+      const rentalData: CurrentRental = {
+        id: bookingData._id,
+        customerName: bookingData.userId ? `${bookingData.userId.firstName} ${bookingData.userId.lastName}` : 'Unknown Customer',
+        customerEmail: bookingData.userId?.email || '',
+        customerPhone: bookingData.userId?.phone || '',
+        bikeName: bookingData.bikeId?.name || 'Unknown Bike',
+        bikeId: bookingData.bikeId?._id || '',
+        bikeImage: bookingData.bikeId?.images?.[0] || '',
+        startDate: bookingData.dates?.startDate || '',
+        endDate: bookingData.dates?.endDate || '',
+        actualStartDate: bookingData.dates?.actualStartDate || bookingData.dates?.startDate,
+        totalAmount: bookingData.pricing?.total || 0,
+        status: bookingData.status || 'active',
+        pickupLocation: bookingData.locations?.pickup || '',
+        dropoffLocation: bookingData.locations?.dropoff || '',
+        duration: bookingData.package?.id === 'day' ? 1 : bookingData.package?.id === 'week' ? 7 : 30,
+        pricePerDay: bookingData.pricing?.basePrice || 0
+      };
+
       // Check if rental is overdue
-      // const currentDate = new Date();
-      // const endDate = new Date(rentalData.endDate);
-      // rentalData.isOverdue = currentDate > endDate;
-      
-      // console.log('Transformed rental data:', rentalData);
+      const currentDate = new Date();
+      const endDate = new Date(rentalData.endDate);
+      rentalData.isOverdue = currentDate > endDate;
+
+      console.log('Transformed rental data:', rentalData);
       setRental(rentalData);
-    } catch (error) {
-      console.error('Error fetching rental details:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load rental details';
       
-      // Check if it's an authentication error
-      if (errorMessage.includes('No token') || errorMessage.includes('authorization denied')) {
+    } catch (error:any) { // Check if it's an authentication error
+      if (error.message.includes('No token') || error.message.includes('authorization denied')) {
         toast.error('Please log in again to access this page');
         // Don't navigate immediately, let the auth context handle it
         return;
       }
       
-      toast.error(errorMessage);
+      toast.error(error);
       navigate('/partner-dashboard/current-rentals');
     } finally {
       setLoading(false);
