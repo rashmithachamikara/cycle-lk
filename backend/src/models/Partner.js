@@ -126,10 +126,26 @@ const partnerSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // images: {
+  //   logo: String,
+  //   storefront: String,
+  //   gallery: [String]
+  // },
   images: {
-    logo: String,
-    storefront: String,
-    gallery: [String]
+  logo: {
+    url: String,
+    publicId: String
+  },
+  storefront: {
+    url: String,
+    publicId: String
+  },
+  gallery: [
+    {
+      url: String,
+      publicId: String
+    }
+  ]
   },
   verified: {
     type: Boolean,
