@@ -1,4 +1,6 @@
 const { Booking, Bike, User, Payment, Partner } = require('../models');
+const { notificationService } = require('../services/notificationService');
+const firebaseAdmin = require('../config/firebase');
 
 /**
  * Get all bookings with optional filtering
@@ -195,6 +197,68 @@ exports.createBooking = async (req, res) => {
     });
     console.log('Booking created successfully:', booking);
 
+    // Send notification to partner about new booking request
+    try {
+      await notificationService.notifyBookingCreated(booking, bike.partnerId);
+      console.log('Notification sent to partner successfully');
+    } catch (notificationError) {
+      console.error('Error sending notification to partner:', notificationError);
+    }
+
+    // Send real-time event to partner dashboard
+    try {
+      if (firebaseAdmin) {
+        // Get the partner document to find the associated userId
+        const Partner = require('../models/Partner');
+        const partner = await Partner.findById(bike.partnerId);
+        
+        if (!partner) {
+          console.error('Partner not found for partnerId:', bike.partnerId);
+          throw new Error('Partner not found');
+        }
+        
+        console.log('Partner found:', { partnerId: partner._id, userId: partner.userId });
+        
+        const db = firebaseAdmin.firestore();
+        await db.collection('realtimeEvents').add({
+          type: 'BOOKING_CREATED',
+          targetUserId: partner.userId.toString(), // Use partner's userId instead of partnerId
+          targetUserRole: 'partner',
+          data: {
+            bookingId: booking._id.toString(),
+            bikeId: bikeId,
+            userId: userId,
+            bookingData: {
+              id: booking._id.toString(),
+              bookingNumber: booking.bookingNumber,
+              customerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+              customerEmail: req.user.email || '',
+              customerPhone: req.user.phone || '',
+              bikeName: bike.name,
+              startDate: booking.dates.startDate,
+              endDate: booking.dates.endDate,
+              status: booking.status,
+              total: booking.pricing.total,
+              pickupLocation: booking.locations.pickup,
+              dropoffLocation: booking.locations.dropoff,
+              packageType: booking.package.name
+            }
+          },
+          timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+          processed: false,
+          metadata: {
+            sourceUserId: userId,
+            sourceUserRole: 'user'
+          }
+        });
+        console.log('Real-time event sent to partner dashboard');
+      } else {
+        console.log('Firebase not available - real-time events disabled');
+      }
+    } catch (eventError) {
+      console.error('Error sending real-time event:', eventError);
+    }
+
     res.status(201).json(booking);
   } catch (err) {
     console.error('Booking creation error:', err);
@@ -314,16 +378,21 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
     
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id)
+      .populate('userId', 'firstName lastName email')
+      .populate('bikeId', 'name partnerId')
+      .populate('partnerId', 'companyName');
     
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
+
+    const previousStatus = booking.status;
     
     // Update status
     booking.status = status;
     
-    // Handle bike availability for cancellation or completion
+    // Handle bike availability for different status changes
     if (status === 'cancelled' || status === 'completed') {
       await Bike.findByIdAndUpdate(booking.bikeId, {
         'availability.status': 'available'
@@ -336,6 +405,121 @@ exports.updateBookingStatus = async (req, res) => {
     }
     
     await booking.save();
+
+    // Send notifications based on status change
+    try {
+      if (status === 'confirmed' && previousStatus === 'requested') {
+        // Booking accepted - notify user
+        await notificationService.notifyBookingAccepted(booking, booking.userId._id);
+        
+        // Also send payment required notification
+        await notificationService.notifyPaymentRequired(booking, booking.userId._id);
+        
+        console.log('Booking acceptance and payment notifications sent to user');
+
+        // Send real-time event to user dashboard
+        if (firebaseAdmin) {
+          const db = firebaseAdmin.firestore();
+          await db.collection('realtimeEvents').add({
+            type: 'BOOKING_ACCEPTED',
+            targetUserId: booking.userId._id.toString(),
+            targetUserRole: 'user',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: booking.bikeId._id.toString(),
+              bookingData: {
+                id: booking._id.toString(),
+                bikeName: booking.bikeId.name || 'Unknown Bike',
+                status: 'confirmed',
+                partnerName: booking.partnerId.companyName || 'Unknown Partner',
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                total: booking.pricing.total || 0
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: req.user.id,
+              sourceUserRole: req.user.role || 'partner'
+            }
+          });
+          console.log('Real-time booking acceptance event sent to user dashboard');
+        }
+      } else if (status === 'cancelled' && previousStatus === 'requested') {
+        // Booking rejected - notify user
+        await notificationService.notifyBookingRejected(booking, booking.userId._id);
+        console.log('Booking rejection notification sent to user');
+
+        // Send real-time event to user dashboard
+        if (firebaseAdmin) {
+          const db = firebaseAdmin.firestore();
+          await db.collection('realtimeEvents').add({
+            type: 'BOOKING_REJECTED',
+            targetUserId: booking.userId._id.toString(),
+            targetUserRole: 'user',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: booking.bikeId._id.toString(),
+              bookingData: {
+                id: booking._id.toString(),
+                bikeName: booking.bikeId.name || 'Unknown Bike',
+                status: 'cancelled',
+                partnerName: booking.partnerId.companyName || 'Unknown Partner'
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: req.user.id,
+              sourceUserRole: req.user.role || 'partner'
+            }
+          });
+          console.log('Real-time booking rejection event sent to user dashboard');
+        }
+      } else if (status === 'completed') {
+        // Booking completed - notify both user and partner
+        await notificationService.notifyBookingCompleted(booking, booking.userId._id, booking.partnerId._id);
+        console.log('Booking completion notifications sent to user and partner');
+
+        // Send real-time events to both dashboards
+        if (firebaseAdmin) {
+          const db = firebaseAdmin.firestore();
+          const completionData = {
+            bookingId: booking._id.toString(),
+            bikeId: booking.bikeId._id.toString(),
+            bookingData: {
+              id: booking._id.toString(),
+              bikeName: booking.bikeId.name,
+              status: 'completed'
+            }
+          };
+
+          await Promise.all([
+            db.collection('realtimeEvents').add({
+              type: 'BOOKING_COMPLETED',
+              targetUserId: booking.userId._id.toString(),
+              targetUserRole: 'user',
+              data: completionData,
+              timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+              processed: false
+            }),
+            db.collection('realtimeEvents').add({
+              type: 'BOOKING_COMPLETED',
+              targetUserId: booking.partnerId._id.toString(),
+              targetUserRole: 'partner',
+              data: completionData,
+              timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+              processed: false
+            })
+          ]);
+          console.log('Real-time booking completion events sent to both dashboards');
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error sending status update notification:', notificationError);
+      // Don't fail the status update if notification fails
+    }
     
     res.json(booking);
   } catch (err) {
