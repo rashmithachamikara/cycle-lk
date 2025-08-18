@@ -1,3 +1,4 @@
+// frontend-web/components/PartnerRegistrationPage/StepIndicator.tsx
 import React from 'react';
 import { StepIndicatorProps } from './types';
 
