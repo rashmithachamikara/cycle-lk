@@ -29,6 +29,7 @@ const supportRoutes = require('./routes/supportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const faqRoutes = require('./routes/faqRoutes');
 const uploadRoutes = require('./routes/uploadRoutes'); //cloudinary upload routes
+const eventRoutes = require('./routes/eventRoutes'); // real-time event routes
 
 // Use API routes
 app.use('/api/users', userRoutes);
@@ -43,6 +44,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/upload', uploadRoutes); // cloudinary upload routes
+app.use('/api/events', eventRoutes); // real-time event routes
 
 // Health check endpoint
 app.get('/', (req, res) => {

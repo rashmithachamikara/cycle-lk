@@ -4,16 +4,16 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Notifications from '../../components/PartnerDashboard/Notifications';
 import MonthlySnapshot from '../../components/PartnerDashboard/MonthlySnapshot';
-import CurrentRentals from '../../components/PartnerDashboard/CurrentRentals';
-import BookingRequests from '../../components/PartnerDashboard/BookingRequests';
-import Inventory from '../../components/PartnerDashboard/Inventory';
-import CompletedRentals from '../../components/PartnerDashboard/CompletedRentals';
 import { 
   Bike, 
   Star, 
   Users,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  FileText,
+  ArrowRight
 } from 'lucide-react';
 
 import { 
@@ -23,44 +23,45 @@ import {
   transformBookingForPartnerDashboard 
 } from '../../services/bookingService';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('current');
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Add delete confirmation modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [bikeToDelete, setBikeToDelete] = useState<{id: string, name: string} | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  // Real-time events hook for partner
+  const { 
+    newBookingRequests, 
+    isConnected: realtimeConnected,
+    clearProcessedRequests 
+  } = usePartnerRealtimeEvents();
 
   // Fetch bookings for the partner
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Use the new endpoint that doesn't require partnerId in URL
-        const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
-        console.log('Raw backend bookings:', backendBookings);
-        const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
-        console.log('Transformed bookings:', transformedBookings);
-        
-        setBookings(transformedBookings);
-      } catch (err) {
-        console.error('Error fetching bookings:', err);
-        setError('Failed to load bookings');
-        // For now, use fallback data if the API fails
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use the new endpoint that doesn't require partnerId in URL
+      const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+      console.log('Raw backend bookings:', backendBookings);
+      const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
+      console.log('Transformed bookings:', transformedBookings);
+      
+      setBookings(transformedBookings);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+      setError('Failed to load bookings');
+      // For now, use fallback data if the API fails
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (user && user.role === 'partner') {
       fetchBookings();
     } else {
@@ -70,18 +71,33 @@ const PartnerDashboardPage = () => {
     }
   }, [user]);
 
+  // Handle real-time new booking requests
+  useEffect(() => {
+    if (newBookingRequests.length > 0) {
+      console.log('Processing real-time booking requests:', newBookingRequests);
+      
+      // Refresh bookings when we get new requests
+      const refreshBookings = async () => {
+        try {
+          const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+          const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
+          setBookings(transformedBookings);
+          
+          // Clear processed requests after refreshing
+          clearProcessedRequests();
+        } catch (err) {
+          console.error('Error refreshing bookings after real-time update:', err);
+        }
+      };
+
+      refreshBookings();
+    }
+  }, [newBookingRequests, clearProcessedRequests]);
+
   // Filter bookings by status
   const requestedBookings = bookings.filter(booking => booking.status === 'requested');
   const currentBookings = bookings.filter(booking => booking.status === 'active' || booking.status === 'confirmed');
   const recentBookings = bookings.filter(booking => booking.status === 'completed');
-
-  const inventoryItems = [
-    { id: 'BIKE-1234', name: 'City Cruiser', type: 'City', status: 'rented', condition: 'Excellent' },
-    { id: 'BIKE-2345', name: 'Mountain Explorer', type: 'Mountain', status: 'rented', condition: 'Good' },
-    { id: 'BIKE-3456', name: 'Beach Rider', type: 'Cruiser', status: 'available', condition: 'Excellent' },
-    { id: 'BIKE-4567', name: 'City Cruiser', type: 'City', status: '', condition: 'Fair' },
-    { id: 'BIKE-5678', name: 'Mountain Explorer', type: 'Mountain', status: 'available', condition: 'Excellent' }
-  ];
 
   // Calculate total revenue from completed bookings
   const totalRevenue = recentBookings.reduce((sum, booking) => {
@@ -89,32 +105,29 @@ const PartnerDashboardPage = () => {
     return sum + value;
   }, 0);
 
-  // Handle confirming bike deletion
-  const handleConfirmDelete = () => {
-    if (!bikeToDelete) return;
-    
-    setIsDeleting(true);
-    
-    // Simulate API call to delete bike
-    setTimeout(() => {
-      setIsDeleting(false);
-      setDeleteSuccess(true);
-      
-      // Close modal after showing success message
-      setTimeout(() => {
-        setShowDeleteModal(false);
-        setDeleteSuccess(false);
-        setBikeToDelete(null);
-        // In a real application, we would update the inventory list here
-      }, 1500);
-    }, 1000);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Real-time Connection Status */}
+        {!realtimeConnected && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="text-yellow-800 text-sm">
+              ⚠️ Real-time updates are not connected. You may not receive live booking requests.
+            </div>
+          </div>
+        )}
+
+        {/* New Booking Request Alert */}
+        {newBookingRequests.length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+            <div className="text-green-800 text-sm font-medium">
+              🔔 {newBookingRequests.length} new booking request{newBookingRequests.length > 1 ? 's' : ''} received!
+            </div>
+          </div>
+        )}
+
         {/* Error Display */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -223,53 +236,77 @@ const PartnerDashboardPage = () => {
               </div>
             </div>
 
-            {/* Bookings Tabs */}
+            {/* Management Overview Cards */}
             <div className="bg-white rounded-2xl shadow-sm">
-              <div className="border-b border-gray-200">
-                <nav className="flex space-x-8 px-6">
-                  {[
-                    { id: 'current', label: 'Current Rentals', count: currentBookings.length },
-                    { id: 'requested', label: 'Booking Requests', count: requestedBookings.length },
-                    { id: 'inventory', label: 'Inventory', count: inventoryItems.length },
-                    { id: 'recent', label: 'Completed Rentals', count: recentBookings.length }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      {tab.label} ({tab.count})
-                    </button>
-                  ))}
-                </nav>
-              </div>
+              {/* <div className="p-6 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">Management Overview</h3>
+                <p className="text-gray-600 mt-1">Quick access to your rental management</p>
+              </div> */}
 
               <div className="p-6">
-                {/* Current Rentals */}
-                {activeTab === 'current' && <CurrentRentals />}
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Current Rentals Button */}
+                  <Link
+                    to="/partner-dashboard/current-rentals"
+                    className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 transition-all duration-200 border border-blue-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                        <Clock className="h-6 w-6 text-white" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Current Rentals</h4>
+                    <p className="text-gray-600 text-sm mb-3">Manage active bicycle rentals</p>
+                    <div className="flex items-center">
+                      <span className="text-2xl font-bold text-blue-600">{currentBookings.length}</span>
+                      <span className="text-blue-600 text-sm ml-2">active rentals</span>
+                    </div>
+                  </Link>
 
-                {/* Booking Requests */}
-                {activeTab === 'requested' && <BookingRequests bookings={requestedBookings} />}
+                  {/* Booking Requests Button */}
+                  <Link
+                    to="/partner-dashboard/booking-requests"
+                    className="group bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-xl p-6 transition-all duration-200 border border-orange-200 hover:border-orange-300"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+                        <FileText className="h-6 w-6 text-white" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Booking Requests</h4>
+                    <p className="text-gray-600 text-sm mb-3">Review pending requests</p>
+                    <div className="flex items-center">
+                      <span className="text-2xl font-bold text-orange-600">{requestedBookings.length}</span>
+                      <span className="text-orange-600 text-sm ml-2">pending requests</span>
+                    </div>
+                    {newBookingRequests.length > 0 && (
+                      <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {newBookingRequests.length} new!
+                      </div>
+                    )}
+                  </Link>
 
-                {/* Inventory */}
-                {activeTab === 'inventory' && (
-                  <Inventory
-                    showDeleteModal={showDeleteModal}
-                    setShowDeleteModal={setShowDeleteModal}
-                    bikeToDelete={bikeToDelete}
-                    setBikeToDelete={setBikeToDelete}
-                    handleConfirmDelete={handleConfirmDelete}
-                    isDeleting={isDeleting}
-                    deleteSuccess={deleteSuccess}
-                  />
-                )}
-
-                {/* Recent Bookings */}
-                {activeTab === 'recent' && <CompletedRentals bookings={recentBookings} />}
+                  {/* Completed Rentals Button */}
+                  <Link
+                    to="/partner-dashboard/completed-rentals"
+                    className="group bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl p-6 transition-all duration-200 border border-green-200 hover:border-green-300"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center group-hover:bg-green-600 transition-colors">
+                        <CheckCircle className="h-6 w-6 text-white" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-green-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Completed Rentals</h4>
+                    <p className="text-gray-600 text-sm mb-3">View rental history & earnings</p>
+                    <div className="flex items-center">
+                      <span className="text-2xl font-bold text-green-600">{recentBookings.length}</span>
+                      <span className="text-green-600 text-sm ml-2">completed</span>
+                    </div>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -287,9 +324,9 @@ const PartnerDashboardPage = () => {
                   Add New Bike
                 </Link>
                 <button
-                  className="w-full border border-blue-500 text-blue-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
+                  className="w-full border border-red-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
                 >
-                  Generate Reports
+                  Inventory
                 </button>
                 <button
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"

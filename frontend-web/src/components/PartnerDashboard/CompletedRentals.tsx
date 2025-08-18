@@ -68,7 +68,8 @@
 
 
 
-import { Calendar, Users, Download, Star } from 'lucide-react';
+import { Calendar, Users, Download, Star, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type CompletedRental = {
   id: string;
@@ -108,15 +109,24 @@ const CompletedRentals = ({ bookings }: CompletedRentalsProps) => {
                 <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
                 <span className="text-lg font-semibold text-gray-900">Completed Rental</span>
               </div>
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < (booking.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center space-x-3">
+                <Link 
+                  to={`/partner-dashboard/completed-rentals/${booking.id}`}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View Details
+                </Link>
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < (booking.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
             

@@ -90,46 +90,54 @@
 
 
 
-import { Calendar, Users, Phone, Settings } from 'lucide-react';
+import { Calendar, Users, Phone, Settings, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const CurrentRentals = () => {
-  const currentBookings = [
-    {
-      id: 'CL2025001',
-      customerName: 'John Doe',
-      customerPhone: '+94 77 123 4567',
-      bikeName: 'City Cruiser',
-      bikeId: 'BIKE-1234',
-      startDate: '2025-03-15',
-      endDate: '2025-03-22',
-      status: 'active',
-      value: '$105'
-    },
-    {
-      id: 'CL2025002',
-      customerName: 'Sarah Johnson',
-      customerPhone: '+94 77 234 5678',
-      bikeName: 'Mountain Explorer',
-      bikeId: 'BIKE-2345',
-      startDate: '2025-03-18',
-      endDate: '2025-03-25',
-      status: 'active',
-      value: '$140'
-    }
-  ];
+type CurrentRental = {
+    id: string;
+  customerName: string;
+  bikeName: string;
+  bikeId: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  rating?: number;
+  value: string;
+  bookingNumber: string;
+  customerPhone: string;
+  customerEmail: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  packageType: string;
+}
+
+type CurrentRentalsProps = {
+  rentals: CurrentRental[];
+}
+
+const CurrentRentals = ({ rentals }: CurrentRentalsProps) => {
 
   return (
     <div className="space-y-6">
-      {currentBookings.map((booking) => (
+      {rentals.map((booking) => (
         <div key={booking.id} className="border border-gray-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
               <span className="text-lg font-semibold text-gray-900">Active Rental</span>
             </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              In Progress
-            </span>
+            <div className="flex items-center space-x-2">
+              <Link 
+                to={`/partner-dashboard/current-rentals/${booking.id}`}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                View Details
+              </Link>
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                In Progress
+              </span>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6">
