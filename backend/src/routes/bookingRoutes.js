@@ -31,7 +31,7 @@ router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.
  * @desc    Get booking by ID
  * @access  Private
  */
-router.get('/:id', auth('user', 'partner', 'admin'), bookingController.getBookingById);
+router.get('/:id', auth(['user', 'partner', 'admin']), bookingController.getBookingById);
 
 /**
  * @route   POST /api/bookings

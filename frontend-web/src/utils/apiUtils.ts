@@ -85,10 +85,22 @@ api.interceptors.response.use(
     if (error.response) {
       // Server responded with a status outside 2xx range
       if (error.response.status === 401) {
-        // Unauthorized - clear token and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Check if the error is due to a missing or invalid token
+        const errorMessage = error.response.data?.message || '';
+        
+        // Only clear authentication if it's a token-related error
+        if (errorMessage.includes('No token') || 
+            errorMessage.includes('Token is not valid') || 
+            errorMessage.includes('authorization denied')) {
+          // Unauthorized - clear token and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          
+          // Only redirect if we're not already on the login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+        }
       }
       
       // Format error message from server

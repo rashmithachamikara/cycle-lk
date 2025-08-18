@@ -1,101 +1,70 @@
 //frontend-web/pages/HomePage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   MapPin, 
-  Calendar, 
   Star, 
   Bike, 
   Navigation, 
   Shield, 
   Globe, 
   CheckCircle,
-  Clock,
-  ShieldCheck
+  Clock
 } from 'lucide-react';
+import { locationService, Location } from '../services/locationService';
+import LocationCard from '../components/LocationsPage/LocationCard';
 
 const HomePage = () => {
-  const [selectedPackage, setSelectedPackage] = useState('week');
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Colombo');
 
-  const packages = [
-    {
-      id: 'day',
-      name: '1-Day Explorer',
-      price: '$15',
-      duration: '24 hours',
-      features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
-      popular: false
-    },
-    {
-      id: 'week',
-      name: '1-Week Adventure',
-      price: '$89',
-      duration: '7 days',
-      features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
-      popular: true
-    },
-    {
-      id: 'month',
-      name: '1-Month Journey',
-      price: '$299',
-      duration: '30 days',
-      features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
-      popular: false
-    }
-  ];
-
-  // const locations = [
-  //   { name: 'Colombo', bikes: 45, text: 'Modern cityscape with colonial architecture' },
-  //   { name: 'Kandy', bikes: 32, text: 'Temple of the Tooth and lush hills' },
-  //   { name: 'Galle', bikes: 28, text: 'Historic fort and coastal views' },
-  //   { name: 'Ella', bikes: 24, text: 'Tea plantations and mountain vistas' },
-  //   { name: 'Sigiriya', bikes: 18, text: 'Ancient rock fortress' },
-  //   { name: 'Negombo', bikes: 35, text: 'Beach town with fishing boats' }
+  // const [selectedPackage, setSelectedPackage] = useState('week');
+  // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // const [selectedLocation, setSelectedLocation] = useState('Colombo');
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [locationsError, setLocationsError] = useState<string | null>(null);
+  // const packages = [
+  //   {
+  //     id: 'day',
+  //     name: '1-Day Explorer',
+  //     price: '$15',
+  //     duration: '24 hours',
+  //     features: ['1 city coverage', 'Basic insurance', 'GPS tracking', 'Customer support'],
+  //     popular: false
+  //   },
+  //   {
+  //     id: 'week',
+  //     name: '1-Week Adventure',
+  //     price: '$89',
+  //     duration: '7 days',
+  //     features: ['3 cities coverage', 'Premium insurance', 'Route suggestions', '24/7 support'],
+  //     popular: true
+  //   },
+  //   {
+  //     id: 'month',
+  //     name: '1-Month Journey',
+  //     price: '$299',
+  //     duration: '30 days',
+  //     features: ['Unlimited coverage', 'Full insurance', 'Concierge service', 'Priority support'],
+  //     popular: false
+  //   }
   // ];
 
-  const locations = [
-  {
-    name: 'Colombo',
-    bikes: 20,
-    text: 'Modern cityscape with colonial architecture',
-    img: 'https://wowiwalkers.com/wp-content/uploads/2023/02/Header_Colombo_Sri-Lanka_Blog.jpg'
-  },
-  {
-    name: 'Kandy',
-    bikes: 17,
-    text: 'Temple of the Tooth and lush hills',
-    img: 'https://whc.unesco.org/uploads/thumbs/site_0450_0020-1200-630-20151105154018.jpg'
-  },
-  {
-    name: 'Galle',
-    bikes: 28,
-    text: 'Historic fort and coastal views',
-    img: 'https://do6raq9h04ex.cloudfront.net/sites/8/2021/07/galle-fort-1050x700-1.jpg'
-  },
-  {
-    name: 'Ella',
-    bikes: 43,
-    text: 'Tea plantations and mountain vistas',
-    img: 'https://lk.lakpura.com/cdn/shop/files/demodara-nine-arch-bridge-ella-sri-lanka-scaled-1_77c0b1eb-4170-472a-b6df-950903726734.jpg?v=1654085052&width=3840'
-  },
-  {
-    name: 'Sigiriya',
-    bikes: 18,
-    text: 'Ancient rock fortress',
-    img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/ed/85/6b/um-palacio-no-topo-da.jpg?w=900&h=500&s=1'
-  },
-  {
-    name: 'Negombo',
-    bikes: 39,
-    text: 'Beach town with fishing boats',
-    img: 'https://www.talesofceylon.com/wp-content/uploads/2019/10/Negombo_1920x700.jpg'
-  }
-];
-
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setLocationsLoading(true);
+        const data = await locationService.getAllLocations();
+        setLocations(data);
+      } catch (err:any) {
+        setLocationsError(`Failed to load locations. ${err.message}`);
+      } finally {
+        setLocationsLoading(false);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const features = [
     {
@@ -144,12 +113,18 @@ const HomePage = () => {
     }
   ];
 
+  // Handler for LocationCard (no-op for View Bikes, navigate for More Details)
+  const handleMoreDetails = (locationId: string) => {
+    // You can use a navigation hook if needed, or just link to /location/:id
+    window.location.href = `/location/${locationId}`;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
       
       {/* Hero Section */}
-        <section className="relative overflow-hidden h-[800px]">
+        <section className="relative overflow-hidden h-[94vh]">
         {/* Video Background */}
         <video 
           autoPlay 
@@ -158,7 +133,7 @@ const HomePage = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/src/assests/Sri lanka Video_4.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.mp4" type="video/mp4" />
         </video>
         
         {/* Overlay for better text readability */}
@@ -320,19 +295,19 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-3">
             {[
-              { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
-              { step: '02', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
-              { step: '03', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
-              { step: '04', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
+              // { step: '01', title: 'Choose Package', desc: 'Select your preferred rental duration and coverage area', icon: <Calendar className="h-8 w-8" /> },
+              { step: '01', title: 'Pick Location', desc: 'Choose from 50+ partner locations across Sri Lanka', icon: <MapPin className="h-8 w-8" /> },
+              { step: '02', title: 'Start Cycling', desc: 'Unlock your bike with QR code and begin exploring', icon: <Bike className="h-8 w-8" /> },
+              { step: '03', title: 'Drop Anywhere', desc: 'Return your bike at any partner location in your network', icon: <CheckCircle className="h-8 w-8" /> }
             ].map((item, index) => (
               <div key={index} className="text-center group">
                 <div className="relative mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mx-auto flex items-center justify-center text-white mb-4 transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     {item.icon}
                   </div>
-                  <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-0.5 bg-orange-500 text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
                     {item.step}
                   </div>
                 </div>
@@ -345,7 +320,7 @@ const HomePage = () => {
       </section>
 
       {/* Package Plans */}
-      <section className="py-20">
+      {/* <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Adventure</h2>
@@ -401,7 +376,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features */}
       <section className="py-20 bg-gradient-to-br from-emerald-50 to-teal-50">
@@ -437,39 +412,21 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {locations.slice(0, 6).map((location, index) => (
-              <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-                {/* add image to these cards */}
-                <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
-                  <img
-                    src={location.img}
-                    alt={location.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/20"></div>
-                  <div className="absolute bottom-4 left-6 text-white">
-                    <div className="text-sm opacity-90">{location.text}</div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900">{location.name}</h3>
-                    <div className="flex items-center text-emerald-600">
-                      <Bike className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-medium">{location.bikes} bikes</span>
-                    </div>
-                  </div>
-                  <Link 
-                    to="/locations"
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors duration-300 font-medium text-center block"
-                  >
-                    View Available Bikes
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+          {locationsLoading ? (
+            <div className="text-center py-12 text-gray-500">Loading locations...</div>
+          ) : locationsError ? (
+            <div className="text-center py-12 text-red-500">{locationsError}</div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {locations.slice(0, 6).map((location) => (
+                <LocationCard
+                  key={location.id}
+                  location={location}
+                  onMoreDetails={handleMoreDetails}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link 

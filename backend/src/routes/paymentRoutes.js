@@ -18,6 +18,20 @@ router.get('/', auth(), paymentController.getAllPayments);
 router.get('/stats', auth(), paymentController.getPaymentStats);
 
 /**
+ * @route   GET /api/payments/pending
+ * @desc    Get pending payments for current user
+ * @access  Private
+ */
+router.get('/pending', auth(['user']), paymentController.getPendingPayments);
+
+/**
+ * @route   POST /api/payments/initial
+ * @desc    Process initial payment for a booking
+ * @access  Private (User only)
+ */
+router.post('/initial', auth(['user']), paymentController.processInitialPayment);
+
+/**
  * @route   GET /api/payments/:id
  * @desc    Get payment by ID
  * @access  Private

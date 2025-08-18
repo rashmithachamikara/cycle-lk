@@ -1,5 +1,31 @@
 const { Notification, User } = require('../models');
 const { asyncHandler } = require('../middleware/errorHandler');
+const firebaseAdmin = require('../config/firebase');
+
+/**
+ * Create real-time event in Firestore
+ */
+const createRealtimeEvent = async (eventData) => {
+  try {
+    if (!firebaseAdmin) {
+      console.log('Firebase not initialized, skipping real-time event');
+      return null;
+    }
+
+    const db = firebaseAdmin.firestore();
+    const docRef = await db.collection('realtimeEvents').add({
+      ...eventData,
+      timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+      processed: false
+    });
+
+    console.log(`[RealtimeEvents] Created event ${eventData.type} for user ${eventData.targetUserId}`);
+    return docRef.id;
+  } catch (error) {
+    console.error('[RealtimeEvents] Error creating real-time event:', error);
+    return null;
+  }
+};
 
 /**
  * Get user notifications
@@ -114,7 +140,7 @@ exports.markAllAsRead = asyncHandler(async (req, res) => {
  * @param {Object} res - Express response object
  */
 exports.createNotification = asyncHandler(async (req, res) => {
-  const { userId, type, title, message, relatedTo, sentVia } = req.body;
+  const { userId, type, title, message, relatedTo, sentVia, createRealtimeEvent: shouldCreateRealtimeEvent } = req.body;
   
   // Check if the user exists
   const user = await User.findById(userId);
@@ -134,10 +160,51 @@ exports.createNotification = asyncHandler(async (req, res) => {
   
   await notification.save();
   
+  // Create real-time event if requested
+  if (shouldCreateRealtimeEvent) {
+    const eventType = mapNotificationTypeToEventType(type, relatedTo?.type);
+    if (eventType) {
+      await createRealtimeEvent({
+        type: eventType,
+        targetUserId: userId,
+        targetUserRole: user.role,
+        data: {
+          notificationId: notification._id.toString(),
+          title,
+          message,
+          type,
+          relatedTo
+        },
+        metadata: {
+          sourceUserId: req.user?.id,
+          sourceUserRole: req.user?.role
+        }
+      });
+    }
+  }
+  
   // TODO: If sentVia includes email or sms, send through those channels
   
   res.status(201).json(notification);
 });
+
+/**
+ * Map notification type to real-time event type
+ */
+const mapNotificationTypeToEventType = (notificationType, relatedToType) => {
+  if (notificationType === 'partner' && relatedToType === 'booking') {
+    return 'BOOKING_CREATED';
+  }
+  if (notificationType === 'system' && relatedToType === 'booking') {
+    return 'BOOKING_UPDATED';
+  }
+  if (notificationType === 'payment') {
+    return 'PAYMENT_COMPLETED';
+  }
+  
+  // Default to generic notification event
+  return 'NOTIFICATION_CREATED';
+};
 
 /**
  * Delete a notification
@@ -186,7 +253,7 @@ exports.deleteAllNotifications = asyncHandler(async (req, res) => {
  * Admin only function
  */
 exports.createBulkNotifications = asyncHandler(async (req, res) => {
-  const { userIds, type, title, message, relatedTo, sentVia } = req.body;
+  const { userIds, type, title, message, relatedTo, sentVia, createRealtimeEvent: shouldCreateRealtimeEvent } = req.body;
   
   if (!Array.isArray(userIds) || userIds.length === 0) {
     return res.status(400).json({ message: 'User IDs array is required' });
@@ -209,12 +276,40 @@ exports.createBulkNotifications = asyncHandler(async (req, res) => {
     createdAt: new Date()
   }));
   
-  await Notification.insertMany(notifications);
+  const createdNotifications = await Notification.insertMany(notifications);
+  
+  // Create real-time events if requested
+  if (shouldCreateRealtimeEvent) {
+    const eventType = mapNotificationTypeToEventType(type, relatedTo?.type);
+    if (eventType) {
+      const eventPromises = users.map((user, index) => 
+        createRealtimeEvent({
+          type: eventType,
+          targetUserId: user._id.toString(),
+          targetUserRole: user.role,
+          data: {
+            notificationId: createdNotifications[index]._id.toString(),
+            title,
+            message,
+            type,
+            relatedTo
+          },
+          metadata: {
+            sourceUserId: req.user?.id,
+            sourceUserRole: req.user?.role
+          }
+        })
+      );
+      
+      await Promise.all(eventPromises);
+    }
+  }
   
   // TODO: If sentVia includes email or sms, send through those channels
   
   res.status(201).json({ 
     message: `${notifications.length} notifications sent successfully`,
-    count: notifications.length
+    count: notifications.length,
+    notifications: createdNotifications
   });
 });

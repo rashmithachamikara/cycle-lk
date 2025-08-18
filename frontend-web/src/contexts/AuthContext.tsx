@@ -1,6 +1,7 @@
 // frontend-web/src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, setAuthToken } from '../services/authService';
+import { notificationIntegrationService } from '../services/notificationIntegrationService';
 
 // Define types
 export interface User {
@@ -54,30 +55,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('token');
-      if (storedToken) {
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedToken && storedUser) {
         try {
           // Set auth token using helper
           setAuthToken(storedToken);
           
-          // Get user data
-          const userData = localStorage.getItem('user');
-          if (userData) {
-            setUser(JSON.parse(userData));
-          }
+          // Parse and set user data
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
           setToken(storedToken);
+          
+          console.log('Authentication restored from localStorage:', { userId: userData.id, role: userData.role });
         } catch (err) {
           console.error('Authentication error:', err);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setToken(null);
           setUser(null);
+          setAuthToken(null);
         }
+      } else {
+        console.log('No stored authentication found');
       }
       setIsLoading(false);
     };
 
     checkAuth();
   }, []);
+
+  // Initialize FCM and notification integration when user is authenticated
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      if (user && token) {
+        try {
+          // Initialize notification integration service
+          await notificationIntegrationService.initialize(
+            user.id, 
+            user.role as 'user' | 'partner' | 'admin'
+          );
+          
+          console.log('Notification integration initialized successfully');
+        } catch (error) {
+          console.error('Error initializing notifications:', error);
+        }
+      }
+    };
+
+    initializeNotifications();
+  }, [user, token]);
 
   // Login function
   const login = async (email: string, password: string) => {
@@ -135,6 +162,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Logout function
   const logout = () => {
+    // Cleanup notification integration
+    notificationIntegrationService.cleanup();
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
