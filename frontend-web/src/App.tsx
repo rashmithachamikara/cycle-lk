@@ -90,7 +90,8 @@ import {
   PartnerDashboardPage,
   CurrentRentalsPage,
   BookingRequestsPage,
-  CompletedRentalsPage 
+  CompletedRentalsPage,
+  PaymentRequestsPage
 } from './pages/PartnerDashboardPage';
 import BookingRequestDetailPage from './pages/BookingRequestDetailPage';
 import CurrentRentalDetailPage from './pages/CurrentRentalDetailPage';
@@ -177,6 +178,7 @@ function App() {
       <Route path="/partner-dashboard/current-rentals" element={<ProtectedRoute element={<CurrentRentalsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/booking-requests" element={<ProtectedRoute element={<BookingRequestsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/completed-rentals" element={<ProtectedRoute element={<CompletedRentalsPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/paymentRequests" element={<ProtectedRoute element={<PaymentRequestsPage />} requiredRole="partner" />} />
       
       {/* Partner detail pages */}
       <Route path="/partner-dashboard/booking-requests/:id" element={<ProtectedRoute element={<BookingRequestDetailPage />} requiredRole="partner" />} />

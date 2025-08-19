@@ -38,7 +38,7 @@ interface NotificationProps {
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past'>('requested');
+  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past' | 'paymentPending'>('requested');
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PaymentPendingBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -233,7 +233,7 @@ const DashboardPage = () => {
   }, [bookingUpdates, clearProcessedUpdates]);
 
   // Filter bookings by tab (excluding payments)
-  const filterBookingsByTab = (tab: 'current' | 'requested' | 'past') => {
+  const filterBookingsByTab = (tab: 'current' | 'requested' | 'past' | 'paymentPending') => {
     return bookings.filter(booking => {
       switch (tab) {
         case 'current':
@@ -242,6 +242,8 @@ const DashboardPage = () => {
           return booking.status === 'requested';
         case 'past':
           return booking.status === 'completed' || booking.status === 'cancelled';
+        case 'paymentPending':
+          return booking.status === 'confirmed' && booking.paymentStatus === 'pending';
         default:
           return false;
       }
@@ -271,7 +273,8 @@ const DashboardPage = () => {
   const bookingCounts = {
     current: filterBookingsByTab('current').length,
     requested: filterBookingsByTab('requested').length,
-    past: filterBookingsByTab('past').length
+    past: filterBookingsByTab('past').length,
+    paymentPending: filterBookingsByTab('paymentPending').length
   };
 
   const handleMarkAsRead = (notificationId: string) => {

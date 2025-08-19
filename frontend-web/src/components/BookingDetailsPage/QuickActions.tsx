@@ -5,7 +5,8 @@ import {
   Navigation, 
   Phone, 
   Download, 
-  MessageCircle 
+  MessageCircle, 
+  CreditCard
 } from 'lucide-react';
 import { UserDashboardBooking } from '../../services/bookingService';
 
@@ -22,7 +23,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
       
       <div className="space-y-3">
         {/* Status-specific actions */}
-        {(booking.status === 'active' || booking.status === 'confirmed') && (
+        {(booking.status === 'active') && (
           <>
             <button className="w-full flex items-center justify-center bg-emerald-500 text-white px-4 py-3 rounded-lg hover:bg-emerald-600 transition-colors">
               <QrCode className="h-4 w-4 mr-2" />
@@ -30,7 +31,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
             </button>
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               <Navigation className="h-4 w-4 mr-2" />
-              Get Directions
+              Get Drop Locations
             </button>
             {booking.partnerPhone && (
               <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
@@ -40,12 +41,22 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
             )}
           </>
         )}
-        
+
+        {booking.status === 'confirmed' && booking.paymentStatus === 'pending' && (
+          <>
+            <button className="w-full flex items-center justify-center border bg-yellow-600 text-white px-4 py-3 rounded-lg transition-colors hover:bg-yellow-700"
+              onClick={() => navigate(`/payments`)}>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Proceed to Payment
+            </button>
+          </>
+        )}
+
         {booking.status === 'requested' && (
           <>
-            <button className="w-full flex items-center justify-center bg-gray-500 text-white px-4 py-3 rounded-lg hover:bg-gray-600 transition-colors">
-              <Download className="h-4 w-4 mr-2" />
-              Download Voucher
+            <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
+              <Navigation className="h-4 w-4 mr-2" />
+              Navigate to Pickup Location
             </button>
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               Modify Booking
