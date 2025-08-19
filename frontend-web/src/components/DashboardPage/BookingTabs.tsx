@@ -2,12 +2,13 @@ import React from 'react';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
 
 interface BookingTabsProps {
-  activeTab: 'current' | 'requested' | 'past';
-  onTabChange: (tab: 'current' | 'requested' | 'past') => void;
+  activeTab: 'current' | 'requested' | 'past' | 'paymentPending';
+  onTabChange: (tab: 'current' | 'requested' | 'past' | 'paymentPending') => void;
   counts: {
     current: number;
     requested: number;
     past: number;
+    paymentPending: number;
   };
 }
 
@@ -15,15 +16,23 @@ const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, onTabChange, count
   const tabs = [
     {
       id: 'requested' as const,
-      label: 'Requested Rentals',
+      label: 'Requested ',
       icon: Clock,
       count: counts.requested,
       color: 'text-blue-600',
       activeColor: 'border-blue-500 bg-blue-50 text-blue-700'
     },
     {
+      id: 'paymentPending' as const,
+      label: 'Payment Pending ',
+      icon: Clock,
+      count: counts.paymentPending,
+      color: 'text-blue-600',
+      activeColor: 'border-blue-500 bg-blue-50 text-blue-700'
+    },
+    {
       id: 'current' as const,
-      label: 'Current Rentals',
+      label: 'Current ',
       icon: Calendar,
       count: counts.current,
       color: 'text-green-600',
@@ -31,7 +40,7 @@ const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, onTabChange, count
     },
     {
       id: 'past' as const,
-      label: 'Past Rentals',
+      label: 'Past ',
       icon: CheckCircle,
       count: counts.past,
       color: 'text-gray-600',
