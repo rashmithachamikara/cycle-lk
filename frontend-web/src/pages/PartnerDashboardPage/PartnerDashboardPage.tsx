@@ -289,9 +289,9 @@ const PartnerDashboardPage = () => {
                     )}
                   </Link>
 
-                  {/* Initial Payment Pending Requests */}
+                  {/* Initial Payment Pending Requests Button */}
                   <Link
-                    to="/partner-dashboard/payment-requests"
+                    to="/partner-dashboard/paymentRequests"
                     className="group bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-xl p-6 transition-all duration-200 border border-yellow-200 hover:border-yellow-300"
                   >
                     <div className="flex items-center justify-between mb-4">
