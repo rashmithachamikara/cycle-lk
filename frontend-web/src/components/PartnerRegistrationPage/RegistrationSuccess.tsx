@@ -32,7 +32,6 @@
 
 
 // frontend-web/components/PartnerRegistrationPage/RegistrationSuccess.tsx
-
 import React from 'react';
 import { CheckCircle, Mail, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,3 +1,4 @@
+//frontend-web/components/PartnerRegistrationPage/BusinessHoursStep.tsx
 import React from 'react';
 import { StepProps } from './types';
 import { type BusinessHours } from '../../services/partnerService';

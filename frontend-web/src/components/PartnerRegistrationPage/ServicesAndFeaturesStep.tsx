@@ -1,3 +1,4 @@
+//frontend-web/components/PartnerRegistrationPage/ServicesAndFeaturesStep.tsx
 import React from 'react';
 import { StepProps } from './types';
 import { BIKE_SPECIALTIES, BUSINESS_FEATURES } from './constants';
