@@ -3,7 +3,6 @@ const { Bike, Partner } = require('../models');
 const cloudinary = require('../config/cloudinary');
 
 
-
 /**
  * Get all bikes with optional filtering
  * @param {Object} req - Express request object
@@ -211,8 +210,6 @@ exports.addBike = async (req, res) => {
     res.status(500).json({ message: 'Server error while adding bike' });
   }
 };
-
-
 
 
 
