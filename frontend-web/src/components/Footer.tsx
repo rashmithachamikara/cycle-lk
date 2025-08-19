@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bike, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,10 +9,14 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2">
             <Link to="/" className="flex items-center space-x-2 mb-6">
-              <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <Bike className="h-6 w-6 text-white" />
+              <div className="h-12 w-12 rounded-xl overflow-hidden">
+                <img
+                  src="https://res.cloudinary.com/di9vcyned/image/upload/v1755623346/logo_vo5njt.jpg"
+                  alt="Logo"
+                  className="h-full w-full object-contain"
+                  />
               </div>
-              <span className="text-2xl font-bold">Cycle.LK</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-[#1E90FF] to-[#00D4AA] bg-clip-text text-transparent font-sans ">Cycle.LK</span>
             </Link>
             <p className="text-gray-300 mb-6 max-w-md">
               Explore Sri Lanka sustainably with our flexible bike rental network. 
