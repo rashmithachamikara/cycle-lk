@@ -53,7 +53,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
         </p>
         
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center text-emerald-600">
+          <div className="flex items-center text-[#00D4AA]">
             <Bike className="h-4 w-4 mr-1" />
             <span className="text-sm font-medium">{location.bikeCount} bikes</span>
           </div>
@@ -82,7 +82,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
                   e.stopPropagation();
                   onMoreDetails(location.id);
                 }}
-                className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors duration-300 font-medium"
+                className="flex-1 bg-gradient-to-r from-[#FF6B35] to-[#FF6B9D] text-white py-3 rounded-lg hover:from-[#e55a2e] hover:to-[#e55a89] transition-colors duration-300 font-medium"
               >
                 More Details
               </button>
