@@ -19,7 +19,6 @@
 
 
 // frontend-web/components/PartnerRegistrationPage/index.ts
-
 export { default as PartnerRegistrationForm } from './PartnerRegistrationForm';
 export { default as RegistrationSuccess } from './RegistrationSuccess';
 export { default as ServiceLocationManager } from './ServiceLocationManager';
