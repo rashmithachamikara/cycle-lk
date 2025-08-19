@@ -8,7 +8,7 @@ interface BookingListProps {
   bookings: UserDashboardBooking[];
   loading: boolean;
   error: string | null;
-  type: 'current' | 'requested' | 'past';
+  type: 'current' | 'requested' | 'past' | 'paymentPending';
   onRetry?: () => void;
 }
 
@@ -103,6 +103,13 @@ const BookingList: React.FC<BookingListProps> = ({
             description: 'You haven\'t completed any bike rentals yet.',
             action: 'Start Your First Rental',
             link: '/booking'
+          };
+        case 'paymentPending':
+          return {
+            title: 'No Pending Payments',
+            description: 'You don\'t have any pending payments at the moment.',
+            action: 'View Payment Options',
+            link: '/payments'
           };
         default:
           return {

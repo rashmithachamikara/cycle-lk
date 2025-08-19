@@ -47,7 +47,7 @@ const CurrentRentalsPage = () => {
   }, [user]);
 
   // Filter bookings by status
-  const currentBookings = bookings.filter(booking => booking.status === 'active' || booking.status === 'confirmed');
+  const currentBookings = bookings.filter(booking => booking.status === 'active');
 
   return (
     <div className="min-h-screen bg-gray-50">

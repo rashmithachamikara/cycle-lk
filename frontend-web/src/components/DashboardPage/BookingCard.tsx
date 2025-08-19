@@ -16,7 +16,7 @@ import { UserDashboardBooking } from '../../services/bookingService';
 
 interface BookingCardProps {
   booking: UserDashboardBooking;
-  type: 'current' | 'requested' | 'past';
+  type: 'current' | 'requested' | 'past' | 'paymentPending';
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({ booking, type }) => {
@@ -46,6 +46,13 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, type }) => {
             ? 'bg-gray-100 text-gray-800' 
             : 'bg-red-100 text-red-800',
           badgeText: booking.status === 'completed' ? 'Completed' : 'Cancelled'
+        };
+      case 'paymentPending':
+        return {
+          dotColor: 'bg-yellow-500',
+          title: 'Payment Pending',
+          badge: 'bg-yellow-100 text-yellow-800',
+          badgeText: 'Pending'
         };
       default:
         return {
@@ -77,10 +84,10 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, type }) => {
       case 'requested':
         return (
           <div className="flex space-x-3">
-            <button className="flex items-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+            {/* <button className="flex items-center bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
               <Download className="h-4 w-4 mr-2" />
-              Download Voucher
-            </button>
+             Navigate to pickup location
+            </button> */}
             <button className="flex items-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:border-emerald-500 transition-colors">
               <Settings className="h-4 w-4 mr-2" />
               Modify
