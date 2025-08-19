@@ -13,6 +13,7 @@ class NotificationIntegrationService {
   private listenerId: string | null = null;
   private isInitialized: boolean = false;
   private processedEventIds: Set<string> = new Set();
+  private updateCallbacks: Set<() => void> = new Set();
 
   /**
    * Initialize the notification integration for a user
@@ -44,6 +45,34 @@ class NotificationIntegrationService {
   }
 
   /**
+   * Subscribe to notification updates
+   */
+  onNotificationUpdate(callback: () => void): () => void {
+    this.updateCallbacks.add(callback);
+    console.log('[NotificationIntegration] Added update callback, total callbacks:', this.updateCallbacks.size);
+    
+    // Return unsubscribe function
+    return () => {
+      this.updateCallbacks.delete(callback);
+      console.log('[NotificationIntegration] Removed update callback, remaining callbacks:', this.updateCallbacks.size);
+    };
+  }
+
+  /**
+   * Notify all subscribers about notification updates
+   */
+  private notifyUpdateCallbacks() {
+    console.log('[NotificationIntegration] Notifying', this.updateCallbacks.size, 'update callbacks');
+    this.updateCallbacks.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        console.error('[NotificationIntegration] Error in update callback:', error);
+      }
+    });
+  }
+
+  /**
    * Subscribe to real-time events for the current user
    */
   private subscribeToRealtimeEvents() {
@@ -60,6 +89,8 @@ class NotificationIntegrationService {
    * Handle incoming real-time events
    */
   private handleRealtimeEvents(events: RealtimeEvent[]) {
+    let hasNewEvents = false;
+    
     events.forEach(event => {
       // Prevent duplicate processing
       if (!event.id || this.processedEventIds.has(event.id)) {
@@ -69,6 +100,7 @@ class NotificationIntegrationService {
 
       console.log('[NotificationIntegration] Processing new event:', event.type, event.id);
       this.processedEventIds.add(event.id);
+      hasNewEvents = true;
 
       // Show toast notification based on event type and user role
       this.showToastNotification(event);
@@ -76,6 +108,11 @@ class NotificationIntegrationService {
       // Mark the real-time event as processed
       realtimeEventService.markEventAsProcessed(event.id);
     });
+
+    // Notify subscribers about new notifications
+    if (hasNewEvents) {
+      this.notifyUpdateCallbacks();
+    }
   }
 
   /**
@@ -193,6 +230,7 @@ class NotificationIntegrationService {
     this.userRole = null;
     this.isInitialized = false;
     this.processedEventIds.clear();
+    this.updateCallbacks.clear();
   }
 }
 

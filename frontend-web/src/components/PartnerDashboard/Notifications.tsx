@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../utils/apiUtils';
+import notificationIntegrationService from '../../services/notificationIntegrationService';
 
 // Use the same notification type as the main notifications system
 interface DatabaseNotification {
@@ -55,11 +56,29 @@ const Notifications = () => {
     }
   }, [user?.id]);
 
+  // Handle real-time notification updates
+  const handleRealtimeUpdate = useCallback(() => {
+    console.log('[Partner Notifications] Real-time update received, refreshing notifications...');
+    fetchNotifications();
+  }, [fetchNotifications]);
+
   useEffect(() => {
     if (user && user.role === 'partner') {
       fetchNotifications();
+      
+      // Subscribe to real-time notification updates
+      const unsubscribe = notificationIntegrationService.onNotificationUpdate(handleRealtimeUpdate);
+      console.log('[Partner Notifications] Subscribed to real-time updates');
+      
+      // Cleanup subscription on unmount
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+          console.log('[Partner Notifications] Unsubscribed from real-time updates');
+        }
+      };
     }
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, handleRealtimeUpdate]);
 
   // Format timestamp for display
   const formatTime = (timestamp: string) => {
