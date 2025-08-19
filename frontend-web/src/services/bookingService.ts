@@ -107,6 +107,7 @@ export interface UserDashboardBooking {
   id: string;
   bikeName: string;
   bikeImages: string[];
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -177,6 +178,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       id: booking._id || '',
       bikeImages: booking.bikeId?.images || [],
       bikeName: booking.bikeId?.name || 'Unknown Bike',
+      paymentStatus: booking.paymentStatus || 'Unknown',
       startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
       endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
       status: booking.status || 'requested',
@@ -201,6 +203,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
     // Return a safe fallback object
     return {
       id: booking._id || 'unknown',
+      paymentStatus: booking.paymentStatus || 'Unknown',
       bikeName: 'Unknown Bike',
       bikeImages: [],
       startDate: '',
