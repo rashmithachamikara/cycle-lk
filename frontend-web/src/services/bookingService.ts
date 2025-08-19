@@ -86,6 +86,7 @@ export interface BackendBooking {
 // Interface for partner dashboard booking display
 export interface PartnerDashboardBooking {
   id: string;
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -152,6 +153,7 @@ export interface CreateBookingRequest{
 export const transformBookingForPartnerDashboard = (booking: BackendBooking): PartnerDashboardBooking => {
   return {
     id: booking._id,
+    paymentStatus: booking.paymentStatus || 'Unknown',
     customerName: booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown Customer',
     customerPhone: booking.userId?.phone || '',
     customerEmail: booking.userId?.email || '',

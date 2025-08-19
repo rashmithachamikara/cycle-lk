@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Notifications from '../../components/PartnerDashboard/Notifications';
+import UpcomingEvents from '../../components/PartnerDashboard/UpcomingEvents';
 import MonthlySnapshot from '../../components/PartnerDashboard/MonthlySnapshot';
 import { 
   Bike, 
@@ -13,7 +14,8 @@ import {
   Clock,
   CheckCircle,
   FileText,
-  ArrowRight
+  ArrowRight,
+  CreditCard
 } from 'lucide-react';
 
 import { 
@@ -24,6 +26,7 @@ import {
 } from '../../services/bookingService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
+import notificationIntegrationService from '../../services/notificationIntegrationService';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
@@ -64,11 +67,25 @@ const PartnerDashboardPage = () => {
   useEffect(() => {
     if (user && user.role === 'partner') {
       fetchBookings();
+      
+      // Initialize notification integration service
+      notificationIntegrationService.initialize(user.id, 'partner')
+        .then(() => {
+          console.log('Partner notification integration initialized');
+        })
+        .catch((error) => {
+          console.error('Failed to initialize partner notification integration:', error);
+        });
     } else {
       // If not a partner, set to empty and stop loading
       setBookings([]);
       setLoading(false);
     }
+
+    // Cleanup on unmount
+    return () => {
+      notificationIntegrationService.cleanup();
+    };
   }, [user]);
 
   // Handle real-time new booking requests
@@ -96,8 +113,9 @@ const PartnerDashboardPage = () => {
 
   // Filter bookings by status
   const requestedBookings = bookings.filter(booking => booking.status === 'requested');
-  const currentBookings = bookings.filter(booking => booking.status === 'active' || booking.status === 'confirmed');
+  const currentBookings = bookings.filter(booking => booking.status === 'active');
   const recentBookings = bookings.filter(booking => booking.status === 'completed');
+  const paymentRequests = bookings.filter(booking => booking.status === 'confirmed' && booking.paymentStatus === 'pending');
 
   // Calculate total revenue from completed bookings
   const totalRevenue = recentBookings.reduce((sum, booking) => {
@@ -244,25 +262,8 @@ const PartnerDashboardPage = () => {
               </div> */}
 
               <div className="p-6">
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Current Rentals Button */}
-                  <Link
-                    to="/partner-dashboard/current-rentals"
-                    className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 transition-all duration-200 border border-blue-200 hover:border-blue-300"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                        <Clock className="h-6 w-6 text-white" />
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Current Rentals</h4>
-                    <p className="text-gray-600 text-sm mb-3">Manage active bicycle rentals</p>
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-blue-600">{currentBookings.length}</span>
-                      <span className="text-blue-600 text-sm ml-2">active rentals</span>
-                    </div>
-                  </Link>
+                <div className="grid md:grid-cols-4 gap-4">
+                  
 
                   {/* Booking Requests Button */}
                   <Link
@@ -286,6 +287,44 @@ const PartnerDashboardPage = () => {
                         {newBookingRequests.length} new!
                       </div>
                     )}
+                  </Link>
+
+                  {/* Initial Payment Pending Requests */}
+                  <Link
+                    to="/partner-dashboard/payment-requests"
+                    className="group bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-xl p-6 transition-all duration-200 border border-yellow-200 hover:border-yellow-300"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center group-hover:bg-yellow-600 transition-colors">
+                        <CreditCard className="h-6 w-6 text-white" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-yellow-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Payment Requests</h4>
+                    <p className="text-gray-600 text-sm mb-3">Review pending Initial payments</p>
+                    <div className="flex items-center">
+                      <span className="text-2xl font-bold text-yellow-600">{paymentRequests.length}</span>
+                      <span className="text-yellow-600 text-sm ml-2">pending payments</span>
+                    </div>
+                  </Link>
+
+                  {/* Current Rentals Button */}
+                  <Link
+                    to="/partner-dashboard/current-rentals"
+                    className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 transition-all duration-200 border border-blue-200 hover:border-blue-300"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                        <Clock className="h-6 w-6 text-white" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Current Rentals</h4>
+                    <p className="text-gray-600 text-sm mb-3">Manage active bicycle rentals</p>
+                    <div className="flex items-center">
+                      <span className="text-2xl font-bold text-blue-600">{currentBookings.length}</span>
+                      <span className="text-blue-600 text-sm ml-2">active rentals</span>
+                    </div>
                   </Link>
 
                   {/* Completed Rentals Button */}
@@ -338,6 +377,9 @@ const PartnerDashboardPage = () => {
 
             {/* Notifications */}
             <Notifications />
+
+            {/* Upcoming Events */}
+            <UpcomingEvents />
 
             {/* Analytics Summary */}
             <MonthlySnapshot />
