@@ -49,7 +49,7 @@ const Header = () => {
             className="h-full w-full object-contain"
             />
           </div>
-          <span className="text-2xl font-bold text-[#312731] font-sans">
+          <span className="text-2xl font-bold bg-gradient-to-r from-[#1E90FF] to-[#00D4AA] bg-clip-text text-transparent font-sans">
             Cycle.LK
           </span>
           </Link>
