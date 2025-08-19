@@ -29,7 +29,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+    <header className="bg-gray-900 shadow-sm border-b border-gray-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* <Link to="/" className="flex items-center space-x-2">
@@ -44,7 +44,7 @@ const Header = () => {
           <Link to="/" className="flex items-center space-x-2">
           <div className="h-12 w-12 rounded-xl overflow-hidden">
             <img
-            src="https://res.cloudinary.com/di9vcyned/image/upload/v1755517736/Logo_cqbgsk.png"
+            src="https://res.cloudinary.com/di9vcyned/image/upload/v1755623346/logo_vo5njt.jpg"
             alt="Logo"
             className="h-full w-full object-contain"
             />
