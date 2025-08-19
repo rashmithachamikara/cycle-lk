@@ -175,3 +175,20 @@ partnerSchema.index({ status: 1 });
 partnerSchema.index({ companyName: 'text', description: 'text' });
 
 module.exports = mongoose.model('Partner', partnerSchema);
+
+
+
+// City: {
+//     type: String,
+//     trim: true
+//   },
+//   coordinates: {
+//     lat: {
+//       type: Number,
+//       required: true
+//     },
+//     lng: {
+//        type: Number,
+//        required: true
+//       }
+//    },
