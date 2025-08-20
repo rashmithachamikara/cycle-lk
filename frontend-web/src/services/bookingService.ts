@@ -86,6 +86,7 @@ export interface BackendBooking {
 // Interface for partner dashboard booking display
 export interface PartnerDashboardBooking {
   id: string;
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -107,6 +108,7 @@ export interface UserDashboardBooking {
   id: string;
   bikeName: string;
   bikeImages: string[];
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -151,6 +153,7 @@ export interface CreateBookingRequest{
 export const transformBookingForPartnerDashboard = (booking: BackendBooking): PartnerDashboardBooking => {
   return {
     id: booking._id,
+    paymentStatus: booking.paymentStatus || 'Unknown',
     customerName: booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown Customer',
     customerPhone: booking.userId?.phone || '',
     customerEmail: booking.userId?.email || '',
@@ -177,6 +180,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       id: booking._id || '',
       bikeImages: booking.bikeId?.images || [],
       bikeName: booking.bikeId?.name || 'Unknown Bike',
+      paymentStatus: booking.paymentStatus || 'Unknown',
       startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
       endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
       status: booking.status || 'requested',
@@ -201,6 +205,7 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
     // Return a safe fallback object
     return {
       id: booking._id || 'unknown',
+      paymentStatus: booking.paymentStatus || 'Unknown',
       bikeName: 'Unknown Bike',
       bikeImages: [],
       startDate: '',
