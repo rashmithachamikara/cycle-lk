@@ -1,3 +1,4 @@
+//frontend-web/components/LocationsPage/LocationCard.tsx
 import React from 'react';
 import { MapPin, Bike, MapIcon } from 'lucide-react';
 import { Location } from '../../services/locationService';
@@ -15,7 +16,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
 }) => {
   return (
     <div 
-      className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer"
+      className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(255,107,80,0.4)] group cursor-pointer"
       onClick={() => onMoreDetails?.(location.id)}
     >
       <div
