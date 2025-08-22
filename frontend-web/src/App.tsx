@@ -167,7 +167,7 @@ function App() {
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
-      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["user", "partner"]} />} />
+      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["admin", "user", "partner"]} />} />
       <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
       <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
