@@ -1,0 +1,29 @@
+@keyframes navbar-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navbar-slide-reverse {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+}
+
+.animate-navbar-slide {
+  animation: navbar-slide 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.animate-navbar-slide-reverse {
+  animation: navbar-slide-reverse 0.3s cubic-bezier(0.4,0,0.2,1);
+}
