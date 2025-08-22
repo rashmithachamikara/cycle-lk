@@ -34,7 +34,7 @@ const PartnerInfo = ({ bike, formatBusinessHours }: PartnerInfoProps) => {
           {bike.partner?.phone && (
             <a
               href={`tel:${bike.partner.phone}`}
-              className="flex items-center bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+              className="flex items-center bg-[#1E90FF] text-white px-3 py-2 rounded-lg hover:bg-[#00BFFF] transition-colors text-sm"
             >
               <Phone className="h-4 w-4 mr-1" />
               Call
@@ -43,7 +43,7 @@ const PartnerInfo = ({ bike, formatBusinessHours }: PartnerInfoProps) => {
           {bike.partner?.email && (
             <a
               href={`mailto:${bike.partner.email}`}
-              className="flex items-center bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+              className="flex items-center bg-[#00D4AA] text-white px-3 py-2 rounded-lg hover:bg-[#00B89A] transition-colors text-sm"
             >
               <MessageCircle className="h-4 w-4 mr-1" />
               Email
