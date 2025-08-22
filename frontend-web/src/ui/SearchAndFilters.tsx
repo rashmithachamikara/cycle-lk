@@ -72,7 +72,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-[#20B2AA] focus:outline-none"
             />
           </div>
 
@@ -83,7 +83,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               <select
                 value={filterValue}
                 onChange={(e) => onFilterChange(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none"
+                className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
               >
                 <option value="all">{filterLabel}</option>
                 {filterOptions.map(option => (
@@ -98,7 +98,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             <select
               value={sortValue}
               onChange={(e) => onSortChange(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none"
+              className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
             >
               {sortOptions.map(option => (
                 <option key={option.value} value={option.value}>
@@ -112,14 +112,14 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => onViewModeChange('grid')}
-                  className={`p-3 ${viewMode === 'grid' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600'}`}
+                  className={`p-3 ${viewMode === 'grid' ? 'bg-[#20B2AA] text-white' : 'bg-white text-gray-600'}`}
                   title="Grid view"
                 >
                   <Grid className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => onViewModeChange('list')}
-                  className={`p-3 ${viewMode === 'list' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600'}`}
+                  className={`p-3 ${viewMode === 'list' ? 'bg-[#20B2AA] text-white' : 'bg-white text-gray-600'}`}
                   title="List view"
                 >
                   <List className="h-5 w-5" />

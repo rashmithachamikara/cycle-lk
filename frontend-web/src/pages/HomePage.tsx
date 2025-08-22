@@ -115,7 +115,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header/>
       
       <main>
         {/* ============================================= */}
@@ -375,7 +375,7 @@ const HomePage = () => {
               <div 
                 key={index} 
                 className="
-                  backdrop-blur-xl bg-white/20 border border-white/30 
+                  backdrop-blur-xl bg-white/10 border border-white/20
                   rounded-2xl p-8 shadow-lg text-white
                   transition transform hover:scale-105 hover:shadow-2xl hover:bg-white/30
                 "

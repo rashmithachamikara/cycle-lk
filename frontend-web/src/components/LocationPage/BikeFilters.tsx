@@ -76,7 +76,7 @@ const BikeFilters: React.FC<BikeFiltersProps> = ({
           <div className="flex border border-gray-300 rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-3 transition-colors ${viewMode === 'grid' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              className={`p-3 transition-colors ${viewMode === 'grid' ? 'bg-[#FF6347] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
             >
               <Grid className="h-5 w-5" />
             </button>
