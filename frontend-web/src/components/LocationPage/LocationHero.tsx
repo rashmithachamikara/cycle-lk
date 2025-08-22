@@ -32,7 +32,7 @@ const LocationHero: React.FC<LocationHeroProps> = ({ location, bikeCount = 0 }) 
             {/* Back Button */}
             <Link 
               to="/locations" 
-              className="inline-flex items-center text-white/90 hover:text-white mb-4 transition-colors"
+              className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Locations

@@ -29,7 +29,7 @@ const BikeHeader = ({ bike }: BikeHeaderProps) => {
       </div>
       
       <div className="flex items-center space-x-4 mb-4">
-        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium capitalize">
+        <span className="bg-teal-400/10 text-teal-600 px-3 py-1 rounded-full text-sm font-medium capitalize">
           {bike.type}
         </span>
         {bike.rating && (

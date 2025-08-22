@@ -170,7 +170,7 @@ const LocationPage: React.FC = () => {
             <p className="text-gray-600 mb-4">The location you're looking for doesn't exist.</p>
             <button
               onClick={() => navigate('/locations')}
-              className="bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-colors"
+              className="bg-emerald-500 text-white/80 px-6 py-3 rounded-lg hover:text-white transition-colors"
             >
               Back to Locations
             </button>
