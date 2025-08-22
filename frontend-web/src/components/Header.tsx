@@ -44,7 +44,7 @@ const Header = () => {
   return (
     <header
       className={`bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 transition-all
-        ${!isMenuOpen ? 'header-blur bg-opacity-40' : ''}
+        ${!isMenuOpen ? 'header-blur bg-opacity-60' : ''}
         md:header-blur
       `}
     >
