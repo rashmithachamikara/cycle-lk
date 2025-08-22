@@ -44,8 +44,8 @@ const Header = () => {
   return (
     <header
       className={`bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 transition-all
-        ${!isMenuOpen ? 'backdrop-blur-lg bg-opacity-40' : ''}
-        md:backdrop-blur-lg md:bg-opacity-40
+        ${!isMenuOpen ? 'header-blur bg-opacity-40' : ''}
+        md:header-blur
       `}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative ">
