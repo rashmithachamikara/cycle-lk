@@ -41,7 +41,7 @@ const BikeFilters: React.FC<BikeFiltersProps> = ({
               placeholder="Search bikes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-[#20B2AA] focus:outline-none"
             />
           </div>
         </div>
@@ -51,7 +51,7 @@ const BikeFilters: React.FC<BikeFiltersProps> = ({
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none"
+            className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
           >
             <option value="all">All Types</option>
             <option value="hybrid">Hybrid</option>
@@ -65,7 +65,7 @@ const BikeFilters: React.FC<BikeFiltersProps> = ({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:outline-none"
+            className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
           >
             <option value="rating">Sort by Rating</option>
             <option value="price-low">Price: Low to High</option>
@@ -76,13 +76,13 @@ const BikeFilters: React.FC<BikeFiltersProps> = ({
           <div className="flex border border-gray-300 rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-3 transition-colors ${viewMode === 'grid' ? 'bg-[#FF6347] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              className={`p-3 transition-colors ${viewMode === 'grid' ? 'bg-[#20B2AA] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
             >
               <Grid className="h-5 w-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-3 transition-colors ${viewMode === 'list' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              className={`p-3 transition-colors ${viewMode === 'list' ? 'bg-[#20B2AA] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
             >
               <List className="h-5 w-5" />
             </button>
