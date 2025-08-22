@@ -117,10 +117,14 @@ const Header = () => {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                  <Bell className="h-5 w-5" />
+                <Link
+                  to="/notifications"
+                  className="relative p-2 rounded-full bg-white/90 border border-gray-200 shadow hover:bg-emerald-50 transition-all duration-150 text-gray-600 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                  aria-label="Notifications"
+                >
+                  <Bell className={`h-5 w-5 ${unreadCount > 0 ? '' : ''}`} />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -129,7 +133,8 @@ const Header = () => {
                 <div className="relative" ref={dashboardRef}>
                   <button 
                     onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-                    className="flex items-center space-x-2 p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+                    className="flex items-center space-x-2 p-2 px-4 rounded-full bg-white/80 border border-gray-200 shadow hover:bg-emerald-50 transition-all duration-150 text-gray-700 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    aria-label="Profile and dashboard menu"
                   >
                     <User className="h-5 w-5" />
                     <span className="font-medium">{user?.firstName || 'Dashboard'}</span>
@@ -213,7 +218,7 @@ const Header = () => {
               <div className="flex items-center space-x-4">
                 <Link 
                   to="/login" 
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 font-medium transition-colors"
+                  className="px-4 py-2 rounded-lg border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50 hover:text-emerald-800 font-semibold shadow-sm transition-colors duration-150"
                 >
                   Log in
                 </Link>
@@ -354,11 +359,12 @@ const Header = () => {
                 </div>
               </div>
             )}
+            {/* For mobile nav (not authenticated) */}
             {!isAuthenticated && (
               <div className="flex flex-col space-y-2 pt-4">
                 <Link 
                   to="/login" 
-                  className="block rounded-lg px-4 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors hover:bg-gray-50"
+                  className="block rounded-lg px-4 py-3 border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50 hover:text-emerald-800 font-semibold shadow-sm transition-colors duration-150"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Log in
