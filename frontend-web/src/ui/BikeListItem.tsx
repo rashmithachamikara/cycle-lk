@@ -9,7 +9,8 @@ interface BikeListItemProps {
 
 const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] group cursor-pointer p-6">
+
       <div className="grid md:grid-cols-4 gap-6 items-center">
         <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center relative">
           {bike.images && bike.images.length > 0 ? (
@@ -49,7 +50,7 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
           
           <div className="flex flex-wrap gap-2">
             {bike.features && bike.features.map((feature, index) => (
-              <span key={index} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs">
+              <span key={index} className="bg-teal-400/10 text-teal-600 px-2 py-1 rounded text-xs">
                 {feature}
               </span>
             ))}
@@ -57,11 +58,11 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
         </div>
         
         <div className="text-center space-y-4">
-          <div className="text-2xl font-bold text-emerald-600">LKR {bike.pricing.perDay.toLocaleString()}/day</div>
+          <div className="text-2xl font-bold text-[#00D4AA]">LKR {bike.pricing.perDay.toLocaleString()}/day</div>
           <div className="flex flex-col space-y-2">
             <Link
               to={`/bike/${bike.id}`}
-              className="border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:border-emerald-500 transition-colors font-medium text-center"
+              className="border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:border-[#00D4AA] transition-colors font-medium text-center"
             >
               View Details
             </Link>
@@ -69,7 +70,7 @@ const BikeListItem: React.FC<BikeListItemProps> = ({ bike }) => {
               to={`/booking/${bike.id}`}
               className={`py-2 px-4 rounded-lg font-medium text-center transition-colors ${
                 bike.availability?.status === 'available'
-                  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  ? 'bg-[#00D4AA] text-white hover:bg-[#00D4AA]/80'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >

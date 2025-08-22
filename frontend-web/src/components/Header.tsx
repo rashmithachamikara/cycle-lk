@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bike, Menu, X, User, Bell, ChevronDown, Building, ShieldCheck, LogOut } from 'lucide-react';
+import { Menu, X, User, Bell, ChevronDown, Building, ShieldCheck, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
@@ -29,7 +29,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-gray-900 shadow-sm border-b border-gray-800 sticky top-0 z-50">
+    <header className="backdrop-blur-lg bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* <Link to="/" className="flex items-center space-x-2">
