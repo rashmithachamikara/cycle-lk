@@ -27,9 +27,9 @@ const PartnerBenefits: React.FC<PartnerBenefitsProps> = ({ className = '' }) => 
 
   const getColorClasses = (color: string) => {
     const colorMap: Record<string, string> = {
-      emerald: 'bg-emerald-500',
-      blue: 'bg-blue-500',
-      purple: 'bg-purple-500'
+      emerald: 'bg-teal-400',
+      blue: 'bg-[#1E90FF]',
+      purple: 'bg-[#FF69B4]'
     };
     return colorMap[color] || colorMap.emerald;
   };
@@ -62,7 +62,7 @@ const PartnerBenefits: React.FC<PartnerBenefitsProps> = ({ className = '' }) => 
       <div className="text-center mt-12">
         <Link
           to="/partner-registration"
-          className="bg-emerald-500 text-white px-8 py-4 rounded-xl hover:bg-emerald-600 transition-colors font-semibold text-lg inline-flex items-center"
+          className="bg-gradient-to-r from-[#1E90FF] to-teal-500 text-white px-8 py-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-600 hover:to-teal-600 transition-colors font-semibold text-lg inline-flex items-center"
         >
           Become a Partner
           <ExternalLink className="h-5 w-5 ml-2" />

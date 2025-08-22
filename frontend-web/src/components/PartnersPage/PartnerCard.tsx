@@ -66,9 +66,9 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
   const coordinates = getMainLocationCoordinates();
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-102 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] group cursor-pointer">
       {/* Partner Header */}
-      <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 relative overflow-hidden">
+      <div className="h-48 bg-gradient-to-br from-[#00D4AA] to-[#00D4AA]/80 relative overflow-hidden">
         {partner.images?.storefront?.url ? (
           <img 
             src={partner.images.storefront.url} 
@@ -82,7 +82,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
           />
         ) : (
           // Show gradient background if no storefront image
-          <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500"></div>
+          <div className="w-full h-full bg-gradient-to-br from-[#67c8b2] to-[#8aead734]"></div>
         )}
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute top-4 left-4 flex space-x-2">
@@ -92,7 +92,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             </span>
           )}
           {partner.verified && (
-            <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+            <span className="bg-[#1e88e5] text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
               <CheckCircle className="h-3 w-3 mr-1" />
               Verified
             </span>
@@ -131,7 +131,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-lg font-bold text-emerald-600">{partner.bikeCount || 0}</div>
+            <div className="text-lg font-bold text-[#00D4AA]">{partner.bikeCount || 0}</div>
             <div className="text-xs text-gray-600">Bikes</div>
           </div>
           <div className="text-center">
@@ -139,7 +139,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             <div className="text-xs text-gray-600">Years</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-purple-600">{partner.reviews?.length || 0}</div>
+            <div className="text-lg font-bold text-[#FF69B4]">{partner.reviews?.length || 0}</div>
             <div className="text-xs text-gray-600">Reviews</div>
           </div>
         </div>
@@ -150,7 +150,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             <h4 className="text-sm font-semibold text-gray-900 mb-2">Specialties</h4>
             <div className="flex flex-wrap gap-2">
               {partner.specialties.map((specialty, index) => (
-                <span key={index} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs">
+                <span key={index} className="bg-teal-400/10 text-teal-600 px-2 py-1 rounded text-xs">
                   {specialty}
                 </span>
               ))}
@@ -165,7 +165,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             <div className="grid grid-cols-2 gap-2">
               {partner.features.map((feature, index) => (
                 <div key={index} className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="h-3 w-3 text-emerald-500 mr-2" />
+                  <CheckCircle className="h-3 w-3 text-[#00D4AA] mr-2" />
                   {feature}
                 </div>
               ))}
@@ -185,7 +185,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             {partner.phone && (
               <div className="flex items-center">
                 <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                <a href={`tel:${partner.phone}`} className="text-emerald-600 hover:underline">
+                <a href={`tel:${partner.phone}`} className="text-[#00D4AA] hover:underline">
                   {partner.phone}
                 </a>
               </div>
@@ -193,7 +193,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
             {partner.email && (
               <div className="flex items-center">
                 <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                <a href={`mailto:${partner.email}`} className="text-emerald-600 hover:underline">
+                <a href={`mailto:${partner.email}`} className="text-[#00D4AA] hover:underline">
                   {partner.email}
                 </a>
               </div>
@@ -205,14 +205,14 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
         <div className="flex space-x-3">
           <Link
             to={`/partners/${partner.id || partner._id}/bikes`}
-            className="flex-1 bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium text-center"
+            className="flex-1 bg-[#00D4AA] text-white py-3 rounded-lg hover:bg-[#00D4AA]/80 transition-colors font-medium text-center"
           >
             View Bikes
           </Link>
           {partner.phone && (
             <a
               href={`tel:${partner.phone}`}
-              className="flex items-center justify-center bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center justify-center bg-[#00c851] text-white px-4 py-3 rounded-lg hover:bg-[#00c851]/80 transition-colors"
             >
               <Phone className="h-4 w-4" />
             </a>
@@ -220,7 +220,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
           {partner.email && (
             <a
               href={`mailto:${partner.email}`}
-              className="flex items-center justify-center bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
+              className="flex items-center justify-center bg-[#1e88e5] text-white px-4 py-3 rounded-lg hover:bg-[#1e88e5]/80 transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
             </a>
@@ -230,7 +230,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
               href={`https://maps.google.com/?q=${coordinates.lat},${coordinates.lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 transition-colors"
+              className="flex items-center justify-center border bg-[#ff6b35] text-white px-4 py-3 rounded-lg hover:bg-[#ff6b35]/80 transition-colors"
             >
               <Navigation className="h-4 w-4" />
             </a>
