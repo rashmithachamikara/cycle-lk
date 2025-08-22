@@ -29,7 +29,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="backdrop-blur-lg bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 ">
+    <header className="backdrop-blur-lg bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50  rounded-b-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* <Link to="/" className="flex items-center space-x-2">
@@ -220,12 +220,12 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
-            <nav className="flex flex-col space-y-4">
+          <div className="md:hidden py-4 border-t bg-white">
+            <nav className="flex flex-col space-y-1 px-2">
               <Link 
                 to="/" 
-                className={`font-medium transition-colors ${
-                  isActive('/') ? 'text-emerald-600' : 'text-gray-700'
+                className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                  isActive('/') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -233,8 +233,8 @@ const Header = () => {
               </Link>
               <Link 
                 to="/booking" 
-                className={`font-medium transition-colors ${
-                  isActive('/booking') ? 'text-emerald-600' : 'text-gray-700'
+                className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                  isActive('/booking') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -242,8 +242,8 @@ const Header = () => {
               </Link>
               <Link 
                 to="/locations" 
-                className={`font-medium transition-colors ${
-                  isActive('/locations') ? 'text-emerald-600' : 'text-gray-700'
+                className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                  isActive('/locations') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -251,8 +251,8 @@ const Header = () => {
               </Link>
               <Link 
                 to="/partners" 
-                className={`font-medium transition-colors ${
-                  isActive('/partners') ? 'text-emerald-600' : 'text-gray-700'
+                className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                  isActive('/partners') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -260,22 +260,22 @@ const Header = () => {
               </Link>
               <Link 
                 to="/support" 
-                className={`font-medium transition-colors ${
-                  isActive('/support') ? 'text-emerald-600' : 'text-gray-700'
+                className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                  isActive('/support') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Support
               </Link>
               {isAuthenticated && (
-                <div className="pt-2 mt-2 border-t border-gray-100">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dashboards</h3>
-                  <div className="space-y-4">
+                <div className="pt-3 mt-3 border-t border-gray-100">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Dashboards</h3>
+                  <div className="space-y-1">
                     {user?.role === 'user' && (
                       <Link 
                         to="/dashboard" 
-                        className={`flex items-center font-medium transition-colors ${
-                          isActive('/dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                          isActive('/dashboard') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -286,8 +286,8 @@ const Header = () => {
                     {user?.role === 'partner' && (
                       <Link 
                         to="/partner-dashboard" 
-                        className={`flex items-center font-medium transition-colors ${
-                          isActive('/partner-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                          isActive('/partner-dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -298,8 +298,8 @@ const Header = () => {
                     {user?.role === 'admin' && (
                       <Link 
                         to="/admin-dashboard" 
-                        className={`flex items-center font-medium transition-colors ${
-                          isActive('/admin-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                          isActive('/admin-dashboard') ? 'bg-purple-50 text-purple-600' : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -314,14 +314,14 @@ const Header = () => {
                 <div className="flex flex-col space-y-2 pt-4">
                   <Link 
                     to="/login" 
-                    className="px-4 py-2 text-gray-700 hover:text-emerald-600 font-medium transition-colors"
+                    className="block rounded-lg px-4 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors hover:bg-gray-50"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Log in
                   </Link>
                   <Link 
                     to="/register" 
-                    className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg font-medium transition-colors"
+                    className="block rounded-lg px-4 py-3 bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Register
