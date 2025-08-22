@@ -166,7 +166,7 @@ const LocationsPage = () => {
         <section className="mb-16">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Popular Destinations</h2>
-            <Link to="/locations" className="text-emerald-600 hover:text-emerald-700 font-medium">
+            <Link to="/locations" className="text-[#20B2AA] hover:text-[#20B2AA]/80 font-medium">
               View All Destinations
             </Link>
           </div>
@@ -207,7 +207,7 @@ const LocationsPage = () => {
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#20B2AA] focus:border-[#20B2AA]"
               >
                 <option value="all">All Locations</option>
                 {locations.map((location) => (
@@ -219,7 +219,7 @@ const LocationsPage = () => {
               {selectedLocation !== 'all' && (
                 <button
                   onClick={() => setSelectedLocation('all')}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                  className="text-[#20B2AA] hover:text-[#20B2AA]/80 font-medium text-sm"
                 >
                   Clear filter
                 </button>

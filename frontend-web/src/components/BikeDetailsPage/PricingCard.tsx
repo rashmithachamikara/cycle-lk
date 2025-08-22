@@ -16,14 +16,14 @@ const PricingCard = ({ bike, formatPrice }: PricingCardProps) => {
     <div className="bg-white rounded-2xl p-6 border border-gray-200">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <div className="text-3xl font-bold text-emerald-600">{formatPrice(bike.pricing.perDay)}</div>
+          <div className="text-3xl font-bold text-[#00D4AA]">{formatPrice(bike.pricing.perDay)}</div>
           <div className="text-gray-600">per day</div>
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-600">Weekly rate</div>
           <div className="text-xl font-semibold text-gray-900">{formatPrice(weeklyPrice)}</div>
           {bike.pricing.perWeek && bike.pricing.perWeek < bike.pricing.perDay * 7 && (
-            <div className="text-xs text-emerald-600">
+            <div className="text-xs text-[#00D4AA]">
               Save {formatPrice(bike.pricing.perDay * 7 - bike.pricing.perWeek)}
             </div>
           )}
@@ -33,7 +33,7 @@ const PricingCard = ({ bike, formatPrice }: PricingCardProps) => {
       <div className="space-y-3 mb-6">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Available now:</span>
-          <span className={`font-medium ${bike.availability?.status === 'available' ? 'text-green-600' : 'text-red-600'}`}>
+          <span className={`font-medium ${bike.availability?.status === 'available' ? 'text-[#00D4AA]' : 'text-red-600'}`}>
             {bike.availability?.status === 'available' ? 'Yes' :
              bike.availability?.status === 'unavailable' ? 'No' :
              bike.availability?.status === 'requested' ? 'Requested' : 'No'}
@@ -49,7 +49,7 @@ const PricingCard = ({ bike, formatPrice }: PricingCardProps) => {
       
       <Link
         to={`/booking?bikeId=${bike.id}`}
-        className="w-full bg-emerald-500 text-white py-4 rounded-xl hover:bg-emerald-600 transition-colors font-semibold text-lg text-center block"
+        className="w-full bg-[#00D4AA] text-white py-4 rounded-xl hover:bg-[#00D4AA]/80 transition-colors font-semibold text-lg text-center block"
       >
         Book This Bike
       </Link>

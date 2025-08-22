@@ -19,7 +19,7 @@ const BackButton: React.FC<BackButtonProps> = ({
   return (
     <Link
       to={to}
-      className={`inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-6 transition-colors ${className}`}
+      className={`inline-flex items-center text-[#00D4AA] hover:text-[#00B89A] mb-6 transition-colors ${className}`}
     >
       <ArrowLeft className="h-4 w-4 mr-2" />
       {text}
