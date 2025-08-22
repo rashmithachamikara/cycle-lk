@@ -331,6 +331,26 @@ const Header = () => {
                       Admin Dashboard
                     </Link>
                   )}
+                  {/* Profile link */}
+                  <Link
+                    to="/profile"
+                    className="flex items-center rounded-lg px-4 py-3 font-medium transition-colors text-gray-700 hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="h-5 w-5 mr-3" />
+                    Profile
+                  </Link>
+                  {/* Logout button */}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center rounded-lg px-4 py-3 font-medium transition-colors text-gray-700 hover:bg-gray-50 w-full text-left"
+                  >
+                    <LogOut className="h-5 w-5 mr-3 text-red-600" />
+                    Log out
+                  </button>
                 </div>
               </div>
             )}
