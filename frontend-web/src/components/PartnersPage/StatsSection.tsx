@@ -11,7 +11,7 @@ const StatsSection: React.FC<StatsSectionProps> = ({ partners }) => {
       icon: Users,
       value: partners.length,
       label: 'Trusted Partners',
-      color: 'emerald'
+      color: 'teal'
     },
     {
       icon: MapPin,
@@ -23,22 +23,38 @@ const StatsSection: React.FC<StatsSectionProps> = ({ partners }) => {
       icon: Bike,
       value: totalBikes,
       label: 'Total Bikes',
-      color: 'yellow'
+      color: 'coral'
     },
     {
       icon: Star,
       value: '4.7',
       label: 'Average Rating',
-      color: 'purple'
+      color: 'pink'
     }
   ];
 
   const getColorClasses = (color: string) => {
-    const colorMap: Record<string, { bg: string; text: string }> = {
-      emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-      blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-      yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
-      purple: { bg: 'bg-purple-100', text: 'text-purple-600' }
+    const colorMap: Record<string, { bg: string; text: string; hover: string }> = {
+      teal: { 
+        bg: 'bg-teal-400/20', 
+        text: 'text-teal-400',
+        hover: 'hover:shadow-[0_12px_40px_rgba(16,185,129,0.4)]' // teal
+      },
+      blue: { 
+        bg: 'bg-[#1E90FF]/20', 
+        text: 'text-[#1E90FF]',
+        hover: 'hover:shadow-[0_12px_40px_rgba(30,144,255,0.4)]' // blue
+      },
+      coral: { 
+        bg: 'bg-[#FF7F50]/20', 
+        text: 'text-[#FF7F50]',
+        hover: 'hover:shadow-[0_12px_40px_rgba(255,127,80,0.4)]' // coral
+      },
+      pink: { 
+        bg: 'bg-[#FF69B4]/20', 
+        text: 'text-[#FF69B4]',
+        hover: 'hover:shadow-[0_12px_40px_rgba(255,105,180,0.4)]' // pink
+      }
     };
     return colorMap[color] || colorMap.emerald;
   };
@@ -51,7 +67,10 @@ const StatsSection: React.FC<StatsSectionProps> = ({ partners }) => {
           const IconComponent = stat.icon;
           
           return (
-            <div key={index} className="bg-white rounded-xl p-6 shadow-sm text-center">
+            <div
+              key={index}
+              className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 group cursor-pointer p-6 text-center ${colors.hover}`}
+            >
               <div className={`w-12 h-12 ${colors.bg} rounded-lg flex items-center justify-center mx-auto mb-4`}>
                 <IconComponent className={`h-6 w-6 ${colors.text}`} />
               </div>

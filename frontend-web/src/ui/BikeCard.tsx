@@ -101,7 +101,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
   const imageUrl = bike.images && bike.images.length > 0 ? bike.images[0].url : null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] group cursor-pointer">
       <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
         {imageUrl ? (
           <img 
@@ -115,7 +115,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
           </div>
         )}
         {bike.availability?.status === 'available' ? (
-          <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <div className="absolute top-4 right-4 bg-[#20B2AA] text-white px-3 py-1 rounded-full text-sm font-semibold">
             Available
           </div>
         ) : (
@@ -129,7 +129,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
       <div className="p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xl font-semibold text-gray-900">{bike.name}</h3>
-          <div className="text-lg font-bold text-emerald-600">LKR {bike.pricing.perDay.toLocaleString()}/day</div>
+          <div className="text-lg font-bold text-[#00D4AA]">LKR {bike.pricing.perDay.toLocaleString()}/day</div>
         </div>
         
         <div className="flex items-center space-x-4 mb-3">
@@ -147,7 +147,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
         
         <div className="flex flex-wrap gap-2 mb-4">
           {bike.features && bike.features.slice(0, 3).map((feature: string, index: number) => (
-            <span key={index} className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs">
+            <span key={index} className="bg-teal-400/10 text-teal-600 px-2 py-1 rounded text-xs">
               {feature}
             </span>
           ))}
@@ -156,7 +156,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
         <div className="flex space-x-3">
           <Link
             to={`/bike/${bike.id}`}
-            className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg hover:border-emerald-500 transition-colors font-medium text-center"
+            className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg hover:border-teal-400  transition-colors font-medium text-center"
           >
             View Details
           </Link>
@@ -164,7 +164,7 @@ const BikeCard: React.FC<BikeCardProps> = ({ bike }) => {
             to={`/booking/${bike.id}`}
             className={`flex-1 py-3 rounded-lg font-medium text-center transition-colors ${
               bike.availability?.status === 'available'
-                ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                ? 'bg-[#00D4AA] text-white hover:bg-[#00D4AA]/80'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
