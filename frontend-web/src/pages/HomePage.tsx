@@ -163,7 +163,7 @@ const HomePage = () => {
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link 
                   to="/booking"
-                  className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-8 py-4 rounded-xl hover:from-blue-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold text-lg text-center"
+                  className="bg-gradient-to-r from-[#1E90FF] to-teal-500 text-white px-8 py-4 rounded-xl hover:from-blue-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold text-lg text-center"
                 >
                   Start Your Journey
                 </Link>
