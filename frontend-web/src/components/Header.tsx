@@ -267,43 +267,67 @@ const Header = () => {
               >
                 Support
               </Link>
-              <div className="pt-2 mt-2 border-t border-gray-100">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dashboards</h3>
-                <div className="space-y-4">
+              {isAuthenticated && (
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dashboards</h3>
+                  <div className="space-y-4">
+                    {user?.role === 'user' && (
+                      <Link 
+                        to="/dashboard" 
+                        className={`flex items-center font-medium transition-colors ${
+                          isActive('/dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        }`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <User className="h-5 w-5 mr-3" />
+                        User Dashboard
+                      </Link>
+                    )}
+                    {user?.role === 'partner' && (
+                      <Link 
+                        to="/partner-dashboard" 
+                        className={`flex items-center font-medium transition-colors ${
+                          isActive('/partner-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        }`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Building className="h-5 w-5 mr-3" />
+                        Partner Dashboard
+                      </Link>
+                    )}
+                    {user?.role === 'admin' && (
+                      <Link 
+                        to="/admin-dashboard" 
+                        className={`flex items-center font-medium transition-colors ${
+                          isActive('/admin-dashboard') ? 'text-emerald-600' : 'text-gray-700'
+                        }`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <ShieldCheck className="h-5 w-5 mr-3" />
+                        Admin Dashboard
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!isAuthenticated && (
+                <div className="flex flex-col space-y-2 pt-4">
                   <Link 
-                    to="/dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
+                    to="/login" 
+                    className="px-4 py-2 text-gray-700 hover:text-emerald-600 font-medium transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <User className="h-5 w-5 mr-3" />
-                    User Dashboard
+                    Log in
                   </Link>
-                  
                   <Link 
-                    to="/partner-dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/partner-dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
+                    to="/register" 
+                    className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg font-medium transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Building className="h-5 w-5 mr-3" />
-                    Partner Dashboard
-                  </Link>
-                  
-                  <Link 
-                    to="/admin-dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/admin-dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <ShieldCheck className="h-5 w-5 mr-3" />
-                    Admin Dashboard
+                    Register
                   </Link>
                 </div>
-              </div>
+              )}
             </nav>
           </div>
         )}
