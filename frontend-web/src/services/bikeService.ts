@@ -100,6 +100,7 @@ export interface Bike {
   type: string;
   description?: string;
   location: string;
+  currentPartnerId: CurrentPartnerId;
   coordinates?: BikeCoordinates;
   pricing: BikePricing;
   features?: string[];
@@ -111,6 +112,15 @@ export interface Bike {
   reviews?: BikeReview[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface CurrentPartnerId {
+  _id: string;
+  companyName: string;
+  location?: string | {
+    _id: string;
+    name: string;
+  };
 }
 
 // Interface for bike data when creating/updating
