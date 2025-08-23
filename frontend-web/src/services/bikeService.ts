@@ -167,6 +167,7 @@ export const bikeService = {
     return transformBike(response.data);
   },
 
+  // Get bikes for the authenticated partner
   getMyBikes: async (): Promise<Bike[]> => {
     const response = await api.get('/bikes/my');
     return response.data.map(transformBike);

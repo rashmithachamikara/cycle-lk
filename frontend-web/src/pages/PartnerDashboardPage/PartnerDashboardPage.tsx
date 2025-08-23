@@ -362,11 +362,12 @@ const PartnerDashboardPage = () => {
                 >
                   Add New Bike
                 </Link>
-                <button
+                <Link
+                  to="/partner-dashboard/inventory"
                   className="w-full border border-red-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
                 >
                   Inventory
-                </button>
+                </Link>
                 <button
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
