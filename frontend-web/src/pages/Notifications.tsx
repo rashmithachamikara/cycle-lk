@@ -208,7 +208,22 @@ const NotificationsPage: React.FC = () => {
       <Header />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Loader />
+                    <div className="animate-pulse">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+              <p className="text-gray-600 mt-1">
+                <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+              </p>
+            </div>
+            
+            <div className="space-y-4 mt-8">
+              <div className="h-8 bg-gray-200 rounded w-2/5 mb-6"></div>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
       <Footer />
