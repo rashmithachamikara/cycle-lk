@@ -204,6 +204,7 @@ const LocationsPage = () => {
           <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700">Filter by location:</label>
+              <span id="bike-listings"></span>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
@@ -261,7 +262,7 @@ const LocationsPage = () => {
         />
 
         {/* Bike Listings */}
-        <section id="bike-listings">
+        <section>
           {loading ? (
             <LoadingState message="Loading bikes..." />
           ) : error ? (
