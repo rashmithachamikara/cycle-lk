@@ -70,9 +70,18 @@ export interface PartnerRegistrationForm {
   category: string;
   description: string;
   // Updated location system
-  serviceCities: string[]; // Cities where they provide services
-  serviceLocations: CityServiceData[]; // Detailed locations for each city
-  // Contact information
+  mapLocation?: {
+    id?: string;
+    name?: string;
+    address?: string;
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+    placeId?: string;
+    isMainLocation?: boolean;
+  };
+  location: string;
   address: string;
   contactPerson: string;
   phone: string;
@@ -81,10 +90,9 @@ export interface PartnerRegistrationForm {
   specialties: string[];
   features: string[];
   yearsActive: number;
-  // Image fields (for form state, not sent to API)
   logoImage?: ImageFile;
   storefrontImage?: ImageFile;
-  galleryImages?: ImageFile[];
+  galleryImages: ImageFile[];
 }
 
 // Step component props interface
