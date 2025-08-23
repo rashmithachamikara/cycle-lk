@@ -1,7 +1,8 @@
 //frontend-web/src/components/PartnerDashboard/Inventory.tsx
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, PlusCircle, X, AlertTriangle } from 'lucide-react';
+import { Bike,transformBike } from '../../services/bikeService';
+import { useState } from 'react';
 
 interface InventoryProps {
   showDeleteModal: boolean;
@@ -11,6 +12,7 @@ interface InventoryProps {
   handleConfirmDelete: () => void;
   isDeleting: boolean;
   deleteSuccess: boolean;
+  Bikes: Bike[];
 }
 
 const Inventory = ({
@@ -20,15 +22,17 @@ const Inventory = ({
   setBikeToDelete,
   handleConfirmDelete,
   isDeleting,
-  deleteSuccess
+  deleteSuccess,
+  Bikes
 }: InventoryProps) => {
-  const inventoryItems = [
-    { id: 'BIKE-1234', name: 'City Cruiser', type: 'City', status: 'rented', condition: 'Excellent' },
-    { id: 'BIKE-2345', name: 'Mountain Explorer', type: 'Mountain', status: 'rented', condition: 'Good' },
-    { id: 'BIKE-3456', name: 'Beach Rider', type: 'Cruiser', status: 'available', condition: 'Excellent' },
-    { id: 'BIKE-4567', name: 'City Cruiser', type: 'City', status: 'maintenance', condition: 'Fair' },
-    { id: 'BIKE-5678', name: 'Mountain Explorer', type: 'Mountain', status: 'available', condition: 'Excellent' }
-  ];
+  // const inventoryItems = [
+  //   { id: 'BIKE-1234', name: 'City Cruiser', type: 'City', status: 'rented', condition: 'Excellent' },
+  //   { id: 'BIKE-2345', name: 'Mountain Explorer', type: 'Mountain', status: 'rented', condition: 'Good' },
+  //   { id: 'BIKE-3456', name: 'Beach Rider', type: 'Cruiser', status: 'available', condition: 'Excellent' },
+  //   { id: 'BIKE-4567', name: 'City Cruiser', type: 'City', status: 'maintenance', condition: 'Fair' },
+  //   { id: 'BIKE-5678', name: 'Mountain Explorer', type: 'Mountain', status: 'available', condition: 'Excellent' }
+  // ];
+  const [inventoryItems] = useState<Bike[]>(transformBike(Bikes)));
 
   return (
     <>
@@ -75,7 +79,7 @@ const Inventory = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {inventoryItems.map((item) => (
+              {inventoryItems.map((item:Bike) => (
                 <tr key={item.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.id}
@@ -88,13 +92,13 @@ const Inventory = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      item.status === 'available' 
+                      item.availability === 'available' 
                         ? 'bg-green-100 text-green-800' 
-                        : item.status === 'rented' 
+                        : item.availability === 'active' 
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      {item.availability.charAt(0).toUpperCase() + item.availability.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
