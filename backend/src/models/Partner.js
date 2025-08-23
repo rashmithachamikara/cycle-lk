@@ -20,8 +20,9 @@ const partnerSchema = new mongoose.Schema({
     type: String
   },
   location: {
-    type: String,
-    required: false // Made optional for backward compatibility
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Location',
+    required: false // or true if always needed
   },
   // New service location system
   mapLocation: {
