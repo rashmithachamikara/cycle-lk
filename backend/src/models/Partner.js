@@ -24,49 +24,38 @@ const partnerSchema = new mongoose.Schema({
     required: false // Made optional for backward compatibility
   },
   // New service location system
-  serviceCities: [{
-    type: String,
-    trim: true
-  }],
-  serviceLocations: [{
-    cityName: {
+  mapLocation: {
+    id: {
+      type: String,
+      required: true
+    },
+    name: {
       type: String,
       required: true,
       trim: true
     },
-    locations: [{
-      id: {
-        type: String,
+    address: {
+      type: String,
+      required: true
+    },
+    coordinates: {
+      lat: {
+        type: Number,
         required: true
       },
-      name: {
-        type: String,
-        required: true,
-        trim: true
-      },
-      address: {
-        type: String,
+      lng: {
+        type: Number,
         required: true
-      },
-      coordinates: {
-        lat: {
-          type: Number,
-          required: true
-        },
-        lng: {
-          type: Number,
-          required: true
-        }
-      },
-      placeId: {
-        type: String
-      },
-      isMainLocation: {
-        type: Boolean,
-        default: false
       }
-    }]
-  }],
+    },
+    placeId: {
+      type: String
+    },
+    isMainLocation: {
+      type: Boolean,
+      default: false
+    }
+  },
   address: {
     type: String
   },
