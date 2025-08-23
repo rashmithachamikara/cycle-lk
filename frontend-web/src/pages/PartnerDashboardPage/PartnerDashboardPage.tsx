@@ -15,7 +15,9 @@ import {
   CheckCircle,
   FileText,
   ArrowRight,
-  CreditCard
+  CreditCard,
+  Package,
+  Rows4  
 } from 'lucide-react';
 
 import { 
@@ -360,13 +362,14 @@ const PartnerDashboardPage = () => {
                   to="/partner-dashboard/add-bike"
                   className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
                 >
-                  Add New Bike
+                  Add New Bike +
+                
                 </Link>
                 <Link
                   to="/partner-dashboard/inventory"
-                  className="w-full border border-red-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
+                  className="w-full border border-green-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center flex items-center justify-center gap-2"
                 >
-                  Inventory
+                  <Rows4  className="h-4 w-4" /> Inventory
                 </Link>
                 <button
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
