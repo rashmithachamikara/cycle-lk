@@ -199,6 +199,17 @@ const CompanyInformationStep: React.FC<StepProps> = ({
     } as any);
   };
 
+  // Add handler to remove mapLocation
+  const handleRemoveMapLocation = () => {
+    onInputChange({
+      target: {
+        name: 'mapLocation',
+        value: null,
+        type: 'text'
+      }
+    } as any);
+  };
+
   // Handle Location dropdown change
   const handleLocationSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onInputChange({
@@ -507,10 +518,20 @@ const CompanyInformationStep: React.FC<StepProps> = ({
           mapHeight="450px"
         />
         {formData.mapLocation?.address && (
-          <div className="mt-2 text-sm text-green-700">
-            Selected: {formData.mapLocation.name || formData.mapLocation.address}
-            <br />
-            Coordinates: {formData.mapLocation.coordinates?.lat}, {formData.mapLocation.coordinates?.lng}
+          <div className="mt-2 text-sm text-green-700 flex items-center gap-4">
+            <div>
+              Selected: {formData.mapLocation.name || formData.mapLocation.address}
+              <br />
+              Coordinates: {formData.mapLocation.coordinates?.lat}, {formData.mapLocation.coordinates?.lng}
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveMapLocation}
+              className="ml-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs flex items-center"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Remove Location
+            </button>
           </div>
         )}
       </div>
