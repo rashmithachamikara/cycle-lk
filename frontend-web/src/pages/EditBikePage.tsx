@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { bikeService, BikeData } from '../services/bikeService';
 
 const EditBikePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,8 @@ const EditBikePage = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -63,54 +66,43 @@ const EditBikePage = () => {
   ];
   // Simulate fetching bike data from API
   useEffect(() => {
-    // In a real application, this would be an API call
     const fetchBikeData = async () => {
+      if (!id) return;
+      
       setIsLoading(true);
       try {
-        // Simulating API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const bikeData = await bikeService.getBikeById(id);
         
-        // Mock data for the specified bike ID
-        const mockBikeData = {
-          id: id,
-          name: 'City Cruiser',
-          type: 'city',
-          pricePerDay: '15',
-          pricePerWeek: '70',
-          pricePerMonth: '200',
-          location: 'Colombo Central',
-          description: 'A comfortable city bike perfect for urban riding and commuting. Features a sturdy frame and smooth riding experience.',
-          features: ['Front basket', 'Rear rack', 'LED lights', 'Bell'],
-          specifications: {
-            frameSize: 'Medium (54cm)',
-            gears: '7 speed',
-            weight: '12kg',
-            ageRestriction: '16+ years',
-            maxLoad: '100kg'
-          },
-          availability: true,
-          existingImages: [
-            'https://images.unsplash.com/photo-1485965120184-e220f721d03e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-            'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1476&q=80'
-          ]
-        };
-
         setFormData(prev => ({
           ...prev,
-          ...mockBikeData,
-          images: []
+          name: bikeData.name,
+          type: bikeData.type,
+          pricePerDay: bikeData.pricing.perDay.toString(),
+          pricePerWeek: bikeData.pricing.perWeek?.toString() || '',
+          pricePerMonth: bikeData.pricing.perMonth?.toString() || '',
+          location: bikeData.location,
+          description: bikeData.description || '',
+          features: bikeData.features || [''],
+          specifications: {
+            frameSize: bikeData.specifications?.frameSize || '',
+            gears: bikeData.specifications?.gears || '',
+            weight: bikeData.specifications?.weight || '',
+            ageRestriction: bikeData.specifications?.ageRestriction || '',
+            maxLoad: bikeData.specifications?.maxLoad || ''
+          },
+          availability: bikeData.availability?.status === 'available',
+          existingImages: bikeData.images?.map(img => img.url) || []
         }));
         
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching bike data:', error);
+        setFormErrors(['Failed to load bike data. Please try again.']);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchBikeData();
-    }
+    fetchBikeData();
   }, [id]);
   // Handle text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -194,7 +186,7 @@ const EditBikePage = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateForm();
     
@@ -204,19 +196,73 @@ const EditBikePage = () => {
       return;
     }
     
+    if (!id) return;
+    
     setIsSubmitting(true);
     setFormErrors([]);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Prepare the bike data for update
+      const updateData: Partial<BikeData> = {
+        name: formData.name,
+        type: formData.type,
+        pricing: {
+          perDay: parseFloat(formData.pricePerDay),
+          perWeek: formData.pricePerWeek ? parseFloat(formData.pricePerWeek) : undefined,
+          perMonth: formData.pricePerMonth ? parseFloat(formData.pricePerMonth) : undefined,
+        },
+        description: formData.description,
+        location: formData.location,
+        features: formData.features.filter(f => f.trim() !== ''),
+        specifications: formData.specifications,
+        condition: 'Excellent' // You may want to add this to the form
+      };
+      
+      // Update bike data
+      await bikeService.updateBike(id, updateData);
+      
+      // Upload new images if any
+      if (formData.images.length > 0) {
+        await bikeService.uploadBikeImages(id, formData.images);
+      }
+      
+      // Update availability
+      await bikeService.updateBikeAvailability(
+        id, 
+        formData.availability ? 'available' : 'unavailable'
+      );
+      
       setSubmitSuccess(true);
       
       // Redirect to partner dashboard after successful submission
       setTimeout(() => {
         navigate('/partner-dashboard/inventory');
       }, 2000);
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Error updating bike:', error);
+      setFormErrors(['Failed to update bike. Please try again.']);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle bike deletion
+  const handleDeleteBike = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    try {
+      await bikeService.deleteBike(id);
+      navigate('/partner-dashboard/inventory');
+    } catch (error) {
+      console.error('Error deleting bike:', error);
+      setFormErrors(['Failed to delete bike. Please try again.']);
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -618,6 +664,7 @@ const EditBikePage = () => {
             <div className="border-t border-gray-200 pt-6 flex justify-between">
               <button
                 type="button"
+                onClick={() => setShowDeleteConfirm(true)}
                 className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100"
               >
                 Delete Bike
@@ -653,6 +700,50 @@ const EditBikePage = () => {
           </form>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="h-6 w-6 text-red-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Deletion</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this bike? This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteBike}
+                disabled={isDeleting}
+                className={`px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center ${
+                  isDeleting ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+              >
+                {isDeleting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Bike'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
