@@ -111,7 +111,7 @@ const SupportPage = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-16">
+      <section className="bg-gradient-to-r from-[#FF7F50] to-[#FF69B4] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">How Can We Help?</h1>
@@ -215,7 +215,7 @@ const SupportPage = () => {
                     onClick={() => setSelectedCategory(category.id)}
                     className={`flex items-center p-4 rounded-lg border-2 transition-colors ${
                       selectedCategory === category.id
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        ? 'border-[#00D4AA] bg-emerald-50 text-[#00D4AA]'
                         : 'border-gray-200 hover:border-gray-300 text-gray-700'
                     }`}
                   >

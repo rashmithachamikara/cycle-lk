@@ -147,15 +147,27 @@ const PartnerBikesPage = () => {
       <Header />
 
       {/* Partner Header Section */}
-      <section className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section
+        className="relative text-white py-12"
+        style={
+          partner?.images?.storefront?.url
+            ? {
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url(${partner.images.storefront.url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : {}
+        }
+      >
+        <div className="absolute inset-0 bg-black/20"></div> {/* Optional overlay for better text readability */}
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center mb-6">
-            {/* <BackButton to="/partners" className="mr-4" /> */}
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{partner.companyName}</h1>
-              <div className="flex items-center text-emerald-100">
+              <div className="flex items-center text-white">
                 <MapPin className="h-5 w-5 mr-2" />
-                <span>{partner.location}</span>
+                <span className="text-xl">{partner.location}</span>
                 {partner.verified && (
                   <span className="ml-4 bg-blue-500 px-3 py-1 rounded-full text-sm font-semibold">
                     Verified Partner
@@ -164,24 +176,24 @@ const PartnerBikesPage = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Partner Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/10 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{bikes.length}</div>
-              <div className="text-emerald-100 text-sm">Available Bikes</div>
+            <div className="bg-teal-400/30 rounded-lg p-4 text-center backdrop-blur-xs">
+              <div className="text-2xl text-white font-bold">{bikes.length}</div>
+              <div className="text-white text-lg">Available Bikes</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-[#FF69B4]/50 rounded-lg p-4 text-center backdrop-blur-xs">
               <div className="text-2xl font-bold">{partner.rating || 'N/A'}</div>
-              <div className="text-emerald-100 text-sm">Rating</div>
+              <div className="text-white text-lg">Rating</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-[#1E90FF]/50 rounded-lg p-4 text-center backdrop-blur-xs">
               <div className="text-2xl font-bold">{partner.yearsActive || 0}</div>
-              <div className="text-emerald-100 text-sm">Years Active</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+              <div className="text-white text-lg">Years Active</div>
+            </div> 
+            <div className="bg-[#FF7F50]/50 rounded-lg p-4 text-center backdrop-blur-xs">
               <div className="text-2xl font-bold">{bikeTypes.length}</div>
-              <div className="text-emerald-100 text-sm">Bike Types</div>
+              <div className="text-white text-lg">Bike Types</div>
             </div>
           </div>
         </div>
