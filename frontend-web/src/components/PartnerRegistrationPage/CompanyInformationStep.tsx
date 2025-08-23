@@ -1,15 +1,17 @@
 // frontend-web/components/PartnerRegistrationPage/CompanyInformationStep.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Building, Tag, FileText, MapPin, Camera, Upload, X, Image as ImageIcon } from 'lucide-react';
-import ServiceLocationManager from './ServiceLocationManager';
+// import ServiceLocationManager from './ServiceLocationManager'; // REMOVE
+import GoogleMapsPlacesInput from '../forms/GoogleMapsPlacesInput';
+import { locationService } from '../../services/locationService';
 import { type StepProps, type ImageFile } from './types';
 import { BUSINESS_CATEGORIES } from './constants';
 
 const CompanyInformationStep: React.FC<StepProps> = ({
   formData,
   onInputChange,
-  onServiceCitiesChange,
-  onServiceLocationsChange,
+  // onServiceCitiesChange, // REMOVE
+  // onServiceLocationsChange, // REMOVE
   onImageChange,
   isUserAuthenticated
 }) => {
@@ -17,6 +19,10 @@ const CompanyInformationStep: React.FC<StepProps> = ({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const storefrontInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Location dropdown state
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   // Helper function to create preview URL
   const createImagePreview = (file: File): string => {
@@ -38,6 +44,15 @@ const CompanyInformationStep: React.FC<StepProps> = ({
     
     return null;
   };
+
+  // Fetch locations from backend
+  useEffect(() => {
+    setLocationsLoading(true);
+    locationService.getAllLocations()
+      .then(locs => setLocations(locs.map(l => ({ id: l.id, name: l.name })))) // <-- add missing parenthesis here
+      .catch(() => setLocations([]))
+      .finally(() => setLocationsLoading(false));
+  }, []);
 
   // Handle logo image selection
   const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +173,41 @@ const CompanyInformationStep: React.FC<StepProps> = ({
     
     newGallery.splice(index, 1);
     onImageChange?.('gallery', newGallery);
+  };
+
+  // Handle mapLocation change
+  const handleMapLocationChange = (address: string, locationData?: any) => {
+    if (!locationData) return;
+    const { address: gmAddress, coordinates, placeId, name } = locationData;
+    const mapLocation = {
+      id: placeId || (coordinates ? `${coordinates.lat},${coordinates.lng}` : ''),
+      name: name || gmAddress || address || 'Store Location',
+      address: gmAddress || address || '',
+      coordinates: {
+        lat: coordinates?.lat ?? 0,
+        lng: coordinates?.lng ?? 0
+      },
+      placeId: placeId,
+      isMainLocation: true
+    };
+    onInputChange({
+      target: {
+        name: 'mapLocation',
+        value: mapLocation,
+        type: 'text'
+      }
+    } as any);
+  };
+
+  // Handle Location dropdown change
+  const handleLocationSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onInputChange({
+      target: {
+        name: 'location',
+        value: e.target.value,
+        type: 'text'
+      }
+    } as any);
   };
 
   // Get current images from formData
@@ -417,22 +467,52 @@ const CompanyInformationStep: React.FC<StepProps> = ({
         </div>
       </div>
 
-      {/* Service Locations */}
+      {/* Location dropdown (from backend) */}
+      <div className="border-t border-gray-200 pt-8">
+        <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+          Location (Service Area) *
+        </label>
+        <select
+          id="location"
+          name="location"
+          value={formData.location || ''}
+          onChange={handleLocationSelect}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          required
+          disabled={locationsLoading}
+        >
+          <option value="">Select a location</option>
+          {locations.map(loc => (
+            <option key={loc.id} value={loc.id}>{loc.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Store Location (Google Maps) */}
       <div className="border-t border-gray-200 pt-8">
         <div className="flex items-center mb-6">
           <MapPin className="h-6 w-6 text-emerald-600 mr-2" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Service Locations</h3>
-            <p className="text-sm text-gray-600">Add the cities and specific locations where you provide services</p>
+            <h3 className="text-lg font-semibold text-gray-900">Store Location</h3>
+            <p className="text-sm text-gray-600">
+              Select the exact location of your main store using Google Maps
+            </p>
           </div>
         </div>
-
-        <ServiceLocationManager
-          serviceCities={formData.serviceCities}
-          serviceLocations={formData.serviceLocations}
-          onServiceCitiesChange={onServiceCitiesChange}
-          onServiceLocationsChange={onServiceLocationsChange}
+        <GoogleMapsPlacesInput
+          value={formData.mapLocation?.address || ''}
+          onChange={handleMapLocationChange}
+          placeholder="Search or select your store location"
+          showMap={true}
+          mapHeight="450px"
         />
+        {formData.mapLocation?.address && (
+          <div className="mt-2 text-sm text-green-700">
+            Selected: {formData.mapLocation.name || formData.mapLocation.address}
+            <br />
+            Coordinates: {formData.mapLocation.coordinates?.lat}, {formData.mapLocation.coordinates?.lng}
+          </div>
+        )}
       </div>
 
       {/* Validation Summary */}
@@ -451,8 +531,11 @@ const CompanyInformationStep: React.FC<StepProps> = ({
               <li className={`flex items-center ${storefrontImage ? 'line-through opacity-60' : ''}`}>
                 • Storefront image
               </li>
-              <li className={`flex items-center ${formData.serviceCities.length > 0 ? 'line-through opacity-60' : ''}`}>
-                • At least one service city
+              <li className={`flex items-center ${formData.mapLocation?.address ? 'line-through opacity-60' : ''}`}>
+                • Store location (Google Maps)
+              </li>
+              <li className={`flex items-center ${formData.location ? 'line-through opacity-60' : ''}`}>
+                • Location (from database)
               </li>
             </ul>
           </div>
