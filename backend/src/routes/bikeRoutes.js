@@ -19,6 +19,12 @@ router.get('/', bikeController.getAllBikes);
  */
 router.get('/featured', bikeController.getFeaturedBikes);
 
+/**
+ * @route   GET /api/bikes/my
+ * @desc    Get all bikes for the authenticated partner
+ * @access  Private/Partner
+ */
+router.get('/my', auth(['partner']), bikeController.getMyBikes);
 
 /**
  * @route   GET /api/bikes/by-partner/:partnerId
@@ -27,21 +33,12 @@ router.get('/featured', bikeController.getFeaturedBikes);
  */
 router.get('/by-partner/:partnerId', bikeController.getBikesByPartner);
 
-
 /**
  * @route   GET /api/bikes/:id
  * @desc    Get bike by ID
  * @access  Public
  */
 router.get('/:id', bikeController.getBikeById);
-
-
-/**
- * @route   GET /api/bikes/my
- * @desc    Get all bikes for the authenticated partner
- * @access  Private/Partner
- */
-router.get('/my', auth(['partner']), bikeController.getMyBikes);
 
 
 /**
