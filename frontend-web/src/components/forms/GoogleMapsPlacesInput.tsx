@@ -40,6 +40,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
+  const [inputValue, setInputValue] = useState<string>(value);
 
   // Check API key on mount
   useEffect(() => {
@@ -158,7 +159,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
 
       autocompleteInstance.addListener('place_changed', () => {
         const place = autocompleteInstance.getPlace();
-        
+
         if (!place.geometry || !place.geometry.location) {
           setError('No location details available for this place');
           return;
@@ -166,7 +167,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
 
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        
+
         const locationData: LocationData = {
           address: place.formatted_address || place.name || '',
           coordinates: { lat, lng },
@@ -177,16 +178,41 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         };
 
         setCurrentLocation(locationData);
+        setInputValue(place.formatted_address || place.name || '');
         onChange(place.formatted_address || place.name || '', locationData);
         setError(null);
 
-        // Update map if available
+        // Update map pin and center map
         if (map && marker) {
           map.setCenter({ lat, lng });
           marker.setPosition({ lat, lng });
           marker.setAnimation(google.maps.Animation.BOUNCE);
           setTimeout(() => marker.setAnimation(null), 1000);
           map.setZoom(16);
+        } else if (mapRef.current) {
+          // If map is not initialized yet, initialize it at the selected location
+          googleMapsService.createMap(mapRef.current, {
+            center: { lat, lng },
+            zoom: 16,
+            mapTypeId: 'roadmap',
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: true,
+            zoomControl: true,
+            gestureHandling: 'cooperative',
+          }).then((mapInstance: google.maps.Map) => {
+            const markerInstance = new google.maps.Marker({
+              map: mapInstance,
+              position: { lat, lng },
+              draggable: true,
+              title: 'Drag to adjust location',
+              animation: google.maps.Animation.BOUNCE,
+            });
+            setMap(mapInstance);
+            setMarker(markerInstance);
+            setIsMapInitialized(true);
+            setTimeout(() => markerInstance.setAnimation(null), 1000);
+          });
         }
       });
 
@@ -267,9 +293,15 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
   // Clear location
   const clearLocation = () => {
     onChange('');
+    setInputValue('');
     setCurrentLocation(null);
     setError(null);
   };
+
+  // Sync inputValue with external value only when it changes externally (not on every keystroke)
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   // Show error if API key is invalid
   if (!validateGoogleMapsApiKey()) {
@@ -304,8 +336,11 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         <input
           ref={inputRef}
           type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            onChange(e.target.value); // propagate to parent
+          }}
           placeholder={placeholder}
           className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           required={required}
