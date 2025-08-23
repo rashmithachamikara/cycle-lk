@@ -74,6 +74,19 @@ export interface PartnerImages {
   }>;
 }
 
+// Interface for map location (new structure)
+export interface MapLocation {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  placeId?: string;
+  isMainLocation?: boolean;
+}
+
 // Full Partner interface matching MongoDB structure
 export interface Partner {
   _id: string;
@@ -82,10 +95,9 @@ export interface Partner {
   companyName: string;
   category?: string;
   description?: string;
-  location: string; // Legacy field
-  // New service location system
-  serviceCities?: string[];
-  serviceLocations?: CityServiceData[];
+  location: string; // Now ObjectId string (reference)
+  // mapLocation replaces serviceCities/serviceLocations
+  mapLocation?: MapLocation;
   address?: string;
   coordinates?: Coordinates; // Legacy coordinates
   contactPerson?: string;
@@ -120,8 +132,10 @@ export interface PartnerRegistrationFormData {
   companyName: string;
   category?: string;
   description?: string;
-  serviceCities?: string[];
-  serviceLocations?: CityServiceData[];
+  // serviceCities?: string[]; // removed
+  // serviceLocations?: CityServiceData[]; // removed
+  mapLocation?: MapLocation;
+  location?: string;
   address: string;
   contactPerson?: string;
   phone?: string;
@@ -158,8 +172,9 @@ export interface PartnerFromAPI {
   category?: string;
   description?: string;
   location: string;
-  serviceCities?: string[];
-  serviceLocations?: CityServiceData[];
+  // serviceCities?: string[]; // removed
+  // serviceLocations?: CityServiceData[]; // removed
+  mapLocation?: MapLocation;
   address?: string;
   coordinates?: Coordinates;
   contactPerson?: string;
