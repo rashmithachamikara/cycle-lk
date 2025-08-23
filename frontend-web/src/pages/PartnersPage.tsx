@@ -75,7 +75,9 @@ const PartnersPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section */}
+      <HeroSection />
+        <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Loader message="Loading partners..." size="lg" />
         </div>
         <Footer />
