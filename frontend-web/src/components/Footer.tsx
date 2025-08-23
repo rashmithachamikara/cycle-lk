@@ -5,7 +5,7 @@ import { Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2">
             <Link to="/" className="flex items-center space-x-2 mb-6">

@@ -394,7 +394,7 @@ const BookingPage = () => {
         <BookingProgressSteps currentStep={currentStep} steps={steps} />
       )}
 
-      <div className="py-12">
+      <div className="pb-12">
         {/* Step 1: Location Selection */}
         {currentStep === 1 && (
           <LocationSelectionStep
