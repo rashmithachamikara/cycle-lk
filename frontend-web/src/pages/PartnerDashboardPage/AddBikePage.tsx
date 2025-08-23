@@ -17,43 +17,20 @@ const AddBikePage = () => {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const [bikeTypes, setBikeTypes] = useState<{ id: string, name: string }[]>([]);
-    const [locations, setLocations] = useState<string[]>([]);
 
-    // Fetch bike types and locations from the backend
+    // Only fetch bike types on mount
     useEffect(() => {
-        const fetchInitialData = async () => {
-            try {
-                // These would be API calls to fetch dynamic data
-                // For now, using hardcoded values as a placeholder
-                const fetchedBikeTypes = [
-                    { id: 'city', name: 'City Bike' },
-                    { id: 'mountain', name: 'Mountain Bike' },
-                    { id: 'road', name: 'Road Bike' },
-                    { id: 'hybrid', name: 'Hybrid Bike' },
-                    { id: 'electric', name: 'Electric Bike' },
-                    { id: 'touring', name: 'Touring Bike' },
-                    { id: 'folding', name: 'Folding Bike' },
-                    { id: 'cruiser', name: 'Cruiser' }
-                ];
-                const fetchedLocations = [
-                    'Colombo Central',
-                    'Kandy Hills',
-                    'Galle Fort',
-                    'Ella Station',
-                    'Negombo Beach',
-                    'Mirissa Harbor',
-                    'Jaffna City',
-                    'Trincomalee Port'
-                ];
-                setBikeTypes(fetchedBikeTypes);
-                setLocations(fetchedLocations);
-            } catch (error) {
-                console.error("Failed to fetch initial data", error);
-                // Handle error appropriately
-            }
-        };
-
-        fetchInitialData();
+        const fetchedBikeTypes = [
+            { id: 'city', name: 'City Bike' },
+            { id: 'mountain', name: 'Mountain Bike' },
+            { id: 'road', name: 'Road Bike' },
+            { id: 'hybrid', name: 'Hybrid Bike' },
+            { id: 'electric', name: 'Electric Bike' },
+            { id: 'touring', name: 'Touring Bike' },
+            { id: 'folding', name: 'Folding Bike' },
+            { id: 'cruiser', name: 'Cruiser' }
+        ];
+        setBikeTypes(fetchedBikeTypes);
     }, []);
 
     const [formData, setFormData] = useState({
@@ -62,7 +39,7 @@ const AddBikePage = () => {
         pricePerDay: '',
         pricePerWeek: '',
         pricePerMonth: '',
-        location: '',
+        location: '', // will be set on backend
         coordinates: {
             latitude: 0,
             longitude: 0
@@ -137,7 +114,6 @@ const AddBikePage = () => {
         const errors: string[] = [];
         if (!formData.name) errors.push("Bike name is required");
         if (!formData.pricePerDay) errors.push("Daily price is required");
-        if (!formData.location) errors.push("Location is required");
         if (!formData.description) errors.push("Description is required");
         if (formData.images.length === 0) errors.push("At least one image is required");
         return errors;
@@ -268,20 +244,15 @@ const AddBikePage = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="location">
                                         Location*
                                     </label>
-                                    <select
+                                    <input
+                                        type="text"
                                         id="location"
                                         name="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="">Select a location</option>
-                                        {locations.map(location => (
-                                            <option key={location} value={location}>
-                                                {location}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        value="Current shop location"
+                                        disabled
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                                        placeholder="Current shop location"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
