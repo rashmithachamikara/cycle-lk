@@ -124,6 +124,9 @@ const Inventory = ({
                   Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Availability
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -164,6 +167,9 @@ const Inventory = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                       {bike.type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" title={bike.location + " - " + bike.currentPartnerId.companyName}>
+                      {bike.location}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
