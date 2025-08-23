@@ -11,10 +11,10 @@ import CompanyInformationStep from './CompanyInformationStep';
 import ContactInformationStep from './ContactInformationStep';
 import BusinessHoursStep from './BusinessHoursStep';
 import ServicesAndFeaturesStep from './ServicesAndFeaturesStep';
-import { PartnerRegistrationForm as FormData, type CityServiceData, type ImageFile } from './types';
+import { PartnerRegistrationForm as FormData, type ImageFile } from './types';
 import { DEFAULT_BUSINESS_HOURS } from './constants';
 import RegistrationSuccess from './RegistrationSuccess';
-
+import type { CityServiceData } from './types';
 interface PartnerRegistrationFormProps {
   onSuccess: () => void;
 }
@@ -41,8 +41,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     category: '',
     description: '',
     // Updated location system
-    serviceCities: [],
-    serviceLocations: [],
+    mapLocation: undefined,
+    location: '',
     address: '',
     contactPerson: '',
     phone: '',
@@ -57,26 +57,13 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     galleryImages: []
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { name: string, value: any, type: string } }
+  ) => {
     const { name, value, type } = e.target;
-    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'number' ? (value === '' ? 0 : Number(value)) : value
-    }));
-  };
-
-  const handleServiceCitiesChange = (cities: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      serviceCities: cities
-    }));
-  };
-
-  const handleServiceLocationsChange = (locations: CityServiceData[]) => {
-    setFormData(prev => ({
-      ...prev,
-      serviceLocations: locations
     }));
   };
 
@@ -136,17 +123,19 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         }
         return !!(
           formData.companyName.trim() && 
-          formData.category && 
-          formData.serviceCities.length > 0 &&
-          formData.storefrontImage // Storefront image is required
+          formData.category &&
+          formData.storefrontImage &&
+          formData.mapLocation?.address &&
+          formData.location
         );
       case 2:
         if (!isUserAuthenticated) {
           return !!(
             formData.companyName.trim() && 
-            formData.category && 
-            formData.serviceCities.length > 0 &&
-            formData.storefrontImage // Storefront image is required
+            formData.category &&
+            formData.storefrontImage &&
+            formData.mapLocation?.address &&
+            formData.location
           );
         }
         return !!(
@@ -174,7 +163,6 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
 
   const getValidationErrors = (step: number): string[] => {
     const errors: string[] = [];
-    
     switch (step) {
       case 1:
         if (!isUserAuthenticated) {
@@ -189,16 +177,18 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         } else {
           if (!formData.companyName.trim()) errors.push('Company name is required');
           if (!formData.category) errors.push('Business category is required');
-          if (formData.serviceCities.length === 0) errors.push('At least one service city is required');
           if (!formData.storefrontImage) errors.push('Storefront image is required');
+          if (!formData.mapLocation?.address) errors.push('Store location is required');
+          if (!formData.location) errors.push('Location selection is required');
         }
         break;
       case 2:
         if (!isUserAuthenticated) {
           if (!formData.companyName.trim()) errors.push('Company name is required');
           if (!formData.category) errors.push('Business category is required');
-          if (formData.serviceCities.length === 0) errors.push('At least one service city is required');
           if (!formData.storefrontImage) errors.push('Storefront image is required');
+          if (!formData.mapLocation?.address) errors.push('Store location is required');
+          if (!formData.location) errors.push('Location selection is required');
         } else {
           if (!formData.address.trim()) errors.push('Business address is required');
           if (!formData.contactPerson.trim()) errors.push('Contact person is required');
@@ -217,7 +207,6 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         if (formData.features.length === 0) errors.push('At least one business feature is required.');
         break;
     }
-    
     return errors;
   };
 
@@ -239,7 +228,7 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Final validation before submitting
     const validationErrors = getValidationErrors(4);
     if (validationErrors.length > 0) {
@@ -290,23 +279,40 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         return;
       }
 
-      if (formData.serviceCities.length === 0) {
-        setError('At least one service city is required.');
-        return;
-      }
-
       if (!formData.storefrontImage) {
         setError('Storefront image is required.');
         return;
       }
+
+      if (!formData.mapLocation?.address) {
+        setError('Store location is required.');
+        return;
+      }
+
+      if (!formData.location) {
+        setError('Location selection is required.');
+        return;
+      }
+
+      // --- Normalize mapLocation to ensure all required fields ---
+      const mapLocation = formData.mapLocation || {};
+      const normalizedMapLocation = {
+        id: mapLocation.id || (mapLocation.coordinates && mapLocation.coordinates.lat && mapLocation.coordinates.lng ? `${mapLocation.coordinates.lat},${mapLocation.coordinates.lng}` : 'unknown'),
+        name: mapLocation.name || mapLocation.address || 'Store Location',
+        address: mapLocation.address || 'Unknown address',
+        coordinates: {
+          lat: typeof mapLocation.coordinates?.lat === 'number' ? mapLocation.coordinates.lat : 0,
+          lng: typeof mapLocation.coordinates?.lng === 'number' ? mapLocation.coordinates.lng : 0
+        },
+        placeId: mapLocation.placeId || '',
+        isMainLocation: true
+      };
 
       const registrationData = {
         userId,
         companyName: formData.companyName.trim(),
         category: formData.category,
         description: formData.description.trim(),
-        serviceCities: formData.serviceCities,
-        serviceLocations: formData.serviceLocations,
         address: formData.address.trim(),
         contactPerson: formData.contactPerson.trim(),
         phone: formData.phone.trim() || formData.userPhone.trim(),
@@ -315,7 +321,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         specialties: formData.specialties,
         features: formData.features,
         yearsActive: formData.yearsActive,
-        // Include image files
+        mapLocation: normalizedMapLocation, // <-- always send normalized
+        location: formData.location,
         logoImage: formData.logoImage,
         storefrontImage: formData.storefrontImage,
         galleryImages: formData.galleryImages
@@ -338,14 +345,28 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     ? ['Company', 'Contact', 'Hours', 'Services', 'Success']
     : ['Account', 'Company', 'Contact', 'Services', 'Success'];
 
+  const handleServiceCitiesChange = (cities: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      serviceCities: cities
+    }));
+  };
+
+  const handleServiceLocationsChange = (locations: CityServiceData[]) => {
+    setFormData(prev => ({
+      ...prev,
+      serviceLocations: locations
+    }));
+  };
+
   const stepProps = {
     formData,
     onInputChange: handleInputChange,
+    onImageChange: handleImageChange,
+    onArrayFieldChange: handleArrayFieldChange,
+    onBusinessHourChange: handleBusinessHourChange,
     onServiceCitiesChange: handleServiceCitiesChange,
     onServiceLocationsChange: handleServiceLocationsChange,
-    onBusinessHourChange: handleBusinessHourChange,
-    onArrayFieldChange: handleArrayFieldChange,
-    onImageChange: handleImageChange,
     isUserAuthenticated: !!isUserAuthenticated
   };
 
