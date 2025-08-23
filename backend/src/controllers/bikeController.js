@@ -1,5 +1,5 @@
 //backend/src/controllers/bikeController.js
-const { Bike, Partner } = require('../models');
+const { Bike, Partner, Location } = require('../models'); // Add Location to imports
 const cloudinary = require('../config/cloudinary');
 
 
@@ -11,21 +11,18 @@ const cloudinary = require('../config/cloudinary');
 exports.getAllBikes = async (req, res) => {
   try {
     const { location, type, minPrice, maxPrice, availability, partnerId, limit, sort } = req.query;
-    
-    // Build filter object based on query parameters
-    const filter = {};
-    
-    if (location) filter.location = location;
-    if (type) filter.type = type;
-    if (partnerId) filter.partnerId = partnerId;
-    filter['availability.status'] = availability || 'available';
 
+    // Build match filter for aggregation
+    const match = {};
+    if (type) match.type = type;
+    if (partnerId) match.partnerId = partnerId;
+    if (availability) match['availability.status'] = availability;
     if (minPrice || maxPrice) {
-      filter['pricing.perDay'] = {};
-      if (minPrice) filter['pricing.perDay'].$gte = Number(minPrice);
-      if (maxPrice) filter['pricing.perDay'].$lte = Number(maxPrice);
+      match['pricing.perDay'] = {};
+      if (minPrice) match['pricing.perDay'].$gte = Number(minPrice);
+      if (maxPrice) match['pricing.perDay'].$lte = Number(maxPrice);
     }
-    
+
     // Build sort options
     let sortOptions = {};
     if (sort === 'price-asc') {
@@ -37,18 +34,41 @@ exports.getAllBikes = async (req, res) => {
     } else {
       sortOptions['rating'] = -1; // Default sort
     }
-    
-    // Create the query
-    let query = Bike.find(filter)
-      .populate('partnerId', 'companyName rating')
-      .sort(sortOptions);
-    
-    // Apply limit if provided
-    if (limit) {
-      query = query.limit(Number(limit));
-    }
-    
-    const bikes = await query;
+
+    // Aggregation pipeline
+    const pipeline = [
+      { $match: match },
+      {
+        $lookup: {
+          from: 'partners',
+          localField: 'currentPartnerId',
+          foreignField: '_id',
+          as: 'partner'
+        }
+      },
+      { $unwind: '$partner' },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: 'partner.location',
+          foreignField: '_id',
+          as: 'locationObj'
+        }
+      },
+      { $unwind: { path: '$locationObj', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          location: '$locationObj.name'
+        }
+      },
+      // Filter by location name if provided
+      ...(location ? [{ $match: { location: location } }] : []),
+      { $sort: sortOptions },
+      ...(limit ? [{ $limit: Number(limit) }] : [])
+    ];
+
+    const bikes = await Bike.aggregate(pipeline);
+
     res.json(bikes);
   } catch (err) {
     console.error(err);
@@ -70,10 +90,17 @@ exports.getMyBikes = async (req, res) => {
     console.log(`User role: ${req.user.role}, User's Partner ID: ${req.user.partnerId}`);
 
     const partnerId = req.user.partnerId;
-    const bikes = await Bike.find({ partnerId })
-      .populate('partnerId', 'companyName email phone location');
-
-    res.json(bikes || []);
+    const bikes = await Bike.find({ currentPartnerId: req.user.partnerId })
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName email phone location',
+        populate: { path: 'location', select: 'name' }
+      });
+    const bikesWithLocationName = bikes.map(bike => ({
+      ...bike.toObject(),
+      location: bike.currentPartnerId?.location?.name || ''
+    }));
+    res.json(bikesWithLocationName || []);
 
   } catch (err) {
     console.error('Error in getMyBikes:', err);
@@ -89,13 +116,17 @@ exports.getMyBikes = async (req, res) => {
 exports.getBikeById = async (req, res) => {
   try {
     const bike = await Bike.findById(req.params.id)
-      .populate('partnerId', 'companyName rating contact email phone location businessHours');
-      
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName rating contact email phone location businessHours',
+        populate: { path: 'location', select: 'name' }
+      });
     if (!bike) {
       return res.status(404).json({ message: 'Bike not found' });
     }
-    
-    res.json(bike);
+    const bikeObj = bike.toObject();
+    bikeObj.location = bike.currentPartnerId?.location?.name || '';
+    res.json(bikeObj);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -164,39 +195,29 @@ exports.addBike = async (req, res) => {
 
 
   try {
-    // The auth middleware has already run and should have added `partnerId` to `req.user`.
-    // This is our final safeguard.
     if (!req.user || !req.user.partnerId) {
       console.error('Bike Controller: partnerId is missing from request. Auth middleware may have failed.');
       return res.status(403).json({ message: 'Authentication error: Partner could not be identified.' });
     }
-    
+
     // Simple validation (can be replaced with a more robust library like Joi or express-validator)
-    if (!req.body.name || !req.body.type || !req.body.location) {
-        return res.status(400).json({ message: 'Validation failed: Name, type, and location are required.' });
+    if (!req.body.name || !req.body.type) {
+      return res.status(400).json({ message: 'Validation failed: Name and type are required.' });
     }
 
-    // This line will now work correctly!
     const partnerId = req.user.partnerId;
 
-    const partner = await Partner.findById(partnerId);
-    if (!partner) {
-      // This is the error you were getting. It's now a fallback safety check.
-      return res.status(400).json({ message: 'Invalid partner ID' });
-    }
-    
     const {
-        name,
-        type,
-        description,
-        location,
-        pricing,
-        features,
-        specifications,
-        coordinates,
-        availability
+      name,
+      type,
+      description,
+      pricing,
+      features,
+      specifications,
+      coordinates,
+      availability
     } = req.body;
-    
+
     // This logic should now work correctly because req.files will be populated
     const imageUrls = [];
     if (req.files && req.files.length > 0) {
@@ -209,25 +230,35 @@ exports.addBike = async (req, res) => {
       }
 
     const bike = new Bike({
-        partnerId: req.user.partnerId, // This is now the correct _id from the Partner model
-        name,
-        type,
-        description,
-        location,
-        pricing,
-        features: Array.isArray(features) ? features : [features],
-        specifications,
-        coordinates,
-        images: imageUrls,
-        'availability.status': availability.status 
+      partnerId: req.user.partnerId,
+      name,
+      type,
+      description,
+      currentPartnerId: partnerId, // always use partner's location
+      pricing,
+      features: Array.isArray(features) ? features : [features],
+      specifications,
+      coordinates: coordinates || locationObj.coordinates, // fallback to location's coordinates
+      images: imageUrls,
+      'availability.status': availability?.status
     });
 
-    
     await bike.save();
 
     await Partner.findByIdAndUpdate(req.user.partnerId, {
-        $inc: { bikeCount: 1 }
+      $inc: { bikeCount: 1 }
     });
+
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(400).json({ message: 'Invalid partner ID' });
+    }
+
+    if (partner.location?._id) {
+      await Location.findByIdAndUpdate(partner.location._id, {
+        $inc: { bikeCount: 1 }
+      });
+    }
 
     res.status(201).json(bike);
   } catch (err) {
@@ -251,20 +282,24 @@ exports.updateBike = async (req, res) => {
     if (!bike) {
       return res.status(404).json({ message: 'Bike not found' });
     }
-    
-    // Check if the location is being changed
-    if (req.body.location && req.body.location !== bike.location) {
+
+    // Only compare location if both exist
+    if (
+      req.body.location &&
+      bike.location &&
+      req.body.location.toString() !== bike.location.toString()
+    ) {
       // Update old location's bike count (-1)
-      await Location.findOneAndUpdate({ name: bike.location }, {
+      await Location.findByIdAndUpdate(bike.location, {
         $inc: { bikeCount: -1 }
       });
-      
+
       // Update new location's bike count (+1)
-      await Location.findOneAndUpdate({ name: req.body.location }, {
+      await Location.findByIdAndUpdate(req.body.location, {
         $inc: { bikeCount: 1 }
       });
     }
-    
+
     // Update bike
     const updatedBike = await Bike.findByIdAndUpdate(
       req.params.id,
@@ -292,20 +327,20 @@ exports.deleteBike = async (req, res) => {
     }
 
     const partnerId = bike.partnerId;
-    const location = bike.location;
-    
-    await bike.remove();
-    
-    // Update partner's bike count
+    const locationId = bike.location;
+
+    // Fix: use deleteOne instead of remove
+    await Bike.deleteOne({ _id: bike._id });
+
     await Partner.findByIdAndUpdate(partnerId, {
       $inc: { bikeCount: -1 }
     });
-    
-    // Update location's bike count
-    await Location.findOneAndUpdate({ name: location }, {
+
+    // Update location's bike count using ObjectId
+    await Location.findByIdAndUpdate(locationId, {
       $inc: { bikeCount: -1 }
     });
-    
+
     res.json({ message: 'Bike removed' });
   } catch (err) {
     console.error(err);
@@ -321,14 +356,19 @@ exports.deleteBike = async (req, res) => {
 exports.getFeaturedBikes = async (req, res) => {
   try {
     const { limit = 4 } = req.query;
-    
-    // Get top rated bikes that are available
     const bikes = await Bike.find({ 'availability.status': 'available' })
       .sort({ rating: -1 })
       .limit(Number(limit))
-      .populate('partnerId', 'companyName rating');
-      
-    res.json(bikes);
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName rating location',
+        populate: { path: 'location', select: 'name' }
+      });
+    const bikesWithLocationName = bikes.map(bike => ({
+      ...bike.toObject(),
+      location: bike.currentPartnerId?.location?.name || ''
+    }));
+    res.json(bikesWithLocationName);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -343,15 +383,21 @@ exports.getFeaturedBikes = async (req, res) => {
 exports.getBikesByPartner = async (req, res) => {
   try {
     const { partnerId } = req.params;
-    
-    // Validate partner exists
     const partner = await Partner.findById(partnerId);
     if (!partner) {
       return res.status(404).json({ message: 'Partner not found' });
     }
-    
-    const bikes = await Bike.find({ partnerId });
-    res.json(bikes);
+    const bikes = await Bike.find({ currentPartnerId: partnerId })
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName rating location',
+        populate: { path: 'location', select: 'name' }
+      });
+    const bikesWithLocationName = bikes.map(bike => ({
+      ...bike.toObject(),
+      location: bike.currentPartnerId?.location?.name || ''
+    }));
+    res.json(bikesWithLocationName);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
