@@ -56,6 +56,31 @@ exports.getAllBikes = async (req, res) => {
   }
 };
 
+
+/**
+ * Get all bikes for the authenticated partner
+ */
+exports.getMyBikes = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+        console.log(`User role: ${user.role}, User's Partner ID: ${req.user.partnerId}`);
+
+        if (!user || user.role != 'partner') {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+    const partnerId = req.user.partnerId;
+    const bikes = await Bike.find({ partnerId })
+    .populate('partnerId', 'companyName email phone location');
+
+    res.json(bikes || []);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 /**
  * Get bike by ID
  * @param {Object} req - Express request object

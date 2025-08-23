@@ -35,6 +35,15 @@ router.get('/by-partner/:partnerId', bikeController.getBikesByPartner);
  */
 router.get('/:id', bikeController.getBikeById);
 
+
+/**
+ * @route   GET /api/bikes/my
+ * @desc    Get all bikes for the authenticated partner
+ * @access  Private/Partner
+ */
+router.get('/my', auth(['partner']), bikeController.getMyBikes);
+
+
 /**
  * @route   POST /api/bikes
  * @desc    Add a new bike with images
