@@ -54,39 +54,67 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const locationData = await googleMapsService.reverseGeocode({ lat, lng });
-      
+
       if (locationData) {
         setCurrentLocation(locationData);
+        setInputValue(locationData.address); // update input field when map is used
         onChange(locationData.address, locationData);
       } else {
-        // If geocoding fails, still provide coordinates-based data
         const fallbackData: LocationData = {
           address: `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
           coordinates: { lat, lng },
           formattedAddress: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
         };
         setCurrentLocation(fallbackData);
+        setInputValue(fallbackData.address); // update input field when map is used
         onChange(fallbackData.address, fallbackData);
         setError('Address lookup unavailable, but location coordinates saved');
       }
     } catch (error) {
       console.error('Geocoding error:', error);
-      
-      // Provide fallback with coordinates only
+
       const fallbackData: LocationData = {
         address: `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
         coordinates: { lat, lng },
         formattedAddress: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
       };
       setCurrentLocation(fallbackData);
+      setInputValue(fallbackData.address); // update input field when map is used
       onChange(fallbackData.address, fallbackData);
       setError('Address lookup failed, but location coordinates saved');
     } finally {
       setIsLoading(false);
     }
   }, [onChange]);
+
+  const setupMarkerEvents = useCallback((markerInstance: google.maps.Marker, mapInstance: google.maps.Map) => {
+    // Remove previous listeners to avoid duplicates
+    google.maps.event.clearInstanceListeners(markerInstance);
+    google.maps.event.clearInstanceListeners(mapInstance);
+
+    // Handle marker drag
+    markerInstance.addListener('dragend', async () => {
+      const position = markerInstance.getPosition();
+      if (position) {
+        const lat = position.lat();
+        const lng = position.lng();
+        await handleGeocoding(lat, lng);
+      }
+    });
+
+    // Handle map click
+    mapInstance.addListener('click', async (event: google.maps.MapMouseEvent) => {
+      if (!event.latLng) return;
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      markerInstance.setPosition({ lat, lng });
+      markerInstance.setAnimation(google.maps.Animation.BOUNCE);
+      setTimeout(() => markerInstance.setAnimation(null), 1000);
+      await handleGeocoding(lat, lng);
+    });
+  }, [handleGeocoding]);
 
   // Initialize Google Maps
   const initializeMap = useCallback(async () => {
@@ -115,29 +143,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         animation: google.maps.Animation.DROP,
       });
 
-      // Handle marker drag
-      markerInstance.addListener('dragend', async () => {
-        const position = markerInstance.getPosition();
-        if (position) {
-          const lat = position.lat();
-          const lng = position.lng();
-          await handleGeocoding(lat, lng);
-        }
-      });
-
-      // Handle map click
-      mapInstance.addListener('click', async (event: google.maps.MapMouseEvent) => {
-        if (!event.latLng) return;
-        
-        const lat = event.latLng.lat();
-        const lng = event.latLng.lng();
-        
-        markerInstance.setPosition({ lat, lng });
-        markerInstance.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(() => markerInstance.setAnimation(null), 1000);
-        
-        await handleGeocoding(lat, lng);
-      });
+      setupMarkerEvents(markerInstance, mapInstance);
 
       setMap(mapInstance);
       setMarker(markerInstance);
@@ -148,7 +154,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [showMap, initialCenter, zoom, handleGeocoding, isMapInitialized]);
+  }, [showMap, initialCenter, zoom, handleGeocoding, isMapInitialized, setupMarkerEvents]);
 
   // Initialize Autocomplete
   const initializeAutocomplete = useCallback(async () => {
@@ -189,8 +195,8 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
           marker.setAnimation(google.maps.Animation.BOUNCE);
           setTimeout(() => marker.setAnimation(null), 1000);
           map.setZoom(16);
+          setupMarkerEvents(marker, map); // Ensure marker remains interactive
         } else if (mapRef.current) {
-          // If map is not initialized yet, initialize it at the selected location
           googleMapsService.createMap(mapRef.current, {
             center: { lat, lng },
             zoom: 16,
@@ -208,6 +214,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
               title: 'Drag to adjust location',
               animation: google.maps.Animation.BOUNCE,
             });
+            setupMarkerEvents(markerInstance, mapInstance);
             setMap(mapInstance);
             setMarker(markerInstance);
             setIsMapInitialized(true);
@@ -220,7 +227,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
     } catch (error) {
       console.error('Autocomplete initialization error:', error);
     }
-  }, [map, marker, onChange]);
+  }, [map, marker, onChange, setupMarkerEvents]);
 
   // Initialize components when Google Maps loads
   useEffect(() => {
