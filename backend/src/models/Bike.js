@@ -20,9 +20,10 @@ const bikeSchema = new mongoose.Schema({
   description: {
     type: String
   },
-  location: {
-    type: String,
-    required: true
+  currentPartnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Partner',
+    required: false //Set null when bike is not in a shop
   },
   coordinates: {
     latitude: { type: Number, default: 0 },
@@ -54,7 +55,7 @@ const bikeSchema = new mongoose.Schema({
   images: [{
     url: String,
     publicId: String
-  }],  
+  }],
   availability: {
     status: {
       type: String,
