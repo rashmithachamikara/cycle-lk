@@ -16,6 +16,7 @@ import { api } from '../utils/apiUtils';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import { Loader } from '../ui';
+import Footer from '../components/Footer';
 
 interface DatabaseNotification {
   _id: string;
@@ -203,187 +204,196 @@ const NotificationsPage: React.FC = () => {
 
   if (loading) {
     return (
+      <>
+      <Header />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Loader />
         </div>
       </div>
+      <Footer />
+      </>
+      
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-8">
-         <Header />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between my-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-            <p className="text-gray-600 mt-1">
-              {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : 'All caught up!'}
-            </p>
-          </div>
-          
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-            >
-              <CheckCheck className="h-4 w-4 mr-2" />
-              Mark All Read
-            </button>
-          )}
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filter:</span>
-            </div>
-            
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-            >
-              <option value="all">All</option>
-              <option value="unread">Unread</option>
-              <option value="read">Read</option>
-            </select>
-
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as 'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment')}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-            >
-              <option value="all">All Types</option>
-              <option value="reminder">Reminders</option>
-              <option value="offer">Offers</option>
-              <option value="system">System</option>
-              <option value="partner">Partner</option>
-              <option value="payment">Payment</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Notifications List */}
-        <div className="space-y-4">
-          {filteredNotifications.length === 0 ? (
-            <div className="text-center py-12">
-              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-              <p className="text-gray-500">
-                {filter === 'unread' ? 'No unread notifications' : 'You\'re all caught up!'}
+    <>
+      <Header />
+      <div className="min-h-screen  pb-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex items-center justify-between my-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+              <p className="text-gray-600 mt-1">
+                {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : 'All caught up!'}
               </p>
             </div>
-          ) : (
-            filteredNotifications.map((notification) => {
-              const link = getNotificationLink(notification);
-              const NotificationContent = (
-                <div className={`bg-white rounded-lg shadow-sm border-l-4 p-4 transition-all hover:shadow-md ${
-                  notification.read 
-                    ? 'border-gray-200 opacity-75' 
-                    : 'border-emerald-500'
-                }`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <div className="flex-shrink-0 mt-1">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className={`text-sm font-medium ${
-                            notification.read ? 'text-gray-700' : 'text-gray-900'
-                          }`}>
-                            {notification.title}
-                          </h3>
-                          <span className="text-xs text-gray-500 ml-2">
-                            {formatTimeAgo(notification.createdAt)}
-                          </span>
+            
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                <CheckCheck className="h-4 w-4 mr-2" />
+                Mark All Read
+              </button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Filter:</span>
+              </div>
+              
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
+              </select>
+
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as 'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment')}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="all">All Types</option>
+                <option value="reminder">Reminders</option>
+                <option value="offer">Offers</option>
+                <option value="system">System</option>
+                <option value="partner">Partner</option>
+                <option value="payment">Payment</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-4">
+            {filteredNotifications.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                <p className="text-gray-500">
+                  {filter === 'unread' ? 'No unread notifications' : 'You\'re all caught up!'}
+                </p>
+              </div>
+            ) : (
+              filteredNotifications.map((notification) => {
+                const link = getNotificationLink(notification);
+                const NotificationContent = (
+                  <div className={`bg-white rounded-lg shadow-sm border-l-4 p-4 transition-all hover:shadow-md ${
+                    notification.read 
+                      ? 'border-gray-200 opacity-75' 
+                      : 'border-emerald-500'
+                  }`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="flex-shrink-0 mt-1">
+                          {getNotificationIcon(notification.type)}
                         </div>
                         
-                        <p className={`text-sm mt-1 ${
-                          notification.read ? 'text-gray-500' : 'text-gray-700'
-                        }`}>
-                          {notification.message}
-                        </p>
-                        
-                        <div className="flex items-center justify-between mt-3">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            notification.type === 'payment' ? 'bg-orange-100 text-orange-800' :
-                            notification.type === 'partner' ? 'bg-purple-100 text-purple-800' :
-                            notification.type === 'offer' ? 'bg-green-100 text-green-800' :
-                            notification.type === 'reminder' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {notification.type}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className={`text-sm font-medium ${
+                              notification.read ? 'text-gray-700' : 'text-gray-900'
+                            }`}>
+                              {notification.title}
+                            </h3>
+                            <span className="text-xs text-gray-500 ml-2">
+                              {formatTimeAgo(notification.createdAt)}
+                            </span>
+                          </div>
                           
-                          <div className="flex items-center space-x-2">
-                            {!notification.read && (
+                          <p className={`text-sm mt-1 ${
+                            notification.read ? 'text-gray-500' : 'text-gray-700'
+                          }`}>
+                            {notification.message}
+                          </p>
+                          
+                          <div className="flex items-center justify-between mt-3">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              notification.type === 'payment' ? 'bg-orange-100 text-orange-800' :
+                              notification.type === 'partner' ? 'bg-purple-100 text-purple-800' :
+                              notification.type === 'offer' ? 'bg-green-100 text-green-800' :
+                              notification.type === 'reminder' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {notification.type}
+                            </span>
+                            
+                            <div className="flex items-center space-x-2">
+                              {!notification.read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    markAsRead(notification._id);
+                                  }}
+                                  className="text-emerald-600 hover:text-emerald-700 text-xs"
+                                  title="Mark as read"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                              )}
+                              
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  markAsRead(notification._id);
+                                  deleteNotification(notification._id);
                                 }}
-                                className="text-emerald-600 hover:text-emerald-700 text-xs"
-                                title="Mark as read"
+                                className="text-red-600 hover:text-red-700 text-xs"
+                                title="Delete notification"
                               >
-                                <Check className="h-4 w-4" />
+                                <X className="h-4 w-4" />
                               </button>
-                            )}
-                            
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                deleteNotification(notification._id);
-                              }}
-                              className="text-red-600 hover:text-red-700 text-xs"
-                              title="Delete notification"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
 
-              return (
-                <div key={notification._id}>
-                  {link ? (
-                    <Link to={link} className="block">
-                      {NotificationContent}
-                    </Link>
-                  ) : (
-                    NotificationContent
-                  )}
-                </div>
-              );
-            })
+                return (
+                  <div key={notification._id}>
+                    {link ? (
+                      <Link to={link} className="block">
+                        {NotificationContent}
+                      </Link>
+                    ) : (
+                      NotificationContent
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Load More Button (if needed) */}
+          {filteredNotifications.length >= 100 && (
+            <div className="text-center mt-8">
+              <button
+                onClick={fetchNotifications}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Load More
+              </button>
+            </div>
           )}
         </div>
-
-        {/* Load More Button (if needed) */}
-        {filteredNotifications.length >= 100 && (
-          <div className="text-center mt-8">
-            <button
-              onClick={fetchNotifications}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Load More
-            </button>
-          </div>
-        )}
+        
       </div>
-    </div>
+      <Footer/>
+    </>
   );
 };
 
