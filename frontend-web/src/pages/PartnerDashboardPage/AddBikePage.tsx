@@ -9,7 +9,7 @@ import {
     CheckCircle,
     AlertCircle
 } from 'lucide-react';
-import { bikeService } from '../../services/bikeService';
+import { bikeService, BikeTypes } from '../../services/bikeService';
 
 const AddBikePage = () => {
     const navigate = useNavigate();
@@ -20,16 +20,10 @@ const AddBikePage = () => {
 
     // Only fetch bike types on mount
     useEffect(() => {
-        const fetchedBikeTypes = [
-            { id: 'city', name: 'City Bike' },
-            { id: 'mountain', name: 'Mountain Bike' },
-            { id: 'road', name: 'Road Bike' },
-            { id: 'hybrid', name: 'Hybrid Bike' },
-            { id: 'electric', name: 'Electric Bike' },
-            { id: 'touring', name: 'Touring Bike' },
-            { id: 'folding', name: 'Folding Bike' },
-            { id: 'cruiser', name: 'Cruiser' }
-        ];
+        const fetchedBikeTypes = BikeTypes.map(type => ({
+            id: type,
+            name: type.charAt(0).toUpperCase() + type.slice(1) + ' Bike'
+        }));
         setBikeTypes(fetchedBikeTypes);
     }, []);
 
@@ -63,7 +57,7 @@ const AddBikePage = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name.includes('.')) {
-            const [parentProp, childProp] = name.split('.');
+            const [, childProp] = name.split('.');
             setFormData(prev => ({
                 ...prev,
                 specifications: {

@@ -9,7 +9,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { bikeService, BikeData } from '../services/bikeService';
+import { bikeService, BikeData, BikeType, BikeCondition } from '../services/bikeService';
 
 const EditBikePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +24,7 @@ const EditBikePage = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    type: 'city',
+    type: 'city' as BikeType,
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
@@ -42,7 +42,7 @@ const EditBikePage = () => {
     availability: true,
     images: [] as File[],
     existingImages: [] as string[],
-    condition: 'good' // default value
+    condition: 'good' as BikeCondition // default value
   });
 
   const bikeTypes = [
@@ -54,17 +54,6 @@ const EditBikePage = () => {
     { id: 'touring', name: 'Touring Bike' },
     { id: 'folding', name: 'Folding Bike' },
     { id: 'cruiser', name: 'Cruiser' }
-  ];
-
-  const locations = [
-    'Colombo Central',
-    'Kandy Hills',
-    'Galle Fort',
-    'Ella Station',
-    'Negombo Beach',
-    'Mirissa Harbor',
-    'Jaffna City',
-    'Trincomalee Port'
   ];
   // Simulate fetching bike data from API
   useEffect(() => {
@@ -82,8 +71,10 @@ const EditBikePage = () => {
           pricePerDay: bikeData.pricing.perDay.toString(),
           pricePerWeek: bikeData.pricing.perWeek?.toString() || '',
           pricePerMonth: bikeData.pricing.perMonth?.toString() || '',
-          location: bikeData.location,
-          currentPartnerName: bikeData.currentPartnerId.companyName,
+          location: bikeData.location || '',
+          currentPartnerName: typeof bikeData.currentPartnerId === 'object' 
+            ? bikeData.currentPartnerId.companyName 
+            : 'Unknown Partner',
           description: bikeData.description || '',
           features: bikeData.features || [''],
           specifications: {
@@ -217,10 +208,9 @@ const EditBikePage = () => {
           perMonth: formData.pricePerMonth ? parseFloat(formData.pricePerMonth) : undefined,
         },
         description: formData.description,
-        location: formData.location,
         features: formData.features.filter(f => f.trim() !== ''),
         specifications: formData.specifications,
-        condition: formData.condition.toLowerCase(),
+        condition: formData.condition,
       };
       
       // Update bike data
@@ -234,7 +224,8 @@ const EditBikePage = () => {
       // Update availability
       await bikeService.updateBikeAvailability(
         id, 
-        formData.availability ? 'available' : 'unavailable'
+        formData.availability ? 'available' : 'unavailable',
+        formData.availability ? '' : 'Temporarily unavailable'
       );
       
       setSubmitSuccess(true);
