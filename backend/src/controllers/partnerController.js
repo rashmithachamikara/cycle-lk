@@ -3,13 +3,15 @@ const { Partner, User, Bike } = require('../models');
 const cloudinary = require('../config/cloudinary');
 
 /**
- * Get all partners
+ * Get all partners with optional filtering
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 exports.getAllPartners = async (req, res) => {
   try {
     console.log('Attempting to fetch partners from database...');
+    
+    const { locationId, location, verified } = req.query;
   
     // Test database connection
     const mongoose = require('mongoose');
@@ -22,8 +24,24 @@ exports.getAllPartners = async (req, res) => {
 
     console.log('Database connected, fetching partners...');
     
-    const partners = await Partner.find()
+    // Build filter object
+    const filter = {};
+    
+    // Filter by location ID (ObjectId reference)
+    if (locationId) {
+      filter.location = locationId;
+      console.log('Filtering by locationId:', locationId);
+    }
+    
+    // Filter by verification status
+    if (verified !== undefined) {
+      filter.verified = verified === 'true';
+      console.log('Filtering by verified status:', filter.verified);
+    }
+    
+    const partners = await Partner.find(filter)
       .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates') // Populate location details
       .lean(); // Use lean() for better performance
     
     console.log(`Successfully fetched ${partners.length} partners from database`);
@@ -49,7 +67,8 @@ exports.getPartnerById = async (req, res) => {
     console.log('Fetching partner by ID:', req.params.id);
     
     const partner = await Partner.findById(req.params.id)
-      .populate('userId', 'firstName lastName email phone');
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates'); // Populate location details
       
     if (!partner) {
       console.log('Partner not found with ID:', req.params.id);
@@ -65,6 +84,82 @@ exports.getPartnerById = async (req, res) => {
     res.json(partner);
   } catch (error) {
     console.error('Error in getPartnerById:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Get partners by location ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPartnersByLocationId = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    console.log('Fetching partners for location ID:', locationId);
+    
+    const partners = await Partner.find({ location: locationId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates')
+      .lean();
+      
+    console.log(`Found ${partners.length} partners for location:`, locationId);
+    res.json(partners);
+  } catch (error) {
+    console.error('Error in getPartnersByLocationId:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Search partners by query
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.searchPartners = async (req, res) => {
+  try {
+    const { q, location, verified } = req.query;
+    console.log('Searching partners with query:', q);
+    
+    // Build search filter
+    const filter = {};
+    
+    // Text search
+    if (q) {
+      filter.$or = [
+        { companyName: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+        { category: { $regex: q, $options: 'i' } },
+        { specialties: { $in: [new RegExp(q, 'i')] } },
+        { features: { $in: [new RegExp(q, 'i')] } }
+      ];
+    }
+    
+    // Location filter
+    if (location) {
+      filter.location = location;
+    }
+    
+    // Verification filter
+    if (verified !== undefined) {
+      filter.verified = verified === 'true';
+    }
+    
+    const partners = await Partner.find(filter)
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates')
+      .lean();
+      
+    console.log(`Found ${partners.length} partners matching search criteria`);
+    res.json(partners);
+  } catch (error) {
+    console.error('Error in searchPartners:', error);
     res.status(500).json({ 
       message: 'Server error', 
       error: error.message 
