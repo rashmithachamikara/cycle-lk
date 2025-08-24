@@ -156,10 +156,10 @@ exports.createBooking = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('User from token:', req.user);
     
-    const { bikeId, startTime, endTime, deliveryAddress } = req.body;
+    const { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation } = req.body;
     const userId = req.user.id; // From auth middleware
     
-    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, userId });
+    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, userId });
     
     // Validate bike exists and is available
     const bike = await Bike.findById(bikeId);
@@ -265,8 +265,8 @@ exports.createBooking = async (req, res) => {
         endDate: end
       },
       locations: {
-        pickup: deliveryAddress || bike.location,
-        dropoff: deliveryAddress || bike.location
+        pickup: pickupLocation || deliveryAddress || 'Default pickup location',
+        dropoff: dropoffLocation || deliveryAddress || 'Default dropoff location'
       },
       status: 'requested'
     });
@@ -279,80 +279,105 @@ exports.createBooking = async (req, res) => {
     });
     console.log('Booking created successfully:', booking);
 
-    // Send notification to partner about new booking request
-    try {
-      await notificationService.notifyBookingCreated(booking, bike.partnerId);
-      console.log('Notification sent to partner successfully');
-    } catch (notificationError) {
-      console.error('Error sending notification to partner:', notificationError);
-    }
-
-    // Send real-time event to partner dashboard
-    try {
-      if (firebaseAdmin) {
-        // Get the partner document to find the associated userId
-        const Partner = require('../models/Partner');
-        const partner = await Partner.findById(bike.partnerId);
-        
-        if (!partner) {
-          console.error('Partner not found for partnerId:', bike.partnerId);
-          throw new Error('Partner not found');
-        }
-        
-        console.log('Partner found:', { partnerId: partner._id, userId: partner.userId });
-        
-        const db = firebaseAdmin.firestore();
-        await db.collection('realtimeEvents').add({
-          type: 'BOOKING_CREATED',
-          targetUserId: partner.userId.toString(), // Use partner's userId instead of partnerId
-          targetUserRole: 'partner',
-          data: {
-            bookingId: booking._id.toString(),
-            bikeId: bikeId,
-            userId: userId,
-            bookingData: {
-              id: booking._id.toString(),
-              bookingNumber: booking.bookingNumber,
-              customerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
-              customerEmail: req.user.email || '',
-              customerPhone: req.user.phone || '',
-              bikeName: bike.name,
-              startDate: booking.dates.startDate,
-              endDate: booking.dates.endDate,
-              status: booking.status,
-              total: booking.pricing.total,
-              pickupLocation: booking.locations.pickup,
-              dropoffLocation: booking.locations.dropoff,
-              packageType: booking.package.name
-            }
-          },
-          timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
-          processed: false,
-          metadata: {
-            sourceUserId: userId,
-            sourceUserRole: 'user'
-          }
-        });
-        console.log('Real-time event sent to partner dashboard');
-        
-        // Populate booking with user details before creating notification
-        const populatedBooking = await Booking.findById(booking._id)
-          .populate('userId', 'firstName lastName email phone')
-          .populate('bikeId', 'name');
-        
-        // Create database notification for partner
-        await createBookingNotification(populatedBooking, partner.userId.toString(), 'BOOKING_CREATED');
-      } else {
-        console.log('Firebase not available - real-time events disabled');
-      }
-    } catch (eventError) {
-      console.error('Error sending real-time event:', eventError);
-    }
-
+    // Send response immediately to prevent timeout
     res.status(201).json(booking);
+
+    // Handle notifications and real-time events asynchronously (non-blocking)
+    setImmediate(async () => {
+      try {
+        // Send notification to partner about new booking request
+        await notificationService.notifyBookingCreated(booking, bike.partnerId);
+        console.log('Notification sent to partner successfully');
+      } catch (notificationError) {
+        console.error('Error sending notification to partner:', notificationError);
+      }
+
+      // Send real-time event to partner dashboard
+      try {
+        if (firebaseAdmin) {
+          // Get the partner document to find the associated userId
+          const Partner = require('../models/Partner');
+          const partner = await Partner.findById(bike.partnerId);
+          
+          if (!partner) {
+            console.error('Partner not found for partnerId:', bike.partnerId);
+            throw new Error('Partner not found');
+          }
+          
+          console.log('Partner found:', { partnerId: partner._id, userId: partner.userId });
+          
+          const db = firebaseAdmin.firestore();
+          await db.collection('realtimeEvents').add({
+            type: 'BOOKING_CREATED',
+            targetUserId: partner.userId.toString(), // Use partner's userId instead of partnerId
+            targetUserRole: 'partner',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: bikeId,
+              userId: userId,
+              bookingData: {
+                id: booking._id.toString(),
+                bookingNumber: booking.bookingNumber,
+                customerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                customerEmail: req.user.email || '',
+                customerPhone: req.user.phone || '',
+                bikeName: bike.name,
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                status: booking.status,
+                total: booking.pricing.total,
+                pickupLocation: booking.locations.pickup,
+                dropoffLocation: booking.locations.dropoff,
+                packageType: booking.package.name
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: userId,
+              sourceUserRole: 'user'
+            }
+          });
+          console.log('Real-time event sent to partner dashboard');
+          
+          // Populate booking with user details before creating notification
+          const populatedBooking = await Booking.findById(booking._id)
+            .populate('userId', 'firstName lastName email phone')
+            .populate('bikeId', 'name');
+          
+          // Create database notification for partner
+          await createBookingNotification(populatedBooking, partner.userId.toString(), 'BOOKING_CREATED');
+        } else {
+          console.log('Firebase not available - real-time events disabled');
+        }
+      } catch (eventError) {
+        console.error('Error sending real-time event:', eventError);
+      }
+    });
   } catch (err) {
     console.error('Booking creation error:', err);
-    res.status(500).json({ message: 'Server error' });
+    
+    // Handle specific validation errors
+    if (err.name === 'ValidationError') {
+      const errorMessages = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: errorMessages 
+      });
+    }
+    
+    // Handle duplicate booking errors
+    if (err.code === 11000) {
+      return res.status(400).json({ 
+        message: 'Booking already exists' 
+      });
+    }
+    
+    // Generic server error
+    res.status(500).json({ 
+      message: 'Server error during booking creation',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 

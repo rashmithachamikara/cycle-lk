@@ -225,7 +225,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               {isBooking ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processing...
+                  Creating Booking...
                 </>
               ) : (
                 <>
@@ -235,6 +235,19 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               )}
             </button>
           </div>
+          
+          {/* Information message */}
+          {isBooking && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Please wait...</strong> We're creating your booking and notifying the partner. This may take a few moments.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar - Pricing Summary */}
