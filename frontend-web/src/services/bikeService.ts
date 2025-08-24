@@ -143,6 +143,8 @@ export interface Bike {
 export interface CurrentPartnerId {
   _id: string;
   companyName: string;
+  email: string;
+  phone: string;
   location?: string | {
     _id: string;
     name: string;
