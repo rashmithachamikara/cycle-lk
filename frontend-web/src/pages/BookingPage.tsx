@@ -282,7 +282,9 @@ const BookingPage = () => {
         bikeId: selectedBike.id,
         startTime: startDateTime,
         endTime: endDateTime,
-        deliveryAddress: deliveryAddress || undefined
+        deliveryAddress: deliveryAddress || undefined,
+        pickupLocation: pickupLocation?.name || undefined,
+        dropoffLocation: dropoffLocation?.name || undefined
       };
 
       const response = await bookingService.createBooking(bookingPayload);
