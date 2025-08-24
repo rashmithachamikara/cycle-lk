@@ -66,10 +66,24 @@ const { partnerImageUpload, handlePartnerImageUploadErrors } = require('../middl
 
 /**
  * @route   GET /api/partners
- * @desc    Get all partners
+ * @desc    Get all partners with optional filtering (locationId, verified)
  * @access  Public
  */
 router.get('/', partnerController.getAllPartners);
+
+/**
+ * @route   GET /api/partners/search
+ * @desc    Search partners by query with optional filters
+ * @access  Public
+ */
+router.get('/search', partnerController.searchPartners);
+
+/**
+ * @route   GET /api/partners/location/:locationId
+ * @desc    Get partners by location ID
+ * @access  Public
+ */
+router.get('/location/:locationId', partnerController.getPartnersByLocationId);
 
 /**
  * @route   GET /api/partners/:id

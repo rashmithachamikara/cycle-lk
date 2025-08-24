@@ -87,6 +87,16 @@ export interface MapLocation {
   isMainLocation?: boolean;
 }
 
+// Interface for populated location object
+export interface PopulatedLocation {
+  _id: string;
+  name: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
 // Full Partner interface matching MongoDB structure
 export interface Partner {
   _id: string;
@@ -95,7 +105,7 @@ export interface Partner {
   companyName: string;
   category?: string;
   description?: string;
-  location: string; // Now ObjectId string (reference)
+  location: string | PopulatedLocation; // Can be ObjectId string or populated object
   // mapLocation replaces serviceCities/serviceLocations
   mapLocation?: MapLocation;
   address?: string;
@@ -393,15 +403,10 @@ export const partnerService = {
     return transformPartner(response.data);
   },
 
-  getPartnersByLocationId: async (locationId: string): Promise<Partner | Partner[] | null> => {
-    const response = await api.get(`/partners?locationId=${locationId}`);
-    if (Array.isArray(response.data)) {
-      return response.data.map(transformPartner);
-    } else if (response.data) {
-      return transformPartner(response.data);
-    } else {
-      return null;
-    }
+  // Get partners by location ID
+  getPartnersByLocationId: async (locationId: string): Promise<Partner[]> => {
+    const response = await api.get(`/partners/location/${locationId}`);
+    return response.data.map(transformPartner);
   },
 
   // Update partner verification status (requires admin role)
@@ -431,14 +436,37 @@ export const partnerService = {
   },
 
   // Search partners
-  searchPartners: async (query: string): Promise<Partner[]> => {
-    const response = await api.get(`/partners/search?q=${encodeURIComponent(query)}`);
+  searchPartners: async (query: string, filters?: { location?: string; verified?: boolean }): Promise<Partner[]> => {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    
+    if (filters?.location) {
+      params.append('location', filters.location);
+    }
+    
+    if (filters?.verified !== undefined) {
+      params.append('verified', String(filters.verified));
+    }
+    
+    const response = await api.get(`/partners/search?${params.toString()}`);
     return response.data.map(transformPartner);
   },
 
   // Get verified partners only
   getVerifiedPartners: async (): Promise<Partner[]> => {
     const response = await api.get('/partners?verified=true');
+    return response.data.map(transformPartner);
+  },
+
+  // Get partners by location ID with optional verified filter
+  getPartnersByLocationIdFiltered: async (locationId: string, verifiedOnly: boolean = false): Promise<Partner[]> => {
+    const params = new URLSearchParams();
+    params.append('locationId', locationId);
+    if (verifiedOnly) {
+      params.append('verified', 'true');
+    }
+    
+    const response = await api.get(`/partners?${params.toString()}`);
     return response.data.map(transformPartner);
   }
 };

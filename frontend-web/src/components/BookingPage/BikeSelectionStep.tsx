@@ -1,5 +1,5 @@
 import { Filter, ArrowRight } from 'lucide-react';
-import { Bike } from '../../services/bikeService';
+import { Bike, BikeType } from '../../services/bikeService';
 import BikeFilters from './BikeFilters';
 import BikeCard from './BikeCard';
 import ErrorAlert from './ErrorAlert';
@@ -9,8 +9,15 @@ interface BikeSelectionStepProps {
   selectedBike: Bike | null;
   showFilters: boolean;
   error: string | null;
+  loading?: boolean;
   onBikeSelect: (bike: Bike) => void;
   onToggleFilters: () => void;
+  onApplyFilters?: (filters?: {
+    type?: BikeType;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: 'price-asc' | 'price-desc' | 'rating';
+  }) => Promise<void>;
   onContinue: () => void;
 }
 
@@ -19,8 +26,10 @@ const BikeSelectionStep = ({
   selectedBike,
   showFilters,
   error,
+  loading = false,
   onBikeSelect,
   onToggleFilters,
+  onApplyFilters,
   onContinue
 }: BikeSelectionStepProps) => {
   return (
@@ -41,18 +50,30 @@ const BikeSelectionStep = ({
 
       {error && <ErrorAlert message={error} />}
 
-      <BikeFilters showFilters={showFilters} />
+      <BikeFilters showFilters={showFilters} onApplyFilters={onApplyFilters} />
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {availableBikes.map((bike) => (
-          <BikeCard
-            key={bike.id}
-            bike={bike}
-            isSelected={selectedBike?.id === bike.id}
-            onSelect={onBikeSelect}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-6">
+          {availableBikes.length > 0 ? (
+            availableBikes.map((bike) => (
+              <BikeCard
+                key={bike.id}
+                bike={bike}
+                isSelected={selectedBike?.id === bike.id}
+                onSelect={onBikeSelect}
+              />
+            ))
+          ) : (
+            <div className="col-span-2 text-center py-12">
+              <p className="text-gray-500 text-lg">No bikes are currently available at this location.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-end">
         <button
