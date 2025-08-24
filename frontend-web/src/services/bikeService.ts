@@ -276,5 +276,69 @@ export const bikeService = {
   deleteBike: async (id: string) => {
     const response = await api.delete(`/bikes/${id}`);
     return response.data;
+  },
+
+  // Get available bikes for a specific location ID (optimized)
+  getAvailableBikesForLocation: async (locationId: string, filters?: {
+    type?: BikeType;
+    minPrice?: number;
+    maxPrice?: number;
+    limit?: number;
+    sort?: 'price-asc' | 'price-desc' | 'rating';
+  }): Promise<Bike[]> => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters?.type) params.append('type', filters.type);
+      if (filters?.minPrice) params.append('minPrice', filters.minPrice.toString());
+      if (filters?.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+      if (filters?.sort) params.append('sort', filters.sort);
+
+      const queryString = params.toString();
+      const url = `/bikes/location/${locationId}/available${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.get(url);
+      return response.data.map(transformBike);
+    } catch (error) {
+      console.error('Error fetching available bikes for location:', error);
+      throw error;
+    }
+  },
+
+  // Legacy method using partners service (kept for backward compatibility)
+  getAvailableBikesForLocationLegacy: async (locationId: string): Promise<Bike[]> => {
+    try {
+      // First, get all partners for this location
+      const { partnerService } = await import('./partnerService');
+      const partners = await partnerService.getPartnersByLocationId(locationId);
+      
+      if (partners.length === 0) {
+        return [];
+      }
+
+      // Get all available bikes for all partners at this location
+      const allBikesPromises = partners.map(partner => 
+        bikeService.getAllBikes({
+          currentPartnerId: partner._id,
+          availability: 'available'
+        })
+      );
+
+      const bikesArrays = await Promise.all(allBikesPromises);
+      
+      // Flatten the array and remove duplicates
+      const allAvailableBikes = bikesArrays.flat();
+      
+      // Remove duplicates based on bike ID
+      const uniqueBikes = allAvailableBikes.filter((bike, index, array) => 
+        array.findIndex(b => b.id === bike.id) === index
+      );
+
+      return uniqueBikes;
+    } catch (error) {
+      console.error('Error fetching available bikes for location:', error);
+      throw error;
+    }
   }
 };
