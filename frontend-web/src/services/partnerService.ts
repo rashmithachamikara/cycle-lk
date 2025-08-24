@@ -393,6 +393,17 @@ export const partnerService = {
     return transformPartner(response.data);
   },
 
+  getPartnersByLocationId: async (locationId: string): Promise<Partner | Partner[] | null> => {
+    const response = await api.get(`/partners?locationId=${locationId}`);
+    if (Array.isArray(response.data)) {
+      return response.data.map(transformPartner);
+    } else if (response.data) {
+      return transformPartner(response.data);
+    } else {
+      return null;
+    }
+  },
+
   // Update partner verification status (requires admin role)
   updateVerificationStatus: async (id: string, status: string) => {
     const response = await api.put(`/partners/${id}/verification`, { 
