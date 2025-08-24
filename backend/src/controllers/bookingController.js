@@ -490,7 +490,8 @@ exports.updateBookingStatus = async (req, res) => {
     } else if (status === 'confirmed') {
       // When booking is confirmed, set the bike as unavailable for the booking period
       await Bike.findByIdAndUpdate(booking.bikeId, {
-        'availability.status': 'unavailable'
+        'availability.status': 'unavailable',
+        'currentPartnerId': null
       });
     }
     
