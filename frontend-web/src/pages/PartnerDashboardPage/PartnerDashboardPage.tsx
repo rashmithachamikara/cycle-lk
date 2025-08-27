@@ -228,32 +228,7 @@ const PartnerDashboardPage = () => {
               </div>
             </div>
 
-            {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-green-600 font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +12.5% from last month
-                  </span>
-                </div>
-              </div>
-              
-              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
-                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div 
-                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <div className="text-xs text-gray-600 mt-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Management Overview Cards */}
             <div className="bg-white rounded-2xl shadow-sm">
@@ -349,13 +324,40 @@ const PartnerDashboardPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Revenue Chart */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-green-600 font-medium flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    +12.5% from last month
+                  </span>
+                </div>
+              </div>
+              
+              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
+                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <div className="text-xs text-gray-600 mt-2">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
                 <Link
                   to="/partner-dashboard/add-bike"
@@ -370,11 +372,12 @@ const PartnerDashboardPage = () => {
                 >
                   <Rows4  className="h-4 w-4" /> Inventory
                 </Link>
-                <button
+                <Link
+                  to="/partner-dashboard/bike-locations"
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
-                  Manage Settings
-                </button>
+                  My Bike Locations
+                </Link>
               </div>
             </div>
 
