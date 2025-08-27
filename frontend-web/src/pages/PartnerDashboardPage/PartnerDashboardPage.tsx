@@ -372,11 +372,12 @@ const PartnerDashboardPage = () => {
                 >
                   <Rows4  className="h-4 w-4" /> Inventory
                 </Link>
-                <button
+                <Link
+                  to="/partner-dashboard/bike-locations"
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
                   My Bike Locations
-                </button>
+                </Link>
               </div>
             </div>
 
