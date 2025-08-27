@@ -357,7 +357,7 @@ const PartnerDashboardPage = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
                 <Link
                   to="/partner-dashboard/add-bike"
