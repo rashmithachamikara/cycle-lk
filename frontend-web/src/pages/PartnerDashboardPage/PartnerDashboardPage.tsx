@@ -166,15 +166,33 @@ const PartnerDashboardPage = () => {
 
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2"> Dashboard</h1>
-              <p className="text-blue-100">Welcome back, Colombo Bikes!</p>
+              <p className="text-black-100">Welcome back, Colombo Bikes!</p>
             </div>
-            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+            {/* <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <Bike className="h-8 w-8 text-white" />
-            </div>
+            </div> */}
+
+            {/* Action Buttons at the right end of welcome section */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              to="/partner-dashboard/drop-off-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              Drop Off a Bike
+            </Link>
+            <Link
+              to="/partner-dashboard/add-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              + Add New Bike
+            </Link>
           </div>
+          </div>
+          
+          
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
@@ -362,19 +380,7 @@ const PartnerDashboardPage = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
-                <Link
-                  to="/partner-dashboard/drop-off-bike"
-                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
-                >
-                  Drop Off a Bike
-                </Link>
-                <Link
-                  to="/partner-dashboard/add-bike"
-                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
-                >
-                  Add New Bike +
                 
-                </Link>
                 <Link
                   to="/partner-dashboard/inventory"
                   className="w-full border border-green-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center flex items-center justify-center gap-2"
