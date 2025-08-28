@@ -168,8 +168,11 @@ const PartnerDashboardPage = () => {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Partner Dashboard</h1>
+              <h1 className="text-3xl font-bold mb-2"> Dashboard</h1>
               <p className="text-blue-100">Welcome back, Colombo Bikes!</p>
+            </div>
+            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Bike className="h-8 w-8 text-white" />
             </div>
           </div>
         </div>
@@ -359,6 +362,12 @@ const PartnerDashboardPage = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
+                <Link
+                  to="/partner-dashboard/drop-off-bike"
+                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
+                >
+                  Drop Off a Bike
+                </Link>
                 <Link
                   to="/partner-dashboard/add-bike"
                   className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
