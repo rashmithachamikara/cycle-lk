@@ -301,7 +301,8 @@ const BookingPage = () => {
         endTime: endDateTime,
         deliveryAddress: deliveryAddress || undefined,
         pickupLocation: pickupLocation?.name || undefined,
-        dropoffLocation: `${selectedPartner.companyName} - ${selectedPartner.address || selectedPartner.mapLocation?.address || dropoffLocation?.name || 'Address not available'}`
+        dropoffLocation: `${selectedPartner.companyName} - ${selectedPartner.address || selectedPartner.mapLocation?.address || dropoffLocation?.name || 'Address not available'}`,
+        dropoffPartnerId: selectedPartner._id
       };
 
       const response = await bookingService.createBooking(bookingPayload);
