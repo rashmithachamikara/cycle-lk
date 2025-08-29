@@ -340,37 +340,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             </div>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6">
-            <button
-              onClick={onBack}
-              className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Rental Period
-            </button>
-            <button
-              onClick={onConfirmBooking}
-              disabled={isBooking}
-              className={`flex items-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                isBooking
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
-              }`}
-            >
-              {isBooking ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating Booking...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm Booking
-                </>
-              )}
-            </button>
-          </div>
+          
           
           {/* Information message */}
           {isBooking && (
@@ -487,6 +457,36 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               </div>
             </div>
           </div>
+        </div>
+        <div className="grid lg:grid-cols-2 gap-4 mt-6 lg:mt-0 lg:col-span-3">
+          <button
+            onClick={onBack}
+            className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Rental Period
+          </button>
+          <button
+            onClick={onConfirmBooking}
+            disabled={isBooking}
+            className={`flex items-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              isBooking
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isBooking ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Creating Booking...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirm Booking
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
