@@ -565,3 +565,66 @@ exports.updateBikeAvailability = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Update bike current partner (for bike transfers/dropoffs)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updateBikePartnerId = async (req, res) => {
+  try {
+    const { partnerId } = req.body;
+    const bikeId = req.params.id;
+    
+    // Validate required fields
+    if (!partnerId) {
+      return res.status(400).json({ message: 'Partner ID is required' });
+    }
+    
+    // Find the bike
+    const bike = await Bike.findById(bikeId);
+    if (!bike) {
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    // Verify the new partner exists
+    const newPartner = await Partner.findById(partnerId);
+    if (!newPartner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    // Check authorization - either the current partner holding the bike or an admin
+    const user = await require('../models').User.findById(req.user.id);
+    if (user.role !== 'admin' && bike.currentPartnerId && bike.currentPartnerId.toString() !== req.user.partnerId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to transfer this bike' });
+    }
+    
+    // Update the bike's current partner
+    bike.currentPartnerId = partnerId;
+    
+    // Update coordinates if the new partner has location coordinates
+    if (newPartner.mapLocation && newPartner.mapLocation.coordinates) {
+      bike.coordinates = {
+        latitude: newPartner.mapLocation.coordinates.lat,
+        longitude: newPartner.mapLocation.coordinates.lng
+      };
+    }
+    
+    await bike.save();
+    
+    console.log(`Bike ${bikeId} transferred to partner ${partnerId} (${newPartner.companyName})`);
+    
+    res.json({ 
+      message: 'Bike partner updated successfully', 
+      bike: {
+        id: bike._id,
+        currentPartnerId: bike.currentPartnerId,
+        coordinates: bike.coordinates,
+        partnerName: newPartner.companyName
+      }
+    });
+  } catch (err) {
+    console.error('Error updating bike partner:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
