@@ -154,7 +154,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               <h2 className="text-2xl font-bold text-gray-900">Drop-off Information</h2>
             </div>
             
-            <div className="grid md:grid-rows-2 gap-6">
+            <div className="grid lg:grid-row-2 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
@@ -162,17 +162,31 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 </div>
                 <p className="text-gray-700 font-medium">{pickupLocation.name}</p>
                 <p className="text-gray-600 text-sm">{pickupLocation.region}</p>
-                {/* <GoogleMapsPlaces
+                
+                {/* Show pickup location on map */}
+                <div className="mt-4">
+                  <GoogleMapsPlaces
                     value=""
                     onChange={() => {}} // No need for onChange as this is display only
-                    zoom={14}
+                    zoom={15}
                     showMap={true}
                     showSearch={false} // Hide search input for display-only map
-                    initialCenter={{ lat: pickupLocation.coordinates.latitude, lng: pickupLocation.coordinates.longitude }}
-                    partnerMarkers={partnerMarkers}
-                    mapHeight="400px"
+                    enableInteraction={false} // Allow map panning and zooming
+                    showLocationMarker={true} // Show a marker for pickup location
+                    initialCenter={{ 
+                      lat: pickupLocation.coordinates?.latitude || 6.9271, 
+                      lng: pickupLocation.coordinates?.longitude || 79.8612 
+                    }}
+                    partnerMarkers={[]} // No partner markers for pickup location
+                    mapHeight="300px"
                     placeholder="Pickup location"
-                  /> */}
+                  />
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-blue-600 text-sm">
+                      📍 This is your bike pickup location
+                    </p>
+                  </div>
+                </div>
  
               </div>
               
