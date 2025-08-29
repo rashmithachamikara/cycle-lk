@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin, Calendar, Clock, CreditCard, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Bike } from '../../services/bikeService';
 import { Location } from '../../services/locationService';
+import { Partner, partnerService } from '../../services/partnerService';
+import GoogleMapsPlaces from './GoogleMapsPlaces';
 
 interface FinalConfirmationStepProps {
   selectedBike: Bike;
@@ -32,6 +34,9 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   onConfirmBooking,
   isBooking
 }) => {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+
   const formatDate = (date: string, time: string) => {
     const dateObj = new Date(`${date}T${time}`);
     return {
@@ -51,6 +56,80 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   const startDateTime = formatDate(startDate, startTime);
   const endDateTime = formatDate(endDate, endTime);
   const duration = Math.ceil((new Date(`${endDate}T${endTime}`).getTime() - new Date(`${startDate}T${startTime}`).getTime()) / (1000 * 60 * 60 * 24));
+
+  useEffect(() => {
+    // Perform any side effects or data fetching here
+    const fetchPartnersAtLocation = async () => {
+      // Fetch partners based on the dropoff location
+      try{
+        setPartnersLoading(true);
+        const fetchedPartners: Partner[] = await partnerService.getPartnersByLocationId(dropoffLocation.id);
+        console.log(`available partners at ${dropoffLocation.name} location:`, fetchedPartners);
+        setPartners(fetchedPartners);
+      } catch (error) {
+        console.error('Error fetching partners:', error);
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+
+    fetchPartnersAtLocation();
+  }, [dropoffLocation.id, dropoffLocation.name]);
+
+  // Helper function to get map center based on partners
+  const getMapCenter = () => {
+    if (partners.length === 0) {
+      return { lat: 6.9271, lng: 79.8612 }; // Default to Colombo, Sri Lanka
+    }
+
+    // Calculate center from partner coordinates
+    let totalLat = 0;
+    let totalLng = 0;
+    let validCoordinatesCount = 0;
+
+    partners.forEach(partner => {
+      if (partner.coordinates) {
+        totalLat += partner.coordinates.latitude;
+        totalLng += partner.coordinates.longitude;
+        validCoordinatesCount++;
+      } else if (partner.mapLocation?.coordinates) {
+        totalLat += partner.mapLocation.coordinates.lat;
+        totalLng += partner.mapLocation.coordinates.lng;
+        validCoordinatesCount++;
+      }
+    });
+
+    if (validCoordinatesCount === 0) {
+      return { lat: 6.9271, lng: 79.8612 }; // Fallback to default
+    }
+
+    return {
+      lat: totalLat / validCoordinatesCount,
+      lng: totalLng / validCoordinatesCount
+    };
+  };
+
+  // Convert partners to marker format
+  const partnerMarkers = partners.map(partner => {
+    let coordinates = { lat: 0, lng: 0 };
+    
+    // Get coordinates from either legacy coordinates or new mapLocation
+    if (partner.coordinates) {
+      coordinates = {
+        lat: partner.coordinates.latitude,
+        lng: partner.coordinates.longitude
+      };
+    } else if (partner.mapLocation?.coordinates) {
+      coordinates = partner.mapLocation.coordinates;
+    }
+
+    return {
+      id: partner._id,
+      name: partner.companyName,
+      coordinates,
+      address: partner.address || partner.mapLocation?.address || 'Address not available'
+    };
+  }).filter(marker => marker.coordinates.lat !== 0 && marker.coordinates.lng !== 0); // Filter out invalid coordinates
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -83,17 +162,56 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 </div>
                 <p className="text-gray-700 font-medium">{pickupLocation.name}</p>
                 <p className="text-gray-600 text-sm">{pickupLocation.region}</p>
+                {/* <GoogleMapsPlaces
+                    value=""
+                    onChange={() => {}} // No need for onChange as this is display only
+                    zoom={14}
+                    showMap={true}
+                    showSearch={false} // Hide search input for display-only map
+                    initialCenter={{ lat: pickupLocation.coordinates.latitude, lng: pickupLocation.coordinates.longitude }}
+                    partnerMarkers={partnerMarkers}
+                    mapHeight="400px"
+                    placeholder="Pickup location"
+                  /> */}
  
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                  <h3 className="font-semibold text-gray-900">Available Drop-off Locations</h3>
+                  <h3 className="font-semibold text-gray-900">Available Drop-off Locations at {dropoffLocation.name} - {partners.length} found</h3>
                 </div>
-                <p className="text-gray-700 font-medium">{dropoffLocation.name}</p>
-                <p className="text-gray-600 text-sm">{dropoffLocation.region}</p>
-    
+                {/* <p className="text-gray-700 font-medium">{dropoffLocation.name}</p>
+                <p className="text-gray-600 text-sm">{dropoffLocation.region}</p> */}
+                {/* showing google map here to show drop-off locations here */}
+                {partnersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2 text-gray-600">Loading partner locations...</span>
+                  </div>
+                ) : (
+                  <GoogleMapsPlaces
+                    value=""
+                    onChange={() => {}} // No need for onChange as this is display only
+                    zoom={14}
+                    showMap={true}
+                    showSearch={false} // Hide search input for display-only map
+                    initialCenter={getMapCenter()}
+                    partnerMarkers={partnerMarkers}
+                    mapHeight="400px"
+                    placeholder="Partner locations"
+                  />
+                )}
+                {partners.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    {/* <p className="text-green-700 text-sm font-medium">
+                      Found {partners.length} partner{partners.length !== 1 ? 's' : ''} at this location
+                    </p> */}
+                    <p className="text-green-600 text-s mt-1">
+                      Click on the green markers on the map to see dropoff location details
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
