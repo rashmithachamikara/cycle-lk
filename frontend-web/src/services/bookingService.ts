@@ -108,6 +108,7 @@ export interface PartnerDashboardBooking {
   pickupLocation: string;
   dropoffLocation: string;
   dropoffPartner?: string;
+  dropoffPartnerId?: string;
   dropoffPartnerPhone?: string;
   packageType: string;
   rating?: number;
@@ -182,6 +183,9 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     pickupLocation: booking.locations?.pickup || '',
     dropoffLocation: booking.locations?.dropoff || '',
     dropoffPartner: booking.dropoffPartnerId?.companyName || 'Unknown Partner',
+    dropoffPartnerId: typeof booking.dropoffPartnerId === 'string' 
+      ? booking.dropoffPartnerId 
+      : booking.dropoffPartnerId?._id || '',
     dropoffPartnerPhone: booking.dropoffPartnerId?.phone || '',
     packageType: booking.package?.name || '',
     rating: booking.review?.rating

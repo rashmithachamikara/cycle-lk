@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
+import { bikeService } from "../../services/bikeService";
 import toast from 'react-hot-toast';
 
 interface BikeCondition {
@@ -162,6 +163,12 @@ const DropBikePage = () => {
 
       // Update booking status to completed
       await bookingService.updateBookingStatus(selectedBooking.id, 'completed');
+
+      // Update bike's currentPartnerId to the dropoff partner
+      // This transfers the bike to the partner handling the dropoff
+      if (selectedBooking.dropoffPartnerId) {
+        await bikeService.updateBikePartnerId(selectedBooking.bikeId, selectedBooking.dropoffPartnerId);
+      }
 
       // Here you would also:
       // 1. Upload photos to cloud storage
