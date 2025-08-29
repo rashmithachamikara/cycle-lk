@@ -53,9 +53,9 @@ const InventoryPage = () => {
         }
     };
 
-    const updateBikeAvailability = async (bikeId: string, status: string, unavailableDates?: string[]) => {
+    const updateBikeAvailability = async (bikeId: string, status: string, reason?: string, unavailableDates?: string[]) => {
         try {
-            await bikeService.updateBikeAvailability(bikeId, status, unavailableDates);
+            await bikeService.updateBikeAvailability(bikeId, status, reason, unavailableDates);
             
             // Update the bike in the list
             setBikes(prevBikes => 
@@ -65,7 +65,8 @@ const InventoryPage = () => {
                             ...bike, 
                             availability: { 
                                 ...bike.availability, 
-                                status, 
+                                status,
+                                reason, 
                                 unavailableDates 
                             } 
                           }

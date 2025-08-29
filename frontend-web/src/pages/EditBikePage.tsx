@@ -9,7 +9,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { bikeService, BikeData } from '../services/bikeService';
+import { bikeService, BikeData, BikeType, BikeCondition } from '../services/bikeService';
 
 const EditBikePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,11 +24,12 @@ const EditBikePage = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    type: 'city',
+    type: 'city' as BikeType,
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
     location: '',
+    currentPartnerName: '',
     description: '',
     features: [''] as string[],
     specifications: {
@@ -40,7 +41,8 @@ const EditBikePage = () => {
     },
     availability: true,
     images: [] as File[],
-    existingImages: [] as string[]
+    existingImages: [] as string[],
+    condition: 'good' as BikeCondition // default value
   });
 
   const bikeTypes = [
@@ -52,17 +54,6 @@ const EditBikePage = () => {
     { id: 'touring', name: 'Touring Bike' },
     { id: 'folding', name: 'Folding Bike' },
     { id: 'cruiser', name: 'Cruiser' }
-  ];
-
-  const locations = [
-    'Colombo Central',
-    'Kandy Hills',
-    'Galle Fort',
-    'Ella Station',
-    'Negombo Beach',
-    'Mirissa Harbor',
-    'Jaffna City',
-    'Trincomalee Port'
   ];
   // Simulate fetching bike data from API
   useEffect(() => {
@@ -80,7 +71,10 @@ const EditBikePage = () => {
           pricePerDay: bikeData.pricing.perDay.toString(),
           pricePerWeek: bikeData.pricing.perWeek?.toString() || '',
           pricePerMonth: bikeData.pricing.perMonth?.toString() || '',
-          location: bikeData.location,
+          location: bikeData.location || '',
+          currentPartnerName: typeof bikeData.currentPartnerId === 'object' 
+            ? bikeData.currentPartnerId.companyName 
+            : 'Unknown Partner',
           description: bikeData.description || '',
           features: bikeData.features || [''],
           specifications: {
@@ -91,7 +85,8 @@ const EditBikePage = () => {
             maxLoad: bikeData.specifications?.maxLoad || ''
           },
           availability: bikeData.availability?.status === 'available',
-          existingImages: bikeData.images?.map(img => img.url) || []
+          existingImages: bikeData.images?.map(img => img.url) || [],
+          condition: bikeData.condition || 'good',
         }));
         
       } catch (error) {
@@ -181,6 +176,7 @@ const EditBikePage = () => {
     if (!formData.location) errors.push("Location is required");
     if (!formData.description) errors.push("Description is required");
     if (formData.images.length === 0 && formData.existingImages.length === 0) errors.push("At least one image is required");
+    if (!formData.condition) errors.push("Condition is required");
     
     return errors;
   };
@@ -212,10 +208,9 @@ const EditBikePage = () => {
           perMonth: formData.pricePerMonth ? parseFloat(formData.pricePerMonth) : undefined,
         },
         description: formData.description,
-        location: formData.location,
         features: formData.features.filter(f => f.trim() !== ''),
         specifications: formData.specifications,
-        condition: 'Excellent' // You may want to add this to the form
+        condition: formData.condition,
       };
       
       // Update bike data
@@ -229,7 +224,8 @@ const EditBikePage = () => {
       // Update availability
       await bikeService.updateBikeAvailability(
         id, 
-        formData.availability ? 'available' : 'unavailable'
+        formData.availability ? 'available' : 'unavailable',
+        formData.availability ? '' : 'Temporarily unavailable'
       );
       
       setSubmitSuccess(true);
@@ -372,20 +368,15 @@ const EditBikePage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="location">
                     Location*
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="location"
                     name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select a location</option>
-                    {locations.map(location => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
-                    ))}
-                  </select>
+                    value={formData.location + " - " + formData.currentPartnerName}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                    placeholder="Current shop location"
+                  />
                 </div>
 
                 <div>
@@ -463,6 +454,23 @@ const EditBikePage = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Describe the bike, its condition, and best uses..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="condition">
+                    Condition*
+                  </label>
+                  <select
+                    id="condition"
+                    name="condition"
+                    value={formData.condition}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                  </select>
                 </div>
               </div>
 
@@ -751,3 +759,4 @@ const EditBikePage = () => {
 };
 
 export default EditBikePage;
+
