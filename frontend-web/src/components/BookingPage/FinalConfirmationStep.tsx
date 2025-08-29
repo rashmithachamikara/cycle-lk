@@ -83,7 +83,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 </div>
                 <p className="text-gray-700 font-medium">{pickupLocation.name}</p>
                 <p className="text-gray-600 text-sm">{pickupLocation.region}</p>
-                <p className="text-gray-600 text-sm mt-2">{pickupLocation.description}</p>
+ 
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -93,7 +93,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 </div>
                 <p className="text-gray-700 font-medium">{dropoffLocation.name}</p>
                 <p className="text-gray-600 text-sm">{dropoffLocation.region}</p>
-                <p className="text-gray-600 text-sm mt-2">{dropoffLocation.description}</p>
+    
               </div>
             </div>
 
