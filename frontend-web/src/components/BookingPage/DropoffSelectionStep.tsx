@@ -33,6 +33,7 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
   const [partners, setPartners] = useState<Partner[]>([]);
   const [partnersLoading, setPartnersLoading] = useState(false);
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('');
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     const fetchPartnersAtLocation = async () => {
@@ -51,8 +52,13 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
     fetchPartnersAtLocation();
   }, [dropoffLocation.id, dropoffLocation.name]);
 
-  // Helper function to get map center based on partners
+  // Helper function to get map center based on partners or selected partner
   const getMapCenter = () => {
+    // If a specific center is set (when partner is selected), use that
+    if (mapCenter) {
+      return mapCenter;
+    }
+
     if (partners.length === 0) {
       return { lat: 6.9271, lng: 79.8612 }; // Default to Colombo, Sri Lanka
     }
@@ -109,6 +115,28 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
   const handlePartnerSelect = (partnerId: string) => {
     setSelectedPartnerId(partnerId);
     console.log('Selected partner ID:', partnerId);
+    
+    // Find the selected partner and pan map to its location
+    const selectedPartner = partners.find(partner => partner._id === partnerId);
+    if (selectedPartner) {
+      let partnerCoordinates = null;
+      
+      // Get coordinates from either legacy coordinates or new mapLocation
+      if (selectedPartner.coordinates) {
+        partnerCoordinates = {
+          lat: selectedPartner.coordinates.latitude,
+          lng: selectedPartner.coordinates.longitude
+        };
+      } else if (selectedPartner.mapLocation?.coordinates) {
+        partnerCoordinates = selectedPartner.mapLocation.coordinates;
+      }
+      
+      if (partnerCoordinates) {
+        // Update map center to pan to selected partner
+        setMapCenter(partnerCoordinates);
+        console.log('Panning map to partner location:', partnerCoordinates);
+      }
+    }
   };
 
   const handleContinue = () => {
@@ -165,7 +193,7 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                       lng: pickupLocation.coordinates?.longitude || 79.8612 
                     }}
                     partnerMarkers={[]}
-                    mapHeight="300px"
+                    mapHeight="400px"
                     placeholder="Pickup location"
                   />
                   <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
@@ -193,9 +221,10 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                   </div>
                 ) : (
                   <GoogleMapsPlaces
+                    key={`map-${mapCenter?.lat}-${mapCenter?.lng}`} // Force re-render when center changes
                     value=""
                     onChange={() => {}}
-                    zoom={14}
+                    zoom={mapCenter ? 16 : 14} // Zoom in more when focusing on a specific partner
                     showMap={true}
                     showSearch={false}
                     enableInteraction={true}
@@ -208,10 +237,23 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                 )}
                 
                 {partners.length > 0 && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-green-600 text-sm mt-1">
-                      Click on the green markers on the map to see drop-off location details
-                    </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200 flex-1 mr-3">
+                      <p className="text-green-600 text-sm mt-1">
+                        {selectedPartnerId && mapCenter 
+                          ? `🎯 Map focused on: ${partners.find(p => p._id === selectedPartnerId)?.companyName || 'Selected partner'}`
+                          : '📍 Click on green markers or select a partner below to focus on their location'
+                        }
+                      </p>
+                    </div>
+                    {mapCenter && (
+                      <button
+                        onClick={() => setMapCenter(null)}
+                        className="px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+                      >
+                        View All
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -237,16 +279,18 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                 {partners.map((partner) => (
                   <button 
                     key={partner._id} 
-                    className={`w-full text-left cursor-pointer transition-all duration-200 ${
+                    className={`w-full text-left cursor-pointer transition-all duration-200 rounded-xl ${
                       selectedPartnerId === partner._id 
-                        ? 'ring-2 ring-blue-500 transform scale-[1.02] shadow-lg' 
+                        ? 'ring-2 ring-blue-500 transform scale-[1.02] shadow-lg border rounded-xl' 
                         : 'hover:scale-[1.01] hover:shadow-md'
                     }`}
                     onClick={() => handlePartnerSelect(partner._id)}
                   >
-                    <div className={`rounded-lg p-6 border-2 ${
+                    <div className={` p-6 border-2 rounded-xl transition-all duration-300 ${
                       selectedPartnerId === partner._id 
-                        ? 'bg-blue-50 border-blue-300' 
+                        ? mapCenter 
+                          ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-purple-300 shadow-lg' 
+                          : 'bg-blue-50 border-blue-300'
                         : 'bg-gray-50 border-gray-200'
                     }`}>
                       <div className="flex items-start justify-between">
@@ -264,6 +308,11 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                             {selectedPartnerId === partner._id && (
                               <span className="ml-3 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
                                 ✓ Selected
+                              </span>
+                            )}
+                            {mapCenter && selectedPartnerId === partner._id && (
+                              <span className="ml-3 px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
+                                🎯 Map Focused
                               </span>
                             )}
                           </div>
