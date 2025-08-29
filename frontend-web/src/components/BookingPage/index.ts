@@ -10,4 +10,5 @@ export { default as BookingSummary } from './BookingSummary';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LocationSelectionStep } from './LocationSelectionStep';
 export { default as RentalPeriodStep } from './RentalPeriodStep';
+export { default as DropoffSelectionStep } from './DropoffSelectionStep';
 export { default as FinalConfirmationStep } from './FinalConfirmationStep';
