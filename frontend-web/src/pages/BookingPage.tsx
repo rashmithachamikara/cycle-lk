@@ -522,6 +522,7 @@ const BookingPage = () => {
               onBack={() => setCurrentStep(4)}
               onConfirmBooking={handleCreateBooking}
               isBooking={isBooking}
+              isAuthenticated={isAuthenticated}
             />
           </div>
         )}
