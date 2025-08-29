@@ -296,62 +296,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             )}
           </div>
 
-          {/* Bike Details */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Selected Bike</h2>
-            <div className="flex items-start space-x-6">
-              <img
-                src={selectedBike.images?.[0]?.url || '/placeholder-bike.jpg'}
-                alt={selectedBike.name}
-                className="w-32 h-32 object-cover rounded-xl"
-              />
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedBike.name}</h3>
-                <p className="text-gray-600 mb-4">{selectedBike.description}</p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm text-gray-500">Type:</span>
-                    <p className="font-medium">{selectedBike.type}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Condition:</span>
-                    <p className="font-medium">{selectedBike.condition || 'Excellent'}</p>
-                  </div>
-                  {selectedBike.specifications && (
-                    <>
-                      {selectedBike.specifications.frameSize && (
-                        <div>
-                          <span className="text-sm text-gray-500">Frame Size:</span>
-                          <p className="font-medium">{selectedBike.specifications.frameSize}</p>
-                        </div>
-                      )}
-                      {selectedBike.specifications.gears && (
-                        <div>
-                          <span className="text-sm text-gray-500">Gears:</span>
-                          <p className="font-medium">{selectedBike.specifications.gears}</p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-                {selectedBike.features && selectedBike.features.length > 0 && (
-                  <div className="mt-4">
-                    <span className="text-sm text-gray-500">Features:</span>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedBike.features.map((feature, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+         
 
           {/* Rental Period */}
           <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -443,6 +388,48 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
 
         {/* Right Sidebar - Pricing Summary */}
         <div className="lg:col-span-1">
+           {/* Bike Details */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-3">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Selected Bike</h2>
+            <div className="flex items-start space-x-6">
+              <img
+                src={selectedBike.images?.[0]?.url || '/placeholder-bike.jpg'}
+                alt={selectedBike.name}
+                className="w-32 h-32 object-cover rounded-xl"
+              />
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedBike.name}</h3>
+                <p className="text-gray-600 mb-4">{selectedBike.description}</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-500">Type:</span>
+                    <p className="font-medium">{selectedBike.type}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Condition:</span>
+                    <p className="font-medium">{selectedBike.condition || 'Excellent'}</p>
+                  </div>
+                  {selectedBike.specifications && (
+                    <>
+                      {selectedBike.specifications.frameSize && (
+                        <div>
+                          <span className="text-sm text-gray-500">Frame Size:</span>
+                          <p className="font-medium">{selectedBike.specifications.frameSize}</p>
+                        </div>
+                      )}
+                      {selectedBike.specifications.gears && (
+                        <div>
+                          <span className="text-sm text-gray-500">Gears:</span>
+                          <p className="font-medium">{selectedBike.specifications.gears}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+              </div>
+            </div>
+          </div>
           <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
