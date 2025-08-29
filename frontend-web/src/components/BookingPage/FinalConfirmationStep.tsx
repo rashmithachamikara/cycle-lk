@@ -214,6 +214,63 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                     </p>
                   </div>
                 )}
+
+                {/* Partner Details List */}
+                {partners.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Available Drop-off Partners</h4>
+                    <div className="space-y-4">
+                      {partners.map((partner) => (
+                        <div key={partner._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <h5 className="font-semibold text-gray-900">{partner.companyName}</h5>
+                                {partner.verified && (
+                                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    Verified
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                                {/* Address */}
+                                <div>
+                                  <p className="text-gray-600 font-medium">Address:</p>
+                                  <p className="text-gray-800">
+                                    {partner.address || partner.mapLocation?.address || 'Address not available'}
+                                  </p>
+                                </div>
+
+                                {/* Contact Info */}
+                                <div>
+                                  <p className="text-gray-600 font-medium">Contact:</p>
+                                  {partner.phone && (
+                                    <p className="text-gray-800">📞 {partner.phone}</p>
+                                  )}
+                                  {partner.email && (
+                                    <p className="text-gray-800">✉️ {partner.email}</p>
+                                  )}
+                                  {!partner.phone && !partner.email && (
+                                    <p className="text-gray-500">Contact details not available</p>
+                                  )}
+                                </div>
+
+                              
+
+                               
+                              </div>
+
+                             
+
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
