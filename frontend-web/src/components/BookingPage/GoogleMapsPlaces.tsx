@@ -29,6 +29,8 @@ interface GoogleMapsPlacesProps {
   suggestions?: string[];
   partnerMarkers?: PartnerMarker[]; // New prop for partner locations
   showSearch?: boolean; // Control whether to show search input
+  enableInteraction?: boolean; // Control whether the map allows interaction (dragging, clicking to select)
+  showLocationMarker?: boolean; // Control whether to show the red location selection marker
 }
 
 const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
@@ -43,7 +45,9 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
   zoom = 12,
   suggestions = [],
   partnerMarkers = [],
-  showSearch = true
+  showSearch = true,
+  enableInteraction = true,
+  showLocationMarker = true
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -148,18 +152,26 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
         mapTypeControl: false,
         fullscreenControl: true,
         zoomControl: true,
-        gestureHandling: 'cooperative',
+        gestureHandling: 'cooperative', // Always allow map panning/zooming
+        disableDoubleClickZoom: false,
       });
 
-      const markerInstance = new google.maps.Marker({
-        map: mapInstance,
-        position: initialCenter,
-        draggable: true,
-        title: 'Drag to adjust location',
-        animation: google.maps.Animation.DROP,
-      });
+      let markerInstance: google.maps.Marker | null = null;
 
-      setupMarkerEvents(markerInstance, mapInstance);
+      // Only create the location marker if showLocationMarker is true
+      if (showLocationMarker) {
+        markerInstance = new google.maps.Marker({
+          map: mapInstance,
+          position: initialCenter,
+          draggable: enableInteraction, // Only allow dragging if interaction is enabled
+          title: enableInteraction ? 'Drag to adjust location' : 'Location marker',
+          animation: google.maps.Animation.DROP,
+        });
+
+        if (enableInteraction) {
+          setupMarkerEvents(markerInstance, mapInstance);
+        }
+      }
 
       setMap(mapInstance);
       setMarker(markerInstance);
@@ -172,7 +184,7 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [showMap, initialCenter, zoom, isMapInitialized, setupMarkerEvents]);
+  }, [showMap, initialCenter, zoom, isMapInitialized, setupMarkerEvents, enableInteraction, showLocationMarker]);
 
   // Initialize Autocomplete
   const initializeAutocomplete = useCallback(async () => {
@@ -206,14 +218,18 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
         onChange?.(place.formatted_address || place.name || '', locationData);
         setError(null);
 
-        // Update map pin and center map
-        if (map && marker) {
+        // Update map pin and center map only if showLocationMarker is true
+        if (map && marker && showLocationMarker) {
           map.setCenter({ lat, lng });
           marker.setPosition({ lat, lng });
           marker.setAnimation(google.maps.Animation.BOUNCE);
           setTimeout(() => marker.setAnimation(null), 1000);
           map.setZoom(16);
           setupMarkerEvents(marker, map); // Ensure marker remains interactive
+        } else if (map && !showLocationMarker) {
+          // Just center the map without placing a marker
+          map.setCenter({ lat, lng });
+          map.setZoom(16);
         } else if (mapRef.current) {
           googleMapsService.createMap(mapRef.current, {
             center: { lat, lng },
@@ -245,7 +261,7 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
     } catch (error) {
       console.error('Autocomplete initialization error:', error);
     }
-  }, [map, marker, onChange, setupMarkerEvents]);
+  }, [map, marker, onChange, setupMarkerEvents, showLocationMarker]);
 
   // Initialize components when Google Maps loads
   useEffect(() => {
@@ -339,11 +355,15 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         
-        if (map && marker) {
+        if (map) {
           map.setCenter({ lat, lng });
-          marker.setPosition({ lat, lng });
-          marker.setAnimation(google.maps.Animation.DROP);
           map.setZoom(16);
+          
+          // Only update marker if it exists and showLocationMarker is true
+          if (marker && showLocationMarker) {
+            marker.setPosition({ lat, lng });
+            marker.setAnimation(google.maps.Animation.DROP);
+          }
         }
 
         await handleGeocoding(lat, lng);
@@ -370,7 +390,7 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
         maximumAge: 300000
       }
     );
-  }, [map, marker, handleGeocoding]);
+  }, [map, marker, handleGeocoding, showLocationMarker]);
 
   // Clear location
   const clearLocation = () => {
@@ -429,7 +449,7 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
             required={required}
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1">
-            {value && (
+            {value && enableInteraction && (
               <button
                 type="button"
                 onClick={clearLocation}
@@ -439,19 +459,21 @@ const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
                 <X className="h-4 w-4" />
               </button>
             )}
-            <button
-              type="button"
-              onClick={getCurrentLocation}
-              disabled={isLoading || !googleMapsService.isGoogleMapsLoaded()}
-              className="text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed p-1"
-              title="Get current location"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Target className="h-4 w-4" />
-              )}
-            </button>
+            {enableInteraction && (
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                disabled={isLoading || !googleMapsService.isGoogleMapsLoaded()}
+                className="text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed p-1"
+                title="Get current location"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Target className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
       )}
