@@ -91,7 +91,8 @@ import {
   CurrentRentalsPage,
   BookingRequestsPage,
   CompletedRentalsPage,
-  PaymentRequestsPage
+  PaymentRequestsPage,
+  BikeLocations
 } from './pages/PartnerDashboardPage';
 import BookingRequestDetailPage from './pages/BookingRequestDetailPage';
 import CurrentRentalDetailPage from './pages/CurrentRentalDetailPage';
@@ -103,6 +104,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
 import Notifications from './pages/Notifications';
+import InventoryPage from './pages/PartnerDashboardPage/InventoryPage';
+import DropBikePage from './pages/PartnerDashboardPage/DropBikePage';
 
 
 // Protected route component with support for multiple roles
@@ -167,7 +170,7 @@ function App() {
       <Route path="/locations" element={<LocationsPage />} />
       <Route path="/location/:id" element={<LocationPage />} />
       <Route path="/partners" element={<PartnersPage />} />
-      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["user", "partner"]} />} />
+      <Route path="/notifications" element={<ProtectedRoute element={<Notifications />} requiredRoles={["admin", "user", "partner"]} />} />
       <Route path="/partners/:partnerId/bikes" element={<PartnerBikesPage />} />
       <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
@@ -179,6 +182,9 @@ function App() {
       <Route path="/partner-dashboard/booking-requests" element={<ProtectedRoute element={<BookingRequestsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/completed-rentals" element={<ProtectedRoute element={<CompletedRentalsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/paymentRequests" element={<ProtectedRoute element={<PaymentRequestsPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/inventory" element={<ProtectedRoute element={<InventoryPage />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/bike-locations" element={<ProtectedRoute element={<BikeLocations />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/drop-off-bike" element={<ProtectedRoute element={<DropBikePage />} requiredRole="partner" />} />
       
       {/* Partner detail pages */}
       <Route path="/partner-dashboard/booking-requests/:id" element={<ProtectedRoute element={<BookingRequestDetailPage />} requiredRole="partner" />} />

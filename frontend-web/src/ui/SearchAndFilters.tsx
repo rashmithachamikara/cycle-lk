@@ -77,13 +77,13 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
           </div>
 
           {/* Filters and Controls */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             {/* Filter Dropdown */}
             {filterOptions && filterOptions.length > 0 && onFilterChange && (
               <select
                 value={filterValue}
                 onChange={(e) => onFilterChange(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
+                className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none w-full sm:w-auto"
               >
                 <option value="all">{filterLabel}</option>
                 {filterOptions.map(option => (
@@ -98,7 +98,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             <select
               value={sortValue}
               onChange={(e) => onSortChange(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none"
+              className="border border-gray-300 rounded-lg px-4 py-3 focus:border-[#20B2AA] focus:outline-none w-full sm:w-auto"
             >
               {sortOptions.map(option => (
                 <option key={option.value} value={option.value}>
@@ -109,7 +109,7 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
 
             {/* View Mode Toggle */}
             {showViewToggle && viewMode && onViewModeChange && (
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden w-full sm:w-auto">
                 <button
                   onClick={() => onViewModeChange('grid')}
                   className={`p-3 ${viewMode === 'grid' ? 'bg-[#20B2AA] text-white' : 'bg-white text-gray-600'}`}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
-import { bikeService, Bike } from '../services/bikeService';
+import { bikeService, Bike, BikeType } from '../services/bikeService';
 import { bookingService, CreateBookingRequest } from '../services/bookingService';
 import { Location } from '../services/locationService';
 import {
@@ -54,14 +54,22 @@ const BookingPage = () => {
       const fetchBikes = async () => {
         try {
           setLoading(true);
-          const bikes = await bikeService.getAllBikes({ 
-            availability: 'available',
-            location: pickupLocation.name
+          setError(null);
+          console.log(`Fetching bikes for location: ${pickupLocation.id}`);
+          // Use the new optimized method to get available bikes for the pickup location
+          const bikes = await bikeService.getAvailableBikesForLocation(pickupLocation.id, {
+            sort: 'rating' // Default to highest rated bikes first
           });
+          console.log("bikes", bikes);
           setAvailableBikes(bikes);
+          
+          if (bikes.length === 0) {
+            setError('No bikes are currently available at this location. Please try a different location.');
+          }
         } catch (err) {
           setError('Failed to load available bikes');
           console.error('Error fetching bikes:', err);
+          setAvailableBikes([]);
         } finally {
           setLoading(false);
         }
@@ -207,6 +215,33 @@ const BookingPage = () => {
     setCurrentStep(3);
   };
 
+  // Refresh bikes with filters
+  const refreshBikesWithFilters = async (filters?: {
+    type?: BikeType;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: 'price-asc' | 'price-desc' | 'rating';
+  }) => {
+    if (!pickupLocation) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const bikes = await bikeService.getAvailableBikesForLocation(pickupLocation.id, filters);
+      setAvailableBikes(bikes);
+      
+      if (bikes.length === 0) {
+        setError('No bikes match your current filters. Try adjusting your criteria.');
+      }
+    } catch (err) {
+      setError('Failed to load bikes with selected filters');
+      console.error('Error fetching filtered bikes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle rental period selection (Step 3)
   const handleRentalPeriodSelect = (rentalData: {
     startDate: string;
@@ -247,7 +282,9 @@ const BookingPage = () => {
         bikeId: selectedBike.id,
         startTime: startDateTime,
         endTime: endDateTime,
-        deliveryAddress: deliveryAddress || undefined
+        deliveryAddress: deliveryAddress || undefined,
+        pickupLocation: pickupLocation?.name || undefined,
+        dropoffLocation: dropoffLocation?.name || undefined
       };
 
       const response = await bookingService.createBooking(bookingPayload);
@@ -394,7 +431,7 @@ const BookingPage = () => {
         <BookingProgressSteps currentStep={currentStep} steps={steps} />
       )}
 
-      <div className="py-12">
+      <div className="pb-12">
         {/* Step 1: Location Selection */}
         {currentStep === 1 && (
           <LocationSelectionStep
@@ -410,8 +447,10 @@ const BookingPage = () => {
               selectedBike={selectedBike}
               showFilters={showFilters}
               error={error}
+              loading={loading}
               onBikeSelect={setSelectedBike}
               onToggleFilters={() => setShowFilters(!showFilters)}
+              onApplyFilters={refreshBikesWithFilters}
               onContinue={() => selectedBike && handleBikeSelect(selectedBike)}
             />
           </div>

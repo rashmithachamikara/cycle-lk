@@ -15,8 +15,10 @@ import {
   CheckCircle,
   FileText,
   ArrowRight,
-  CreditCard
+  CreditCard,
+  Rows4  
 } from 'lucide-react';
+import { Loader } from '../../ui';
 
 import { 
   bookingService, 
@@ -158,19 +160,39 @@ const PartnerDashboardPage = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading bookings...</span>
+            <Loader />
           </div>
         )}
 
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Partner Dashboard</h1>
-              <p className="text-blue-100">Welcome back, Colombo Bikes!</p>
+              <h1 className="text-3xl font-bold mb-2"> Dashboard</h1>
+              <p className="text-black-100">Welcome back, Colombo Bikes!</p>
             </div>
+            {/* <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Bike className="h-8 w-8 text-white" />
+            </div> */}
+
+            {/* Action Buttons at the right end of welcome section */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              to="/partner-dashboard/drop-off-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              Drop Off a Bike
+            </Link>
+            <Link
+              to="/partner-dashboard/add-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              + Add New Bike
+            </Link>
           </div>
+          </div>
+          
+          
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
@@ -227,32 +249,7 @@ const PartnerDashboardPage = () => {
               </div>
             </div>
 
-            {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-green-600 font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +12.5% from last month
-                  </span>
-                </div>
-              </div>
-              
-              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
-                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div 
-                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <div className="text-xs text-gray-600 mt-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Management Overview Cards */}
             <div className="bg-white rounded-2xl shadow-sm">
@@ -348,30 +345,54 @@ const PartnerDashboardPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Revenue Chart */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-green-600 font-medium flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    +12.5% from last month
+                  </span>
+                </div>
+              </div>
+              
+              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
+                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <div className="text-xs text-gray-600 mt-2">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
+                
                 <Link
-                  to="/partner-dashboard/add-bike"
-                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
+                  to="/partner-dashboard/inventory"
+                  className="w-full border border-green-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center flex items-center justify-center gap-2"
                 >
-                  Add New Bike
+                  <Rows4  className="h-4 w-4" /> Inventory
                 </Link>
-                <button
-                  className="w-full border border-red-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center block"
-                >
-                  Inventory
-                </button>
-                <button
+                <Link
+                  to="/partner-dashboard/bike-locations"
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
-                  Manage Settings
-                </button>
+                  My Bike Locations
+                </Link>
               </div>
             </div>
 
