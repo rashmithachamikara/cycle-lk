@@ -13,7 +13,7 @@ interface InventoryProps {
   isDeleting: boolean;
   deleteSuccess: boolean;
   Bikes: Bike[];
-  updateBikeAvailability: (bikeId: string, status: string, unavailableDates?: string[]) => Promise<void>;
+  updateBikeAvailability: (bikeId: string, status: string, reason?: string, unavailableDates?: string[]) => Promise<void>;
   onRefresh: () => Promise<void>;
 }
 
@@ -47,7 +47,8 @@ const Inventory = ({
 
   const toggleAvailability = async (bike: Bike) => {
     const newStatus = bike.availability?.status === 'available' ? 'unavailable' : 'available';
-    await updateBikeAvailability(bike.id, newStatus);
+    const reason = newStatus === 'unavailable' ? 'Temporarily unavailable' : '';
+    await updateBikeAvailability(bike.id, newStatus, reason);
   };
 
   const getStatusColor = (status?: string) => {
@@ -124,6 +125,9 @@ const Inventory = ({
                   Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Availability
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -164,6 +168,13 @@ const Inventory = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                       {bike.type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" 
+                         title={bike.location + 
+                           (typeof bike.currentPartnerId === 'object' && bike.currentPartnerId?.companyName 
+                             ? " - " + bike.currentPartnerId.companyName 
+                             : "")}>
+                      {bike.location}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
