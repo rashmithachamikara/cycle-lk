@@ -146,7 +146,9 @@ export interface CreateBookingRequest{
         bikeId: string,
         startTime: string,
         endTime: string,
-        deliveryAddress?: string 
+        deliveryAddress?: string,
+        pickupLocation?: string,
+        dropoffLocation?: string
 }
 
 // Utility function to transform backend booking to partner dashboard format
@@ -228,7 +230,9 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
 export const bookingService = {
   // Create a new booking
   createBooking: async (bookingData: CreateBookingRequest) => {
-    const response = await api.post('/bookings', bookingData);
+    const response = await api.post('/bookings', bookingData, {
+      timeout: 30000 // 30 seconds timeout for booking creation
+    });
     return response.data;
   },
 

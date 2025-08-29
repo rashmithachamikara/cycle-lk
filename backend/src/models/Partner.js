@@ -20,53 +20,43 @@ const partnerSchema = new mongoose.Schema({
     type: String
   },
   location: {
-    type: String,
-    required: false // Made optional for backward compatibility
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Location',
+    required: false // or true if always needed
   },
   // New service location system
-  serviceCities: [{
-    type: String,
-    trim: true
-  }],
-  serviceLocations: [{
-    cityName: {
+  mapLocation: {
+    id: {
+      type: String,
+      required: true
+    },
+    name: {
       type: String,
       required: true,
       trim: true
     },
-    locations: [{
-      id: {
-        type: String,
+    address: {
+      type: String,
+      required: true
+    },
+    coordinates: {
+      lat: {
+        type: Number,
         required: true
       },
-      name: {
-        type: String,
-        required: true,
-        trim: true
-      },
-      address: {
-        type: String,
+      lng: {
+        type: Number,
         required: true
-      },
-      coordinates: {
-        lat: {
-          type: Number,
-          required: true
-        },
-        lng: {
-          type: Number,
-          required: true
-        }
-      },
-      placeId: {
-        type: String
-      },
-      isMainLocation: {
-        type: Boolean,
-        default: false
       }
-    }]
-  }],
+    },
+    placeId: {
+      type: String
+    },
+    isMainLocation: {
+      type: Boolean,
+      default: false
+    }
+  },
   address: {
     type: String
   },
@@ -132,20 +122,20 @@ const partnerSchema = new mongoose.Schema({
   //   gallery: [String]
   // },
   images: {
-  logo: {
-    url: String,
-    publicId: String
-  },
-  storefront: {
-    url: String,
-    publicId: String
-  },
-  gallery: [
-    {
+    logo: {
       url: String,
       publicId: String
-    }
-  ]
+    },
+    storefront: {
+      url: String,
+      publicId: String
+    },
+    gallery: [
+      {
+        url: String,
+        publicId: String
+      }
+    ]
   },
   verified: {
     type: Boolean,

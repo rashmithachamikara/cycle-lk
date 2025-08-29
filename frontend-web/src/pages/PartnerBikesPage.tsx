@@ -167,7 +167,14 @@ const PartnerBikesPage = () => {
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{partner.companyName}</h1>
               <div className="flex items-center text-white">
                 <MapPin className="h-5 w-5 mr-2" />
-                <span className="text-xl">{partner.location}</span>
+                <span>
+                  {typeof partner.location === 'object' && partner.location.name 
+                    ? partner.location.name 
+                    : typeof partner.location === 'string' 
+                    ? partner.location 
+                    : 'Location not specified'
+                  }
+                </span>
                 {partner.verified && (
                   <span className="ml-4 bg-blue-500 px-3 py-1 rounded-full text-sm font-semibold">
                     Verified Partner

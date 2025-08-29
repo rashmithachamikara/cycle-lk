@@ -3,10 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, Bell, ChevronDown, Building, ShieldCheck, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import './Header.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false); // for animation
   const dashboardRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
@@ -28,9 +30,25 @@ const Header = () => {
     };
   }, []);
 
+  // Handle mounting/unmounting for animation
+  useEffect(() => {
+    if (isMenuOpen) {
+      setShowMobileNav(true);
+    } else if (showMobileNav) {
+      // Wait for animation to finish before unmounting
+      const timeout = setTimeout(() => setShowMobileNav(false), 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [isMenuOpen]);
+
   return (
-    <header className="backdrop-blur-lg bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 ">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header
+      className={`bg-white shadow-sm border-b border-gray-300 sticky top-0 z-50 transition-all
+        ${!isMenuOpen ? 'header-blur bg-opacity-60' : ''}
+        md:header-blur
+      `}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative ">
         <div className="flex justify-between items-center h-16">
           {/* <Link to="/" className="flex items-center space-x-2">
             <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
@@ -99,10 +117,14 @@ const Header = () => {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                  <Bell className="h-5 w-5" />
+                <Link
+                  to="/notifications"
+                  className="relative p-2 rounded-full bg-white/90 border border-gray-200 shadow hover:bg-emerald-50 transition-all duration-150 text-gray-600 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                  aria-label="Notifications"
+                >
+                  <Bell className={`h-5 w-5 ${unreadCount > 0 ? '' : ''}`} />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -111,7 +133,8 @@ const Header = () => {
                 <div className="relative" ref={dashboardRef}>
                   <button 
                     onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-                    className="flex items-center space-x-2 p-2 text-gray-600 hover:text-emerald-600 transition-colors"
+                    className="flex items-center space-x-2 p-2 px-4 rounded-full bg-white/80 border border-gray-200 shadow hover:bg-emerald-50 transition-all duration-150 text-gray-700 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    aria-label="Profile and dashboard menu"
                   >
                     <User className="h-5 w-5" />
                     <span className="font-medium">{user?.firstName || 'Dashboard'}</span>
@@ -195,7 +218,7 @@ const Header = () => {
               <div className="flex items-center space-x-4">
                 <Link 
                   to="/login" 
-                  className="px-4 py-2 text-gray-700 hover:text-emerald-600 font-medium transition-colors"
+                  className="px-4 py-2 rounded-lg border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50 hover:text-emerald-800 font-semibold shadow-sm transition-colors duration-150"
                 >
                   Log in
                 </Link>
@@ -208,106 +231,156 @@ const Header = () => {
               </div>
             )}
           </nav>
-
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-emerald-600 transition-colors"
-          >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
-            <nav className="flex flex-col space-y-4">
-              <Link 
-                to="/" 
-                className={`font-medium transition-colors ${
-                  isActive('/') ? 'text-emerald-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link 
-                to="/booking" 
-                className={`font-medium transition-colors ${
-                  isActive('/booking') ? 'text-emerald-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Book Now
-              </Link>
-              <Link 
-                to="/locations" 
-                className={`font-medium transition-colors ${
-                  isActive('/locations') ? 'text-emerald-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Locations
-              </Link>
-              <Link 
-                to="/partners" 
-                className={`font-medium transition-colors ${
-                  isActive('/partners') ? 'text-emerald-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Partners
-              </Link>
-              <Link 
-                to="/support" 
-                className={`font-medium transition-colors ${
-                  isActive('/support') ? 'text-emerald-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Support
-              </Link>
-              <div className="pt-2 mt-2 border-t border-gray-100">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dashboards</h3>
-                <div className="space-y-4">
-                  <Link 
-                    to="/dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
+        {/* Mobile menu button (hidden on md+) */}
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="md:hidden absolute top-4 right-4 p-2 text-gray-600 hover:text-emerald-600 transition-colors z-50"
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        >
+          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+      {/* Mobile Navigation */}
+      {showMobileNav && (
+        <div
+          className={`md:hidden fixed left-0 right-0 top-16 z-40 w-full
+            py-4 border-t bg-white shadow-lg rounded-b-xl
+            transition-all duration-300 ease-out
+            ${isMenuOpen ? 'animate-navbar-slide' : 'animate-navbar-slide-reverse'}
+          `}
+        >
+          <nav className="flex flex-col space-y-1 px-2">
+            <Link 
+              to="/" 
+              className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                isActive('/') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link 
+              to="/booking" 
+              className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                isActive('/booking') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Book Now
+            </Link>
+            <Link 
+              to="/locations" 
+              className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                isActive('/locations') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Locations
+            </Link>
+            <Link 
+              to="/partners" 
+              className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                isActive('/partners') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Partners
+            </Link>
+            <Link 
+              to="/support" 
+              className={`block rounded-lg px-4 py-3 font-medium transition-colors ${
+                isActive('/support') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Support
+            </Link>
+            {isAuthenticated && (
+              <div className="pt-3 mt-3 border-t border-gray-100">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Dashboards</h3>
+                <div className="space-y-1">
+                  {user?.role === 'user' && (
+                    <Link 
+                      to="/dashboard" 
+                      className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                        isActive('/dashboard') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-5 w-5 mr-3" />
+                      User Dashboard
+                    </Link>
+                  )}
+                  {user?.role === 'partner' && (
+                    <Link 
+                      to="/partner-dashboard" 
+                      className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                        isActive('/partner-dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Building className="h-5 w-5 mr-3" />
+                      Partner Dashboard
+                    </Link>
+                  )}
+                  {user?.role === 'admin' && (
+                    <Link 
+                      to="/admin-dashboard" 
+                      className={`flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
+                        isActive('/admin-dashboard') ? 'bg-purple-50 text-purple-600' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ShieldCheck className="h-5 w-5 mr-3" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  {/* Profile link */}
+                  <Link
+                    to="/profile"
+                    className="flex items-center rounded-lg px-4 py-3 font-medium transition-colors text-gray-700 hover:bg-gray-50"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="h-5 w-5 mr-3" />
-                    User Dashboard
+                    Profile
                   </Link>
-                  
-                  <Link 
-                    to="/partner-dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/partner-dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
+                  {/* Logout button */}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center rounded-lg px-4 py-3 font-medium transition-colors text-gray-700 hover:bg-gray-50 w-full text-left"
                   >
-                    <Building className="h-5 w-5 mr-3" />
-                    Partner Dashboard
-                  </Link>
-                  
-                  <Link 
-                    to="/admin-dashboard" 
-                    className={`flex items-center font-medium transition-colors ${
-                      isActive('/admin-dashboard') ? 'text-emerald-600' : 'text-gray-700'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <ShieldCheck className="h-5 w-5 mr-3" />
-                    Admin Dashboard
-                  </Link>
+                    <LogOut className="h-5 w-5 mr-3 text-red-600" />
+                    Log out
+                  </button>
                 </div>
               </div>
-            </nav>
-          </div>
-        )}
-      </div>
+            )}
+            {/* For mobile nav (not authenticated) */}
+            {!isAuthenticated && (
+              <div className="flex flex-col space-y-2 pt-4">
+                <Link 
+                  to="/login" 
+                  className="block rounded-lg px-4 py-3 border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50 hover:text-emerald-800 font-semibold shadow-sm transition-colors duration-150"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log in
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="block rounded-lg px-4 py-3 bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
