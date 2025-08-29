@@ -762,3 +762,49 @@ exports.cancelBooking = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Get bookings where the current partner is the dropoff partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getDropoffBookings = async (req, res) => {
+  try {
+    // Get user details to check role and partner ID
+    const user = await User.findById(req.user.id);
+    console.log(`User role: ${user.role}, Partner ID: ${req.user.partnerId}`);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Verify user is a partner
+    if (user.role !== 'partner') {
+      return res.status(403).json({ message: 'Access denied. Only partners can access dropoff bookings.' });
+    }
+    
+    // Verify user has a partnerId
+    if (!req.user.partnerId) {
+      return res.status(403).json({ message: 'Partner ID not found in user profile.' });
+    }
+    
+    // Get all bookings where this partner is the dropoff partner
+    // Filter for active and confirmed bookings only (ready for dropoff)
+    const bookings = await Booking.find({ 
+      dropoffPartnerId: req.user.partnerId,
+      status: { $in: ['active', 'confirmed'] }
+    })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location')
+      .populate('dropoffPartnerId', 'companyName email phone location')
+      .sort({ createdAt: -1 });
+    
+    console.log(`Found ${bookings.length} dropoff bookings for partner ${req.user.partnerId}`);
+    
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get dropoff bookings error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
