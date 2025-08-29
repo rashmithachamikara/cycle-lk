@@ -64,10 +64,14 @@ const DropBikePage = () => {
     try {
       setIsLoading(true);
       const bookings = await bookingService.getMyBookings();
+      console.log('All bookings from API:', bookings); // Debug log
+      
       // Filter for active bookings (confirmed or active status)
       const activeOnes = bookings.filter((booking: PartnerDashboardBooking) => 
         booking.status === 'active' || booking.status === 'confirmed'
       );
+      console.log('Active bookings:', activeOnes); // Debug log
+      console.log('Sample booking structure:', activeOnes[0]); // Debug log
       setActiveBookings(activeOnes);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -84,6 +88,7 @@ const DropBikePage = () => {
   );
 
   const handleBookingSelect = (booking: PartnerDashboardBooking) => {
+    console.log('Selected booking:', booking); // Debug log
     setSelectedBooking(booking);
     setDropOffData(prev => ({ ...prev, bookingId: booking.id }));
     setCurrentStep('assessment');
@@ -354,19 +359,32 @@ const DropBikePage = () => {
 
               {/* Customer & Bike Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Booking Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Customer</p>
-                    <p className="text-gray-900">{selectedBooking.customerName}</p>
+                    <p className="text-gray-900">{selectedBooking?.customerName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">{selectedBooking?.customerPhone || ''}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Bike</p>
-                    <p className="text-gray-900">{selectedBooking.bikeName}</p>
+                    <p className="text-gray-900">{selectedBooking?.bikeName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">ID: {selectedBooking?.bikeId || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Original Amount</p>
-                    <p className="text-gray-900">{selectedBooking.value}</p>
+                    <p className="text-gray-900">{selectedBooking?.value || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Status: {selectedBooking?.paymentStatus || 'N/A'}</p>
                   </div>
+                </div>
+                
+                {/* Debug info - remove this later */}
+                <div className="mt-4 p-3 bg-blue-50 rounded border text-xs">
+                  <p><strong>Debug Info:</strong></p>
+                  <p>Customer Name: "{selectedBooking?.customerName}"</p>
+                  <p>Bike Name: "{selectedBooking?.bikeName}"</p>
+                  <p>Value: "{selectedBooking?.value}"</p>
+                  <p>Booking Number: "{selectedBooking?.bookingNumber}"</p>
                 </div>
               </div>
 
