@@ -55,7 +55,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8 text-center">
+      <div className="my-8 text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Confirm Your Booking
         </h1>
@@ -69,13 +69,13 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
         <div className="lg:col-span-2 space-y-6">
           
           {/* DROP-OFF LOCATIONS - TOP SECTION */}
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl shadow-lg p-8 border-l-4 border-blue-500">
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl shadow-lg p-8 border- border-blue-500">
             <div className="flex items-center mb-6">
               <MapPin className="h-6 w-6 text-blue-600 mr-3" />
               <h2 className="text-2xl font-bold text-gray-900">Drop-off Information</h2>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-rows-2 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
@@ -89,7 +89,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center mb-4">
                   <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                  <h3 className="font-semibold text-gray-900">Drop-off Location</h3>
+                  <h3 className="font-semibold text-gray-900">Available Drop-off Locations</h3>
                 </div>
                 <p className="text-gray-700 font-medium">{dropoffLocation.name}</p>
                 <p className="text-gray-600 text-sm">{dropoffLocation.region}</p>
