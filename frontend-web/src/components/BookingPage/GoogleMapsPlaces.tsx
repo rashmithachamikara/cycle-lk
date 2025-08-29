@@ -1,13 +1,24 @@
-// frontend-web/components/forms/GoogleMapsPlacesInput.tsx
+
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MapPin, Search, Target, Loader2, AlertTriangle, X } from 'lucide-react';
 import { googleMapsService } from '../../services/googleMapsService';
 import { validateGoogleMapsApiKey, type LocationData } from '../../config/googleMaps';
 
-interface GoogleMapsPlacesInputProps {
-  value: string;
-  onChange: (value: string, locationData?: LocationData) => void;
+// Interface for partner markers
+export interface PartnerMarker {
+  id: string;
+  name: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  address?: string;
+}
+
+interface GoogleMapsPlacesProps {
+  value?: string;
+  onChange?: (value: string, locationData?: LocationData) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
@@ -16,10 +27,14 @@ interface GoogleMapsPlacesInputProps {
   initialCenter?: { lat: number; lng: number };
   zoom?: number;
   suggestions?: string[];
+  partnerMarkers?: PartnerMarker[]; // New prop for partner locations
+  showSearch?: boolean; // Control whether to show search input
+  enableInteraction?: boolean; // Control whether the map allows interaction (dragging, clicking to select)
+  showLocationMarker?: boolean; // Control whether to show the red location selection marker
 }
 
-const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
-  value,
+const GoogleMapsPlaces: React.FC<GoogleMapsPlacesProps> = ({
+  value = "",
   onChange,
   placeholder = "Search for a location",
   className = "",
@@ -28,11 +43,16 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
   mapHeight = "300px",
   initialCenter = { lat: 6.9271, lng: 79.8612 }, // Colombo, Sri Lanka
   zoom = 12,
-  suggestions = []
+  suggestions = [],
+  partnerMarkers = [],
+  showSearch = true,
+  enableInteraction = true,
+  showLocationMarker = true
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const partnerMarkersRef = useRef<google.maps.Marker[]>([]);
   
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
@@ -60,7 +80,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
       if (locationData) {
         setCurrentLocation(locationData);
         setInputValue(locationData.address); // update input field when map is used
-        onChange(locationData.address, locationData);
+        onChange?.(locationData.address, locationData);
       } else {
         const fallbackData: LocationData = {
           address: `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
@@ -69,7 +89,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         };
         setCurrentLocation(fallbackData);
         setInputValue(fallbackData.address); // update input field when map is used
-        onChange(fallbackData.address, fallbackData);
+        onChange?.(fallbackData.address, fallbackData);
         setError('Address lookup unavailable, but location coordinates saved');
       }
     } catch (error) {
@@ -82,7 +102,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
       };
       setCurrentLocation(fallbackData);
       setInputValue(fallbackData.address); // update input field when map is used
-      onChange(fallbackData.address, fallbackData);
+      onChange?.(fallbackData.address, fallbackData);
       setError('Address lookup failed, but location coordinates saved');
     } finally {
       setIsLoading(false);
@@ -132,29 +152,39 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         mapTypeControl: false,
         fullscreenControl: true,
         zoomControl: true,
-        gestureHandling: 'cooperative',
+        gestureHandling: 'cooperative', // Always allow map panning/zooming
+        disableDoubleClickZoom: false,
       });
 
-      const markerInstance = new google.maps.Marker({
-        map: mapInstance,
-        position: initialCenter,
-        draggable: true,
-        title: 'Drag to adjust location',
-        animation: google.maps.Animation.DROP,
-      });
+      let markerInstance: google.maps.Marker | null = null;
 
-      setupMarkerEvents(markerInstance, mapInstance);
+      // Only create the location marker if showLocationMarker is true
+      if (showLocationMarker) {
+        markerInstance = new google.maps.Marker({
+          map: mapInstance,
+          position: initialCenter,
+          draggable: enableInteraction, // Only allow dragging if interaction is enabled
+          title: enableInteraction ? 'Drag to adjust location' : 'Location marker',
+          animation: google.maps.Animation.DROP,
+        });
+
+        if (enableInteraction) {
+          setupMarkerEvents(markerInstance, mapInstance);
+        }
+      }
 
       setMap(mapInstance);
       setMarker(markerInstance);
       setIsMapInitialized(true);
+
+      // Partner markers will be created by the separate useEffect
     } catch (error) {
       console.error('Map initialization error:', error);
       setError('Failed to initialize Google Maps');
     } finally {
       setIsLoading(false);
     }
-  }, [showMap, initialCenter, zoom, handleGeocoding, isMapInitialized, setupMarkerEvents]);
+  }, [showMap, initialCenter, zoom, isMapInitialized, setupMarkerEvents, enableInteraction, showLocationMarker]);
 
   // Initialize Autocomplete
   const initializeAutocomplete = useCallback(async () => {
@@ -185,17 +215,21 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
 
         setCurrentLocation(locationData);
         setInputValue(place.formatted_address || place.name || '');
-        onChange(place.formatted_address || place.name || '', locationData);
+        onChange?.(place.formatted_address || place.name || '', locationData);
         setError(null);
 
-        // Update map pin and center map
-        if (map && marker) {
+        // Update map pin and center map only if showLocationMarker is true
+        if (map && marker && showLocationMarker) {
           map.setCenter({ lat, lng });
           marker.setPosition({ lat, lng });
           marker.setAnimation(google.maps.Animation.BOUNCE);
           setTimeout(() => marker.setAnimation(null), 1000);
           map.setZoom(16);
           setupMarkerEvents(marker, map); // Ensure marker remains interactive
+        } else if (map && !showLocationMarker) {
+          // Just center the map without placing a marker
+          map.setCenter({ lat, lng });
+          map.setZoom(16);
         } else if (mapRef.current) {
           googleMapsService.createMap(mapRef.current, {
             center: { lat, lng },
@@ -227,7 +261,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
     } catch (error) {
       console.error('Autocomplete initialization error:', error);
     }
-  }, [map, marker, onChange, setupMarkerEvents]);
+  }, [map, marker, onChange, setupMarkerEvents, showLocationMarker]);
 
   // Initialize components when Google Maps loads
   useEffect(() => {
@@ -249,6 +283,63 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
     initializeComponents();
   }, [showMap, initializeMap, initializeAutocomplete]);
 
+  // Update partner markers when they change
+  useEffect(() => {
+    if (!map || partnerMarkers.length === 0) return;
+
+    // Clear existing partner markers
+    partnerMarkersRef.current.forEach(marker => marker.setMap(null));
+    
+    const newMarkers: google.maps.Marker[] = [];
+    
+    partnerMarkers.forEach(partner => {
+      const marker = new google.maps.Marker({
+        map: map,
+        position: partner.coordinates,
+        title: partner.name,
+        icon: {
+          url: 'data:image/svg+xml;base64,' + btoa(`
+            <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#059669"/>
+              <circle cx="15" cy="15" r="8" fill="white"/>
+              <text x="15" y="20" text-anchor="middle" fill="#059669" font-size="12" font-weight="bold">P</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(30, 40),
+          anchor: new google.maps.Point(15, 40)
+        }
+      });
+
+      // Create info window for partner
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #059669;">${partner.name}</h3>
+            ${partner.address ? `<p style="margin: 4px 0; color: #666; font-size: 14px;"><strong>Address:</strong> ${partner.address}</p>` : ''}
+            <p style="margin: 4px 0; color: #666; font-size: 12px;">
+              <strong>Coordinates:</strong> ${partner.coordinates.lat.toFixed(6)}, ${partner.coordinates.lng.toFixed(6)}
+            </p>
+          </div>
+        `
+      });
+
+      marker.addListener('click', () => {
+        // Close other info windows
+        newMarkers.forEach(m => {
+          const existingInfoWindow = (m as google.maps.Marker & { infoWindow?: google.maps.InfoWindow }).infoWindow;
+          if (existingInfoWindow && existingInfoWindow !== infoWindow) existingInfoWindow.close();
+        });
+        infoWindow.open(map, marker);
+      });
+
+      // Store info window reference
+      (marker as google.maps.Marker & { infoWindow?: google.maps.InfoWindow }).infoWindow = infoWindow;
+      newMarkers.push(marker);
+    });
+
+    partnerMarkersRef.current = newMarkers;
+  }, [map, partnerMarkers]);
+
   // Get current location
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -264,11 +355,15 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         
-        if (map && marker) {
+        if (map) {
           map.setCenter({ lat, lng });
-          marker.setPosition({ lat, lng });
-          marker.setAnimation(google.maps.Animation.DROP);
           map.setZoom(16);
+          
+          // Only update marker if it exists and showLocationMarker is true
+          if (marker && showLocationMarker) {
+            marker.setPosition({ lat, lng });
+            marker.setAnimation(google.maps.Animation.DROP);
+          }
         }
 
         await handleGeocoding(lat, lng);
@@ -295,11 +390,11 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         maximumAge: 300000
       }
     );
-  }, [map, marker, handleGeocoding]);
+  }, [map, marker, handleGeocoding, showLocationMarker]);
 
   // Clear location
   const clearLocation = () => {
-    onChange('');
+    onChange?.('');
     setInputValue('');
     setCurrentLocation(null);
     setError(null);
@@ -324,7 +419,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
         <input
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange?.(e.target.value)}
           placeholder={placeholder}
           className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
           required={required}
@@ -335,49 +430,53 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Search Input */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-            onChange(e.target.value); // propagate to parent
-          }}
-          placeholder={placeholder}
-          className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          required={required}
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1">
-          {value && (
-            <button
-              type="button"
-              onClick={clearLocation}
-              className="text-gray-400 hover:text-gray-600 p-1"
-              title="Clear location"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={getCurrentLocation}
-            disabled={isLoading || !googleMapsService.isGoogleMapsLoaded()}
-            className="text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed p-1"
-            title="Get current location"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Target className="h-4 w-4" />
+      {/* Search Input - Only show if showSearch is true */}
+      {showSearch && (
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              onChange?.(e.target.value); // propagate to parent
+            }}
+            placeholder={placeholder}
+            className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required={required}
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1">
+            {value && enableInteraction && (
+              <button
+                type="button"
+                onClick={clearLocation}
+                className="text-gray-400 hover:text-gray-600 p-1"
+                title="Clear location"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
-          </button>
+            {enableInteraction && (
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                disabled={isLoading || !googleMapsService.isGoogleMapsLoaded()}
+                className="text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed p-1"
+                title="Get current location"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Target className="h-4 w-4" />
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -433,7 +532,7 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
               <button
                 key={index}
                 type="button"
-                onClick={() => onChange(suggestion)}
+                onClick={() => onChange?.(suggestion)}
                 className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 transition-colors"
               >
                 {suggestion}
@@ -446,4 +545,4 @@ const GoogleMapsPlacesInput: React.FC<GoogleMapsPlacesInputProps> = ({
   );
 };
 
-export default GoogleMapsPlacesInput;
+export default GoogleMapsPlaces;

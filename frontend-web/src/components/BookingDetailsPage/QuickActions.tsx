@@ -59,6 +59,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
               Navigate to Pickup Location
             </button>
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
+              <Navigation className="h-4 w-4 mr-2" />
+              Get Drop Locations
+            </button>
+            <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               Modify Booking
             </button>
           </>

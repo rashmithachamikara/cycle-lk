@@ -18,26 +18,20 @@ import { formatBusinessHours } from '../../services/partnerService';
 const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
   // Helper function to get main location coordinates
   const getMainLocationCoordinates = () => {
-    // First try to find a main location
-    if (partner.serviceLocations && partner.serviceLocations.length > 0) {
-      for (const cityService of partner.serviceLocations) {
-        const mainLocation = cityService.locations.find(loc => loc.isMainLocation);
-        if (mainLocation) {
-          return {
-            lat: mainLocation.coordinates.lat,
-            lng: mainLocation.coordinates.lng
-          };
-        }
-      }
-      
-      // If no main location found, use the first location
-      const firstCity = partner.serviceLocations[0];
-      if (firstCity.locations && firstCity.locations.length > 0) {
-        return {
-          lat: firstCity.locations[0].coordinates.lat,
-          lng: firstCity.locations[0].coordinates.lng
-        };
-      }
+    // Try to get from mapLocation first (new structure)
+    if (partner.mapLocation && partner.mapLocation.coordinates) {
+      return {
+        lat: partner.mapLocation.coordinates.lat,
+        lng: partner.mapLocation.coordinates.lng
+      };
+    }
+    
+    // Try to get from populated location object
+    if (partner.location && typeof partner.location === 'object' && partner.location.coordinates) {
+      return {
+        lat: partner.location.coordinates.latitude,
+        lng: partner.location.coordinates.longitude
+      };
     }
     
     // Fallback to legacy coordinates if they exist
@@ -53,13 +47,22 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
 
   // Helper function to get display location
   const getDisplayLocation = () => {
-    // Try to get from service cities first
-    if (partner.serviceCities && partner.serviceCities.length > 0) {
-      return partner.serviceCities.join(', ');
+    // Try to get from mapLocation first (new structure)
+    if (partner.mapLocation && partner.mapLocation.name) {
+      return partner.mapLocation.name;
     }
     
-    // Fallback to legacy location field
-    return partner.location || 'Location not specified';
+    // Fallback to populated location object
+    if (partner.location && typeof partner.location === 'object' && partner.location.name) {
+      return partner.location.name;
+    }
+    
+    // Fallback to location as string (legacy)
+    if (partner.location && typeof partner.location === 'string') {
+      return partner.location;
+    }
+    
+    return 'Location not specified';
   };
 
   // Get coordinates for navigation
