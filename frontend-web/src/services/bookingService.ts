@@ -277,6 +277,13 @@ export const bookingService = {
     return response.data;
   },
 
+  // Get dropoff bookings for the authenticated partner (where they are the dropoff partner)
+  getDropoffBookings: async (): Promise<PartnerDashboardBooking[]> => {
+    const response = await api.get('/bookings/dropoff-bookings');
+    const backendBookings: BackendBooking[] = response.data;
+    return backendBookings.map(transformBookingForPartnerDashboard);
+  },
+
   // Update booking status (requires partner/admin role)
   updateBookingStatus: async (id: string, status: string) => {
     const response = await api.put(`/bookings/${id}/status`, { status });
