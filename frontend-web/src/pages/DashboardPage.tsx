@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -19,9 +19,8 @@ import { useUserRealtimeEvents } from '../hooks/useRealtimeEvents';
 // Import our dashboard components
 import {
   WelcomeSection,
-  StatsGrid,
-  BookingTabs,
-  BookingList,
+  BookingProgressCard,
+  BookingFilter,
   DashboardSidebar
 } from '../components/DashboardPage';
 
@@ -38,7 +37,15 @@ interface NotificationProps {
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past' | 'paymentPending'>('requested');
+  const [searchParams] = useSearchParams();
+  
+  // Check if we should show past rentals
+  const viewType = searchParams.get('view');
+  const [showPastRentals, setShowPastRentals] = useState(viewType === 'past');
+  
+  // Filter state for bookings in main section
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled'>('all');
+  
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PaymentPendingBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,32 +59,7 @@ const DashboardPage = () => {
   } = useUserRealtimeEvents();
 
   // Mock notifications - in real app, this would come from an API
-  const [notifications, setNotifications] = useState<NotificationProps[]>([
-    // {
-    //   id: '1',
-    //   title: 'Booking Confirmed',
-    //   message: 'Your bike rental at Colombo Fort has been confirmed',
-    //   timestamp: '2 hours ago',
-    //   read: false,
-    //   type: 'success'
-    // },
-    // {
-    //   id: '2',
-    //   title: 'Payment Reminder',
-    //   message: 'Payment due for your upcoming rental',
-    //   timestamp: '1 day ago',
-    //   read: false,
-    //   type: 'warning'
-    // },
-    // {
-    //   id: '3',
-    //   title: 'New Location Available',
-    //   message: 'Check out bikes available in Kandy',
-    //   timestamp: '3 days ago',
-    //   read: true,
-    //   type: 'info'
-    // }
-  ]);
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
   // Fetch user bookings on component mount
   useEffect(() => {
@@ -232,50 +214,10 @@ const DashboardPage = () => {
     }
   }, [bookingUpdates, clearProcessedUpdates]);
 
-  // Filter bookings by tab (excluding payments)
-  const filterBookingsByTab = (tab: 'current' | 'requested' | 'past' | 'paymentPending') => {
-    return bookings.filter(booking => {
-      switch (tab) {
-        case 'current':
-          return booking.status === 'active';
-        case 'requested':
-          return booking.status === 'requested';
-        case 'past':
-          return booking.status === 'completed' || booking.status === 'cancelled';
-        case 'paymentPending':
-          return booking.status === 'confirmed' && booking.paymentStatus === 'pending';
-        default:
-          return false;
-      }
-    });
-  };
-
-  // Calculate stats for the stats grid
-  const calculateStats = () => {
-    const activeRentals = bookings.filter(
-      booking => booking.status === 'confirmed'
-    ).length;
-    const totalBookings = bookings.length;
-    const avgRating = bookings
-      .filter(booking => booking.rating && booking.rating > 0)
-      .reduce((sum, booking, _, arr) => sum + (booking.rating || 0) / arr.length, 0);
-    const citiesVisited = new Set(bookings.map(booking => booking.location)).size;
-
-    return {
-      activeRentals,
-      totalBookings,
-      avgRating: avgRating > 0 ? avgRating : 0,
-      citiesVisited
-    };
-  };
-
-  // Calculate booking counts for tabs
-  const bookingCounts = {
-    current: filterBookingsByTab('current').length,
-    requested: filterBookingsByTab('requested').length,
-    past: filterBookingsByTab('past').length,
-    paymentPending: filterBookingsByTab('paymentPending').length
-  };
+  // Filter for past rentals if needed
+  const pastBookings = bookings.filter(booking => 
+    booking.status === 'completed' || booking.status === 'cancelled'
+  );
 
   const handleMarkAsRead = (notificationId: string) => {
     // In a real app, this would update the notification status via API
@@ -309,28 +251,107 @@ const DashboardPage = () => {
     }
   };
 
-  // Get current content based on active tab
-  const getCurrentContent = () => {
-    const currentBookings = filterBookingsByTab(activeTab);
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">My Rentals</h2>
-        
-        {/* Booking Tabs */}
-        <BookingTabs 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          counts={bookingCounts}
-        />
+  // Filter bookings by status
+  const filterBookingsByStatus = (filter: 'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled') => {
+    if (filter === 'all') return bookings;
+    return bookings.filter(booking => booking.status === filter);
+  };
 
-        {/* Booking List */}
-        <BookingList
-          bookings={currentBookings}
-          loading={loading}
-          error={error}
-          type={activeTab}
-          onRetry={handleRetryFetch}
-        />
+  // Calculate booking counts for filters
+  const getBookingCounts = () => {
+    const counts = {
+      all: bookings.length,
+      requested: bookings.filter(b => b.status === 'requested').length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      active: bookings.filter(b => b.status === 'active').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length
+    };
+    return counts;
+  };
+
+  // Get current content based on view type
+  const getCurrentContent = () => {
+    const currentBookings = filterBookingsByStatus(selectedFilter);
+    const displayBookings = showPastRentals ? pastBookings : currentBookings;
+    const title = showPastRentals ? 'Past Rentals' : 'All Current Bookings';
+    
+    return (
+      <div id="all-bookings-section" className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex flex-col gap-7 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          {!showPastRentals && (
+            <BookingFilter
+              activeFilter={selectedFilter}
+              onFilterChange={setSelectedFilter}
+              bookingCounts={getBookingCounts()}
+            />
+          )}
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setShowPastRentals(false)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              !showPastRentals
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Current Rentals
+          </button>
+          <button
+            onClick={() => setShowPastRentals(true)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showPastRentals
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Past Rentals ({pastBookings.length})
+          </button>
+        </div>
+
+        {/* Booking Cards */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-4">{error}</div>
+            <button
+              onClick={handleRetryFetch}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : displayBookings.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500 mb-4">
+              {showPastRentals ? 'No past rentals found' : 'No bookings found'}
+            </div>
+            {!showPastRentals && (
+              <button
+                onClick={() => navigate('/booking')}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                Book Your First Bike
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {displayBookings.map((booking: UserDashboardBooking) => (
+              <BookingProgressCard
+                key={booking.id}
+                booking={booking}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -374,14 +395,60 @@ const DashboardPage = () => {
           pendingPaymentsCount={pendingPayments.length}
         />
 
-        {/* Stats Grid */}
+        {/* Most Recent Booking */}
         <div className="mb-8">
-          <StatsGrid 
-            activeRentals={calculateStats().activeRentals}
-            totalBookings={calculateStats().totalBookings}
-            avgRating={calculateStats().avgRating}
-            citiesVisited={calculateStats().citiesVisited}
-          />
+          {loading ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="text-center py-8">
+                <div className="text-red-600 mb-4">{error}</div>
+                <button
+                  onClick={handleRetryFetch}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="text-center py-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
+                <div className="text-gray-500 mb-4">Start your cycling adventure today!</div>
+                <button
+                  onClick={() => navigate('/booking')}
+                  className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  Book Your First Bike
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Most Recent Booking</h3>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('all-bookings-section');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                >
+                  View All Bookings →
+                </button>
+              </div>
+              <BookingProgressCard
+                booking={bookings[0]}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
