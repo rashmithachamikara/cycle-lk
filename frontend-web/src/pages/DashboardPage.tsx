@@ -19,7 +19,6 @@ import { useUserRealtimeEvents } from '../hooks/useRealtimeEvents';
 // Import our dashboard components
 import {
   WelcomeSection,
-  StatsGrid,
   BookingProgressCard,
   BookingFilter,
   DashboardSidebar
@@ -44,7 +43,7 @@ const DashboardPage = () => {
   const viewType = searchParams.get('view');
   const [showPastRentals, setShowPastRentals] = useState(viewType === 'past');
   
-  // Filter state for bookings
+  // Filter state for bookings in main section
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled'>('all');
   
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
@@ -60,32 +59,7 @@ const DashboardPage = () => {
   } = useUserRealtimeEvents();
 
   // Mock notifications - in real app, this would come from an API
-  const [notifications, setNotifications] = useState<NotificationProps[]>([
-    // {
-    //   id: '1',
-    //   title: 'Booking Confirmed',
-    //   message: 'Your bike rental at Colombo Fort has been confirmed',
-    //   timestamp: '2 hours ago',
-    //   read: false,
-    //   type: 'success'
-    // },
-    // {
-    //   id: '2',
-    //   title: 'Payment Reminder',
-    //   message: 'Payment due for your upcoming rental',
-    //   timestamp: '1 day ago',
-    //   read: false,
-    //   type: 'warning'
-    // },
-    // {
-    //   id: '3',
-    //   title: 'New Location Available',
-    //   message: 'Check out bikes available in Kandy',
-    //   timestamp: '3 days ago',
-    //   read: true,
-    //   type: 'info'
-    // }
-  ]);
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
   // Fetch user bookings on component mount
   useEffect(() => {
@@ -240,51 +214,10 @@ const DashboardPage = () => {
     }
   }, [bookingUpdates, clearProcessedUpdates]);
 
-  // Filter bookings by status
-  const filterBookingsByStatus = (filter: 'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled') => {
-    if (filter === 'all') return bookings;
-    return bookings.filter(booking => booking.status === filter);
-  };
-
-  // Get current filtered bookings
-  const currentBookings = filterBookingsByStatus(selectedFilter);
-
   // Filter for past rentals if needed
   const pastBookings = bookings.filter(booking => 
     booking.status === 'completed' || booking.status === 'cancelled'
   );
-
-  // Calculate stats for the stats grid
-  const calculateStats = () => {
-    const activeRentals = bookings.filter(
-      booking => booking.status === 'confirmed'
-    ).length;
-    const totalBookings = bookings.length;
-    const avgRating = bookings
-      .filter(booking => booking.rating && booking.rating > 0)
-      .reduce((sum, booking, _, arr) => sum + (booking.rating || 0) / arr.length, 0);
-    const citiesVisited = new Set(bookings.map(booking => booking.location)).size;
-
-    return {
-      activeRentals,
-      totalBookings,
-      avgRating: avgRating > 0 ? avgRating : 0,
-      citiesVisited
-    };
-  };
-
-  // Calculate booking counts for filters
-  const getBookingCounts = () => {
-    const counts = {
-      all: bookings.length,
-      requested: bookings.filter(b => b.status === 'requested').length,
-      confirmed: bookings.filter(b => b.status === 'confirmed').length,
-      active: bookings.filter(b => b.status === 'active').length,
-      completed: bookings.filter(b => b.status === 'completed').length,
-      cancelled: bookings.filter(b => b.status === 'cancelled').length
-    };
-    return counts;
-  };
 
   const handleMarkAsRead = (notificationId: string) => {
     // In a real app, this would update the notification status via API
@@ -318,18 +251,35 @@ const DashboardPage = () => {
     }
   };
 
+  // Filter bookings by status
+  const filterBookingsByStatus = (filter: 'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled') => {
+    if (filter === 'all') return bookings;
+    return bookings.filter(booking => booking.status === filter);
+  };
+
+  // Calculate booking counts for filters
+  const getBookingCounts = () => {
+    const counts = {
+      all: bookings.length,
+      requested: bookings.filter(b => b.status === 'requested').length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      active: bookings.filter(b => b.status === 'active').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length
+    };
+    return counts;
+  };
+
   // Get current content based on view type
   const getCurrentContent = () => {
+    const currentBookings = filterBookingsByStatus(selectedFilter);
     const displayBookings = showPastRentals ? pastBookings : currentBookings;
-    const title = showPastRentals ? 'Past Bookings' : 'My Bookings';
+    const title = showPastRentals ? 'Past Rentals' : 'All Current Bookings';
     
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex flex-col gap-6 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          </div>
-          
+      <div id="all-bookings-section" className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex flex-col gap-7 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
           {!showPastRentals && (
             <BookingFilter
               activeFilter={selectedFilter}
@@ -394,7 +344,7 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {displayBookings.map((booking) => (
+            {displayBookings.map((booking: UserDashboardBooking) => (
               <BookingProgressCard
                 key={booking.id}
                 booking={booking}
@@ -445,14 +395,60 @@ const DashboardPage = () => {
           pendingPaymentsCount={pendingPayments.length}
         />
 
-        {/* Stats Grid */}
+        {/* Most Recent Booking */}
         <div className="mb-8">
-          <StatsGrid 
-            activeRentals={calculateStats().activeRentals}
-            totalBookings={calculateStats().totalBookings}
-            avgRating={calculateStats().avgRating}
-            citiesVisited={calculateStats().citiesVisited}
-          />
+          {loading ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="text-center py-8">
+                <div className="text-red-600 mb-4">{error}</div>
+                <button
+                  onClick={handleRetryFetch}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="text-center py-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
+                <div className="text-gray-500 mb-4">Start your cycling adventure today!</div>
+                <button
+                  onClick={() => navigate('/booking')}
+                  className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  Book Your First Bike
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Most Recent Booking</h3>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('all-bookings-section');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                >
+                  View All Bookings →
+                </button>
+              </div>
+              <BookingProgressCard
+                booking={bookings[0]}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
