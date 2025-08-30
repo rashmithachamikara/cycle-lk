@@ -35,7 +35,7 @@ const BikeSelectionStep = ({
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div>
+        <div className='mt-8'>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Bike</h2>
           <p className="text-gray-600">Select from our available bikes for your journey</p>
         </div>
