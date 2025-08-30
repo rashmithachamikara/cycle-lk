@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -20,8 +20,8 @@ import { useUserRealtimeEvents } from '../hooks/useRealtimeEvents';
 import {
   WelcomeSection,
   StatsGrid,
-  BookingTabs,
-  BookingList,
+  BookingProgressCard,
+  BookingFilter,
   DashboardSidebar
 } from '../components/DashboardPage';
 
@@ -38,7 +38,15 @@ interface NotificationProps {
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'current' | 'requested' | 'past' | 'paymentPending'>('requested');
+  const [searchParams] = useSearchParams();
+  
+  // Check if we should show past rentals
+  const viewType = searchParams.get('view');
+  const [showPastRentals, setShowPastRentals] = useState(viewType === 'past');
+  
+  // Filter state for bookings
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled'>('all');
+  
   const [bookings, setBookings] = useState<UserDashboardBooking[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PaymentPendingBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,23 +240,19 @@ const DashboardPage = () => {
     }
   }, [bookingUpdates, clearProcessedUpdates]);
 
-  // Filter bookings by tab (excluding payments)
-  const filterBookingsByTab = (tab: 'current' | 'requested' | 'past' | 'paymentPending') => {
-    return bookings.filter(booking => {
-      switch (tab) {
-        case 'current':
-          return booking.status === 'active';
-        case 'requested':
-          return booking.status === 'requested';
-        case 'past':
-          return booking.status === 'completed' || booking.status === 'cancelled';
-        case 'paymentPending':
-          return booking.status === 'confirmed' && booking.paymentStatus === 'pending';
-        default:
-          return false;
-      }
-    });
+  // Filter bookings by status
+  const filterBookingsByStatus = (filter: 'all' | 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled') => {
+    if (filter === 'all') return bookings;
+    return bookings.filter(booking => booking.status === filter);
   };
+
+  // Get current filtered bookings
+  const currentBookings = filterBookingsByStatus(selectedFilter);
+
+  // Filter for past rentals if needed
+  const pastBookings = bookings.filter(booking => 
+    booking.status === 'completed' || booking.status === 'cancelled'
+  );
 
   // Calculate stats for the stats grid
   const calculateStats = () => {
@@ -269,12 +273,17 @@ const DashboardPage = () => {
     };
   };
 
-  // Calculate booking counts for tabs
-  const bookingCounts = {
-    current: filterBookingsByTab('current').length,
-    requested: filterBookingsByTab('requested').length,
-    past: filterBookingsByTab('past').length,
-    paymentPending: filterBookingsByTab('paymentPending').length
+  // Calculate booking counts for filters
+  const getBookingCounts = () => {
+    const counts = {
+      all: bookings.length,
+      requested: bookings.filter(b => b.status === 'requested').length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      active: bookings.filter(b => b.status === 'active').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length
+    };
+    return counts;
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -309,28 +318,90 @@ const DashboardPage = () => {
     }
   };
 
-  // Get current content based on active tab
+  // Get current content based on view type
   const getCurrentContent = () => {
-    const currentBookings = filterBookingsByTab(activeTab);
+    const displayBookings = showPastRentals ? pastBookings : currentBookings;
+    const title = showPastRentals ? 'Past Bookings' : 'My Bookings';
+    
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">My Rentals</h2>
-        
-        {/* Booking Tabs */}
-        <BookingTabs 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          counts={bookingCounts}
-        />
+        <div className="flex flex-col gap-6 mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          </div>
+          
+          {!showPastRentals && (
+            <BookingFilter
+              activeFilter={selectedFilter}
+              onFilterChange={setSelectedFilter}
+              bookingCounts={getBookingCounts()}
+            />
+          )}
+        </div>
 
-        {/* Booking List */}
-        <BookingList
-          bookings={currentBookings}
-          loading={loading}
-          error={error}
-          type={activeTab}
-          onRetry={handleRetryFetch}
-        />
+        {/* Navigation buttons */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setShowPastRentals(false)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              !showPastRentals
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Current Rentals
+          </button>
+          <button
+            onClick={() => setShowPastRentals(true)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showPastRentals
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Past Rentals ({pastBookings.length})
+          </button>
+        </div>
+
+        {/* Booking Cards */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-4">{error}</div>
+            <button
+              onClick={handleRetryFetch}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : displayBookings.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500 mb-4">
+              {showPastRentals ? 'No past rentals found' : 'No bookings found'}
+            </div>
+            {!showPastRentals && (
+              <button
+                onClick={() => navigate('/booking')}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                Book Your First Bike
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {displayBookings.map((booking) => (
+              <BookingProgressCard
+                key={booking.id}
+                booking={booking}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   };
