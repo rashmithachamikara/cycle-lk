@@ -1,4 +1,4 @@
-import { Filter, ArrowRight } from 'lucide-react';
+import { Filter, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Bike, BikeType } from '../../services/bikeService';
 import BikeFilters from './BikeFilters';
 import BikeCard from './BikeCard';
@@ -19,6 +19,7 @@ interface BikeSelectionStepProps {
     sort?: 'price-asc' | 'price-desc' | 'rating';
   }) => Promise<void>;
   onContinue: () => void;
+  onBack: () => void; // Add onBack prop
 }
 
 const BikeSelectionStep = ({
@@ -30,7 +31,8 @@ const BikeSelectionStep = ({
   onBikeSelect,
   onToggleFilters,
   onApplyFilters,
-  onContinue
+  onContinue,
+  onBack
 }: BikeSelectionStepProps) => {
   return (
     <div className="space-y-8">
@@ -75,13 +77,20 @@ const BikeSelectionStep = ({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex flex-col md:flex-row gap-4">
+        <button
+          onClick={onBack}
+          className="w-full md:w-1/2 flex items-center justify-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to location selection
+        </button>
         <button
           onClick={onContinue}
           disabled={!selectedBike}
-          className="bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full md:w-1/2 bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continue
+          Continue to rental period
           <ArrowRight className="h-5 w-5 ml-2" />
         </button>
       </div>

@@ -219,10 +219,10 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between">
+          <div className="flex flex-col md:flex-row gap-4">
             <button
               onClick={onBack}
-              className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+              className="w-full md:w-1/2 flex items-center justify-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Bikes
@@ -230,7 +230,7 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
             <button
               onClick={handleContinue}
               disabled={!startDate || !endDate}
-              className={`flex items-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              className={`w-full md:w-1/2 flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
                 startDate && endDate
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
