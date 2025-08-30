@@ -5,3 +5,4 @@ export { default as RatingAndReviewSection } from './RatingAndReviewSection';
 export { default as QuickActions } from './QuickActions';
 export { default as BookingTimeline } from './BookingTimeline';
 export { default as AdditionalInfo } from './AdditionalInfo';
+export { default as LocationDetailsModal } from './LocationDetailsModal';
