@@ -84,9 +84,9 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="my-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Select Rental Period
         </h1>
