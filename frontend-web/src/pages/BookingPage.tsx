@@ -470,6 +470,7 @@ const BookingPage = () => {
               onBikeSelect={setSelectedBike}
               onToggleFilters={() => setShowFilters(!showFilters)}
               onApplyFilters={refreshBikesWithFilters}
+              onBack={() => setCurrentStep(1)}
               onContinue={() => selectedBike && handleBikeSelect(selectedBike)}
             />
           </div>
