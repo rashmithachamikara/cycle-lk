@@ -425,8 +425,8 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          <ArrowRight className="h-4 w-4 mr-2" />
           Continue to Confirmation
+          <ArrowRight className="h-4 w-4 ml-2" />
         </button>
       </div>
     </div>
