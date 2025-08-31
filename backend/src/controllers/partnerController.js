@@ -280,17 +280,51 @@ exports.registerPartner = async (req, res) => {
       // Continue with original values if parsing fails
     }
     
+    // Parse document fields
+    let parsedDocumentTypes = req.body.documentTypes;
+    let parsedDocumentNames = req.body.documentNames;
+    try {
+      if (typeof parsedDocumentTypes === 'string') {
+        parsedDocumentTypes = JSON.parse(parsedDocumentTypes);
+      }
+      if (typeof parsedDocumentNames === 'string') {
+        parsedDocumentNames = JSON.parse(parsedDocumentNames);
+      }
+    } catch (parseError) {
+      parsedDocumentTypes = [];
+      parsedDocumentNames = [];
+    }
+
+    // Handle verification documents upload (if present)
+    let verificationDocuments = [];
+    if (req.files && req.files.documents && req.files.documents.length > 0) {
+      // If documentTypes/names not provided, fallback to file names
+      const docTypes = Array.isArray(parsedDocumentTypes) && parsedDocumentTypes.length === req.files.documents.length
+        ? parsedDocumentTypes
+        : req.files.documents.map(f => f.originalname);
+      const docNames = Array.isArray(parsedDocumentNames) && parsedDocumentNames.length === req.files.documents.length
+        ? parsedDocumentNames
+        : req.files.documents.map(f => f.originalname);
+
+      verificationDocuments = req.files.documents.map((file, idx) => ({
+        documentType: docTypes[idx] || file.originalname,
+        documentName: docNames[idx] || file.originalname,
+        url: file.path,
+        publicId: file.filename,
+        uploadedAt: new Date(),
+        verified: false
+      }));
+    }
+
     // Create partner profile with all fields
     const partnerData = {
       userId,
       companyName,
       category: category || undefined,
       description: description || undefined,
-      // mapLocation replaces serviceCities/serviceLocations
       mapLocation: parsedMapLocation || undefined,
-      // location is now an ObjectId string (reference)
       location: location || undefined,
-      address: address || companyAddress, // Support both field names
+      address: address || companyAddress,
       contactPerson: contactPerson || undefined,
       phone: phone || contactPhone || user.phone,
       email: email || user.email,
@@ -298,7 +332,8 @@ exports.registerPartner = async (req, res) => {
       specialties: parsedSpecialties || [],
       features: parsedFeatures || [],
       yearsActive: yearsActive ? Number(yearsActive) : 0,
-      images: images, // Add processed images
+      images: images,
+      verificationDocuments, // <-- Add uploaded docs here
       status: 'pending'
     };
 
