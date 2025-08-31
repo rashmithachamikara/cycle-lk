@@ -64,6 +64,13 @@ export interface BackendBooking {
     pickup: string;
     dropoff: string;
   };
+  dropoffPartnerId: {
+    _id: string;
+    companyName: string;
+    email: string;
+    phone: string;
+    location: string;
+  };
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   paymentInfo?: {
@@ -100,6 +107,9 @@ export interface PartnerDashboardBooking {
   bookingNumber: string;
   pickupLocation: string;
   dropoffLocation: string;
+  dropoffPartner?: string;
+  dropoffPartnerId?: string;
+  dropoffPartnerPhone?: string;
   packageType: string;
   rating?: number;
 }
@@ -116,6 +126,8 @@ export interface UserDashboardBooking {
   bookingNumber: string;
   pickupLocation: string;
   dropoffLocation: string;
+  dropoffPartner?: string;
+  dropoffPartnerPhone?: string;
   packageType: string;
   rating?: number;
   location?: string; // For backward compatibility
@@ -148,7 +160,8 @@ export interface CreateBookingRequest{
         endTime: string,
         deliveryAddress?: string,
         pickupLocation?: string,
-        dropoffLocation?: string
+        dropoffLocation?: string,
+        dropoffPartnerId: string
 }
 
 // Utility function to transform backend booking to partner dashboard format
@@ -169,6 +182,11 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     bookingNumber: booking.bookingNumber || '',
     pickupLocation: booking.locations?.pickup || '',
     dropoffLocation: booking.locations?.dropoff || '',
+    dropoffPartner: booking.dropoffPartnerId?.companyName || 'Unknown Partner',
+    dropoffPartnerId: typeof booking.dropoffPartnerId === 'string' 
+      ? booking.dropoffPartnerId 
+      : booking.dropoffPartnerId?._id || '',
+    dropoffPartnerPhone: booking.dropoffPartnerId?.phone || '',
     packageType: booking.package?.name || '',
     rating: booking.review?.rating
   };
@@ -190,6 +208,8 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       bookingNumber: booking.bookingNumber || '',
       pickupLocation: booking.locations?.pickup || '',
       dropoffLocation: booking.locations?.dropoff || '',
+      dropoffPartner: booking.dropoffPartnerId?.companyName || 'Unknown Partner',
+      dropoffPartnerPhone: booking.dropoffPartnerId?.phone || '',
       packageType: booking.package?.name || '',
       rating: booking.review?.rating,
       location: booking.locations?.pickup || '', // For backward compatibility
@@ -217,6 +237,8 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       bookingNumber: '',
       pickupLocation: '',
       dropoffLocation: '',
+      dropoffPartner: 'Unknown Partner',
+      dropoffPartnerPhone: '',
       packageType: '',
       location: '',
       partner: 'Unknown Partner',
@@ -257,6 +279,13 @@ export const bookingService = {
   getMyBookings: async () => {
     const response = await api.get('/bookings/my-bookings');
     return response.data;
+  },
+
+  // Get dropoff bookings for the authenticated partner (where they are the dropoff partner)
+  getDropoffBookings: async (): Promise<PartnerDashboardBooking[]> => {
+    const response = await api.get('/bookings/dropoff-bookings');
+    const backendBookings: BackendBooking[] = response.data;
+    return backendBookings.map(transformBookingForPartnerDashboard);
   },
 
   // Update booking status (requires partner/admin role)
