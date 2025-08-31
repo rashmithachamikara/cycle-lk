@@ -102,7 +102,8 @@ export interface PartnerRegistrationForm {
   logoImage?: ImageFile;
   storefrontImage?: ImageFile;
   galleryImages: ImageFile[];
-  verificationDocuments?: VerificationDocumentFile[];
+  verificationDocuments: VerificationDocumentFile[]; // Required
+  documentsUploaded?: boolean; // Track upload status
 }
 
 // Step component props interface
