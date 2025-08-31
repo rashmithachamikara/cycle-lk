@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { partnerService, Partner } from '../services/partnerService';
@@ -29,14 +29,20 @@ Clock,
   MessageSquare,
   HelpCircle,
   ClipboardList,
-  Loader
+  Loader,
+  NotebookPen
 } from 'lucide-react';
 
 const AdminDashboardPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [partners, setPartners] = useState<Partner[]>([]);
   const [isLoadingPartners, setIsLoadingPartners] = useState(true);
   const [partnersError, setPartnersError] = useState<string | null>(null);
+  const [approvingPartners, setApprovingPartners] = useState<Set<string>>(new Set());
 
   const partnerRequests = [
     {
@@ -93,6 +99,37 @@ const AdminDashboardPage = () => {
       joined: '2025-02-05',
       bookings: 2,
       status: 'active'
+    }
+  ];
+
+  // Mock support tickets data
+  const supportTickets = [
+    {
+      id: 'TCK-1001',
+      subject: 'Unable to book bike',
+      from: 'John Smith',
+      userType: 'user',
+      created: '2025-02-10',
+      priority: 'high',
+      status: 'open'
+    },
+    {
+      id: 'TCK-1002',
+      subject: 'Payment issue',
+      from: 'Hill Country Bikes',
+      userType: 'partner',
+      created: '2025-02-11',
+      priority: 'medium',
+      status: 'in-progress'
+    },
+    {
+      id: 'TCK-1003',
+      subject: 'Bike listing not visible',
+      from: 'Sarah Perera',
+      userType: 'partner',
+      created: '2025-02-12',
+      priority: 'low',
+      status: 'closed'
     }
   ];
 
@@ -160,6 +197,77 @@ const AdminDashboardPage = () => {
     supportTickets: 15 // Keep existing mock data for now
   };
 
+  // Handle partner approval
+  const handleApprovePartner = async (partnerId: string) => {
+    try {
+      setApprovingPartners(prev => new Set(prev).add(partnerId));
+      
+      // Update partner status to active and verified
+      await partnerService.updatePartner(partnerId, { 
+        status: 'active',
+        verified: true 
+      });
+      
+      // Refresh partners list
+      const updatedPartners = await partnerService.getAllPartners();
+      setPartners(updatedPartners);
+      
+      // Show success message (you could add a toast notification here)
+      console.log('Partner approved successfully');
+      
+    } catch (error) {
+      console.error('Error approving partner:', error);
+      // You could add error toast notification here
+    } finally {
+      setApprovingPartners(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(partnerId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle partner rejection
+  const handleRejectPartner = async (partnerId: string) => {
+    try {
+      setApprovingPartners(prev => new Set(prev).add(partnerId));
+      
+      // Update partner status to inactive
+      await partnerService.updatePartner(partnerId, { 
+        status: 'inactive'
+      });
+      
+      // Refresh partners list
+      const updatedPartners = await partnerService.getAllPartners();
+      setPartners(updatedPartners);
+      
+      console.log('Partner rejected successfully');
+      
+    } catch (error) {
+      console.error('Error rejecting partner:', error);
+    } finally {
+      setApprovingPartners(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(partnerId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle tab switching from URL parameters
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['overview', 'partners', 'users', 'support', 'reports', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -197,7 +305,7 @@ const AdminDashboardPage = () => {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center py-4 px-6 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'text-purple-600 border-b-2 border-purple-500'
@@ -347,7 +455,7 @@ const AdminDashboardPage = () => {
                     className="text-purple-600 flex items-center text-sm font-medium"
                     onClick={(e) => {
                       e.preventDefault();
-                      setActiveTab('partners');
+                      handleTabChange('partners');
                     }}
                   >
                     Review Requests
@@ -370,7 +478,7 @@ const AdminDashboardPage = () => {
                     className="text-blue-600 flex items-center text-sm font-medium"
                     onClick={(e) => {
                       e.preventDefault();
-                      setActiveTab('support');
+                      handleTabChange('support');
                     }}
                   >
                     Handle Support
@@ -476,16 +584,31 @@ const AdminDashboardPage = () => {
                           </div>
                           
                           <div className="flex space-x-3">
-                            <button className="flex items-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
+                            <button 
+                              onClick={() => handleApprovePartner(partner._id)}
+                              disabled={approvingPartners.has(partner._id)}
+                              className="flex items-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {approvingPartners.has(partner._id) ? (
+                                <Loader className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                              )}
+                              {approvingPartners.has(partner._id) ? 'Approving...' : 'Approve'}
                             </button>
-                            <button className="flex items-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            <button 
+                              onClick={() => handleRejectPartner(partner._id)}
+                              disabled={approvingPartners.has(partner._id)}
+                              className="flex items-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
                               <AlertCircle className="h-4 w-4 mr-2" />
                               Reject
                             </button>
-                            <button className="flex items-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:border-purple-500 transition-colors">
-                              <Edit className="h-4 w-4 mr-2" />
+                            <button 
+                              onClick={() => navigate(`/admin/partners/${partner._id}/review`)}
+                              className="flex items-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:border-purple-500 transition-colors"
+                            >
+                              <NotebookPen className="h-4 w-4 mr-2" />
                               Review Details
                             </button>
                           </div>
