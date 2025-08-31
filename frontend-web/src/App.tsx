@@ -106,7 +106,7 @@ import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
 import Notifications from './pages/Notifications';
 import InventoryPage from './pages/PartnerDashboardPage/InventoryPage';
 import DropBikePage from './pages/PartnerDashboardPage/DropBikePage';
-
+import ReviewPartnerDetailsPage from './pages/ReviewPartnerDetailsPage';
 
 // Protected route component with support for multiple roles
 const ProtectedRoute = ({ 
@@ -203,6 +203,7 @@ function App() {
         path="/admin-dashboard/:section" 
         element={<ProtectedRoute element={<AdminDashboardPage />} requiredRoles={["admin", "partner"]} />} 
       />
+      <Route path="/admin/partners/:partnerId/review" element={<ReviewPartnerDetailsPage />} />
       
       {/* Test routes - accessible by both admin and partner roles */}
     
