@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { partnerService, Partner } from '../services/partnerService';
 import { 
 Clock, 
   MapPin, 
@@ -27,11 +28,15 @@ Clock,
   TrendingUp,
   MessageSquare,
   HelpCircle,
-  ClipboardList
+  ClipboardList,
+  Loader
 } from 'lucide-react';
 
 const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [isLoadingPartners, setIsLoadingPartners] = useState(true);
+  const [partnersError, setPartnersError] = useState<string | null>(null);
 
   const partnerRequests = [
     {
@@ -91,101 +96,68 @@ const AdminDashboardPage = () => {
     }
   ];
 
-  const partners = [
-    {
-      id: 'PTR-1001',
-      companyName: 'Colombo Bikes',
-      location: 'Colombo Central',
-      contactPerson: 'Ashan Fernando',
-      bikeCount: 25,
-      activeBookings: 8,
-      revenue: 2450,
-      rating: 4.7,
-      status: 'active'
-    },
-    {
-      id: 'PTR-1002',
-      companyName: 'Kandy Cycles',
-      location: 'Kandy Hills',
-      contactPerson: 'Meera Jayawardena',
-      bikeCount: 15,
-      activeBookings: 6,
-      revenue: 1850,
-      rating: 4.5,
-      status: 'active'
-    },
-    {
-      id: 'PTR-1003',
-      companyName: 'Galle Wheels',
-      location: 'Galle Fort',
-      contactPerson: 'Tariq Hussein',
-      bikeCount: 18,
-      activeBookings: 5,
-      revenue: 1650,
-      rating: 4.3,
-      status: 'active'
-    },
-    {
-      id: 'PTR-1004',
-      companyName: 'Ella Adventures',
-      location: 'Ella',
-      contactPerson: 'Niluni Silva',
-      bikeCount: 12,
-      activeBookings: 4,
-      revenue: 1200,
-      rating: 4.8,
-      status: 'active'
-    }
-  ];
+  // Fetch partners data
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        setIsLoadingPartners(true);
+        setPartnersError(null);
+        const partnersData = await partnerService.getAllPartners();
+        setPartners(partnersData);
+      } catch (error) {
+        console.error('Error fetching partners:', error);
+        setPartnersError('Failed to load partners data');
+      } finally {
+        setIsLoadingPartners(false);
+      }
+    };
 
-  const supportTickets = [
-    {
-      id: 'TCKT-1001',
-      subject: 'Payment Issue',
-      from: 'John Smith',
-      userType: 'customer',
-      created: '2025-03-15',
-      status: 'open',
-      priority: 'high'
-    },
-    {
-      id: 'TCKT-1002',
-      subject: 'Bike Listing Problem',
-      from: 'Colombo Bikes',
-      userType: 'partner',
-      created: '2025-03-14',
-      status: 'open',
-      priority: 'medium'
-    },
-    {
-      id: 'TCKT-1003',
-      subject: 'Account Access',
-      from: 'Emma Johnson',
-      userType: 'customer',
-      created: '2025-03-13',
-      status: 'in-progress',
-      priority: 'medium'
-    },
-    {
-      id: 'TCKT-1004',
-      subject: 'Refund Request',
-      from: 'Michael Brown',
-      userType: 'customer',
-      created: '2025-03-12',
-      status: 'closed',
-      priority: 'low'
-    }
-  ];
+    fetchPartners();
+  }, []);
 
+  // Filter partners by status
+  const pendingPartners = partners.filter(partner => partner.status === 'pending');
+  const activePartners = partners.filter(partner => partner.status === 'active');
+
+  // Helper function to format location
+  const getPartnerLocation = (partner: Partner): string => {
+    if (typeof partner.location === 'object' && partner.location?.name) {
+      return partner.location.name;
+    }
+    return partner.address || partner.location as string || 'Location not specified';
+  };
+
+  // Helper function to get partner contact person
+  const getContactPerson = (partner: Partner): string => {
+    return partner.contactPerson || 'Not specified';
+  };
+
+  // Helper function to get partner phone
+  const getPartnerPhone = (partner: Partner): string => {
+    return partner.phone || 'Not provided';
+  };
+
+  // Helper function to get partner email
+  const getPartnerEmail = (partner: Partner): string => {
+    return partner.email || 'Not provided';
+  };
+
+  // Helper function to format creation date
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return 'Unknown';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Update system stats to use real data
   const systemStats = {
-    totalUsers: 1245,
-    totalPartners: 48,
-    totalBikes: 563,
-    totalBookings: 3254,
-    totalRevenue: 142350,
-    activeBookings: 124,
-    pendingApprovals: 8,
-    supportTickets: 15
+    totalUsers: 1245, // Keep existing mock data for now
+    totalPartners: partners.length,
+    totalBikes: partners.reduce((sum, partner) => sum + (partner.bikeCount || 0), 0),
+    totalBookings: 3254, // Keep existing mock data for now
+    totalRevenue: 142350, // Keep existing mock data for now
+    activeBookings: 124, // Keep existing mock data for now
+    pendingApprovals: pendingPartners.length,
+    supportTickets: 15 // Keep existing mock data for now
   };
 
   return (
@@ -460,16 +432,26 @@ const AdminDashboardPage = () => {
             <div className="bg-white rounded-2xl shadow-sm p-6" id="partner-section">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Partner Approval Requests</h3>
               
-              {partnerRequests.length === 0 ? (
+              {isLoadingPartners ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader className="h-8 w-8 text-purple-600 animate-spin" />
+                  <span className="ml-2 text-gray-600">Loading partners...</span>
+                </div>
+              ) : partnersError ? (
+                <div className="text-center py-8 text-red-500">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                  {partnersError}
+                </div>
+              ) : pendingPartners.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">No pending partner requests</div>
               ) : (
                 <div className="space-y-6">
-                  {partnerRequests.map((request) => (
-                    <div key={request.id} className="border border-gray-200 rounded-xl p-6">
+                  {pendingPartners.map((partner) => (
+                    <div key={partner._id} className="border border-gray-200 rounded-xl p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                          <span className="text-lg font-semibold text-gray-900">{request.companyName}</span>
+                          <span className="text-lg font-semibold text-gray-900">{partner.companyName}</span>
                         </div>
                         <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
                           Pending Approval
@@ -481,15 +463,15 @@ const AdminDashboardPage = () => {
                           <div>
                             <div className="flex items-center text-gray-600 mb-2">
                               <MapPin className="h-4 w-4 mr-2" />
-                              <span>{request.location}</span>
+                              <span>{getPartnerLocation(partner)}</span>
                             </div>
                             <div className="flex items-center text-gray-600 mb-2">
                               <User className="h-4 w-4 mr-2" />
-                              <span>Contact: {request.contactPerson}</span>
+                              <span>Contact: {getContactPerson(partner)}</span>
                             </div>
                             <div className="flex items-center text-gray-600">
                               <Bike className="h-4 w-4 mr-2" />
-                              <span>Bikes to list: {request.bikeCount}</span>
+                              <span>Bikes to list: {partner.bikeCount || 'Not specified'}</span>
                             </div>
                           </div>
                           
@@ -514,19 +496,19 @@ const AdminDashboardPage = () => {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="text-gray-600">ID:</span>
-                              <span className="font-medium">{request.id}</span>
+                              <span className="font-medium">{partner._id.slice(-8)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-gray-600">Email:</span>
-                              <span className="font-medium">{request.email}</span>
+                              <span className="font-medium text-sm">{getPartnerEmail(partner)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-gray-600">Phone:</span>
-                              <span className="font-medium">{request.phone}</span>
+                              <span className="font-medium">{getPartnerPhone(partner)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-gray-600">Applied:</span>
-                              <span className="font-medium">March 15, 2025</span>
+                              <span className="font-medium">{formatDate(partner.createdAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -541,69 +523,91 @@ const AdminDashboardPage = () => {
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Active Partners</h3>
               
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Partner
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Bikes
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Active Bookings
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Revenue
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Rating
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {partners.map((partner) => (
-                      <tr key={partner.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="text-sm font-medium text-gray-900">{partner.companyName}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {partner.location}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {partner.bikeCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {partner.activeBookings}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          ${partner.revenue}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="ml-1 text-sm text-gray-500">{partner.rating}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button className="text-purple-600 hover:text-purple-900 mr-4">View</button>
-                          <button className="text-gray-600 hover:text-gray-900 mr-4">Edit</button>
-                          <button className="text-red-600 hover:text-red-900">Suspend</button>
-                        </td>
+              {isLoadingPartners ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader className="h-8 w-8 text-purple-600 animate-spin" />
+                  <span className="ml-2 text-gray-600">Loading partners...</span>
+                </div>
+              ) : activePartners.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No active partners found</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Partner
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Location
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Bikes
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Rating
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Verified
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {activePartners.map((partner) => (
+                        <tr key={partner._id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{partner.companyName}</div>
+                            <div className="text-sm text-gray-500">{getContactPerson(partner)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {getPartnerLocation(partner)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {partner.bikeCount || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              partner.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {partner.status?.charAt(0).toUpperCase() + partner.status?.slice(1) || 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <span className="ml-1 text-sm text-gray-500">
+                                {partner.rating ? partner.rating.toFixed(1) : 'N/A'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              partner.verified 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {partner.verified ? 'Verified' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button className="text-purple-600 hover:text-purple-900 mr-4">View</button>
+                            <button className="text-gray-600 hover:text-gray-900 mr-4">Edit</button>
+                            <button className="text-red-600 hover:text-red-900">Suspend</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
