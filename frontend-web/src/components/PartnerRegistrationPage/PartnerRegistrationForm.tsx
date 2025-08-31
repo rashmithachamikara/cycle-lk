@@ -57,7 +57,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     storefrontImage: undefined,
     galleryImages: [],
     // Document field
-    verificationDocuments: []
+    verificationDocuments: [],
+    documentsUploaded: false // Track upload status
   });
 
   const handleInputChange = (
@@ -112,7 +113,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
   const handleDocumentChange = (documents: VerificationDocumentFile[]) => {
     setFormData(prev => ({
       ...prev,
-      verificationDocuments: documents
+      verificationDocuments: documents,
+      documentsUploaded: false // Reset upload status on change
     }));
   };
 
@@ -215,6 +217,10 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
       case 4:
         if (formData.specialties.length === 0) errors.push('At least one bike specialty is required.');
         if (formData.features.length === 0) errors.push('At least one business feature is required.');
+        // Only check if documents are present, not uploaded yet
+        if (!formData.verificationDocuments || formData.verificationDocuments.length === 0) {
+          errors.push('At least one verification document is required.');
+        }
         break;
     }
     return errors;
@@ -318,55 +324,8 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         isMainLocation: true
       };
 
-      // Create FormData for API request
-      const formDataObj = new FormData();
-      
-      // Add partner data fields
-      formDataObj.append('userId', userId);
-      formDataObj.append('companyName', formData.companyName.trim());
-      formDataObj.append('category', formData.category);
-      formDataObj.append('description', formData.description.trim());
-      formDataObj.append('address', formData.address.trim());
-      formDataObj.append('contactPerson', formData.contactPerson.trim());
-      formDataObj.append('phone', formData.phone.trim() || formData.userPhone.trim());
-      formDataObj.append('email', formData.email.trim() || formData.userEmail.trim());
-      formDataObj.append('businessHours', JSON.stringify(formData.businessHours));
-      formDataObj.append('specialties', JSON.stringify(formData.specialties));
-      formDataObj.append('features', JSON.stringify(formData.features));
-      formDataObj.append('yearsActive', formData.yearsActive.toString());
-      formDataObj.append('mapLocation', JSON.stringify(normalizedMapLocation));
-      formDataObj.append('location', formData.location);
-      
-      // Add logo image if exists
-      if (formData.logoImage?.file) {
-        formDataObj.append('logo', formData.logoImage.file);
-      }
-      
-      // Add storefront image if exists
-      if (formData.storefrontImage?.file) {
-        formDataObj.append('storefront', formData.storefrontImage.file);
-      }
-      
-      // Add gallery images if exist
-      if (formData.galleryImages && formData.galleryImages.length > 0) {
-        formData.galleryImages.forEach(img => {
-          if (img.file) {
-            formDataObj.append('gallery', img.file);
-          }
-        });
-      }
-      
-      // Add verification document if exists
-      if (formData.verificationDocuments && formData.verificationDocuments.length > 0) {
-        await partnerService.uploadVerificationDocuments(userId, {
-          documentTypes: formData.verificationDocuments.map(d => d.documentType || d.name),
-          documentNames: formData.verificationDocuments.map(d => d.name),
-          files: formData.verificationDocuments.map(d => d.file)
-        });
-      }
-
-      // Register partner
-      await partnerService.registerPartner({
+      // Prepare registration data including verification documents
+      const registrationData = {
         userId,
         companyName: formData.companyName.trim(),
         category: formData.category,
@@ -383,9 +342,13 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         location: formData.location,
         logoImage: formData.logoImage,
         storefrontImage: formData.storefrontImage,
-        galleryImages: formData.galleryImages
-      });
-      
+        galleryImages: formData.galleryImages,
+        verificationDocuments: formData.verificationDocuments // <-- include docs here
+      };
+
+      // Register partner with all files (images + documents)
+      await partnerService.registerPartner(registrationData);
+
       setCurrentStep(5);
       onSuccess();
 

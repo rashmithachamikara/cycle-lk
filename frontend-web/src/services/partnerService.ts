@@ -170,6 +170,12 @@ export interface PartnerRegistrationFormData {
   logoImage?: ImageFile;
   storefrontImage?: ImageFile;
   galleryImages?: ImageFile[];
+  // Add verification documents to registration
+  verificationDocuments?: {
+    file: File;
+    name: string;
+    documentType?: string;
+  }[];
 }
 
 // Interface for bank details
@@ -296,7 +302,7 @@ export const transformPartner = (partnerFromAPI: PartnerFromAPI): Partner => {
   return transformed;
 };
 
-// Helper function to create FormData with images
+// Helper function to create FormData with images and documents
 const createPartnerFormData = (data: PartnerRegistrationFormData): FormData => {
   const formData = new FormData();
   
@@ -336,6 +342,21 @@ const createPartnerFormData = (data: PartnerRegistrationFormData): FormData => {
     });
   }
   
+  // Add verification documents
+  if (data.verificationDocuments && data.verificationDocuments.length > 0) {
+    // Document types and names arrays
+    const documentTypes = data.verificationDocuments.map(doc => doc.documentType || doc.name);
+    const documentNames = data.verificationDocuments.map(doc => doc.name);
+
+    formData.append('documentTypes', JSON.stringify(documentTypes));
+    formData.append('documentNames', JSON.stringify(documentNames));
+    data.verificationDocuments.forEach(doc => {
+      if (doc.file) {
+        formData.append('documents', doc.file);
+      }
+    });
+  }
+
   return formData;
 };
 
@@ -394,12 +415,17 @@ export const isPartnerOpen = (businessHours: BusinessHours | undefined): boolean
 
 // Partner service object
 export const partnerService = {
-  // Register as a partner with image upload
+  // Register as a partner with image and document upload
   registerPartner: async (partnerData: PartnerRegistrationData | PartnerRegistrationFormData) => {
     let response;
-    
-    // Check if this is form data with images
-    if ('logoImage' in partnerData || 'storefrontImage' in partnerData || 'galleryImages' in partnerData) {
+
+    // Check if this is form data with images/documents
+    if (
+      'logoImage' in partnerData ||
+      'storefrontImage' in partnerData ||
+      'galleryImages' in partnerData ||
+      'verificationDocuments' in partnerData
+    ) {
       const formData = createPartnerFormData(partnerData as PartnerRegistrationFormData);
       response = await api.post('/partners', formData, {
         headers: {
@@ -410,7 +436,7 @@ export const partnerService = {
       // Regular JSON data
       response = await api.post('/partners', partnerData);
     }
-    
+
     return transformPartner(response.data);
   },
 
@@ -437,28 +463,6 @@ export const partnerService = {
   // Delete a gallery image
   deleteGalleryImage: async (partnerId: string, imageIndex: number) => {
     const response = await api.delete(`/partners/${partnerId}/gallery/${imageIndex}`);
-    return response.data;
-  },
-
-  // Upload verification documents
-  uploadVerificationDocuments: async (partnerId: string, documentData: DocumentUploadData) => {
-    const formData = new FormData();
-    
-    // Add document types and names as JSON strings
-    formData.append('documentTypes', JSON.stringify(documentData.documentTypes));
-    formData.append('documentNames', JSON.stringify(documentData.documentNames));
-    
-    // Add document files
-    documentData.files.forEach(file => {
-      formData.append('documents', file);
-    });
-    
-    const response = await api.post(`/partners/${partnerId}/documents`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
     return response.data;
   },
 

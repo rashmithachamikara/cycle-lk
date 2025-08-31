@@ -411,7 +411,9 @@ const CompanyInformationStep: React.FC<StepProps> = ({
         <div className="flex items-center mb-6">
           <FileCheck className="h-6 w-6 text-emerald-600 mr-2" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Verification Documents</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Verification Documents <span className="text-red-500">*</span>
+            </h3>
             <p className="text-sm text-gray-600">Upload documents to verify your business</p>
           </div>
         </div>
@@ -768,6 +770,9 @@ const CompanyInformationStep: React.FC<StepProps> = ({
               </li>
               <li className={`flex items-center ${formData.location ? 'line-through opacity-60' : ''}`}>
                 • Location (from database)
+              </li>
+              <li className={`flex items-center ${formData.verificationDocuments && formData.verificationDocuments.length > 0 ? 'line-through opacity-60' : ''}`}>
+                • At least one verification document
               </li>
             </ul>
           </div>
