@@ -5,6 +5,7 @@ const partnerController = require('../controllers/partnerController');
 const { auth, admin } = require('../middleware/auth');
 const { partnerImageUpload, handlePartnerImageUploadErrors } = require('../middleware/partnerImageUpload');
 const { partnerDocumentUpload, handlePartnerDocumentUploadErrors } = require('../middleware/partnerDocumentUpload');
+const { partnerRegistrationUpload, handlePartnerRegistrationUploadErrors } = require('../middleware/partnerRegistrationUpload');
 
 /**
  * @route   GET /api/partners
@@ -36,13 +37,13 @@ router.get('/:id', partnerController.getPartnerById);
 
 /**
  * @route   POST /api/partners
- * @desc    Register a new partner with image upload
+ * @desc    Register a new partner with image and document upload
  * @access  Private
  */
-router.post('/', 
-  auth(), 
-  partnerImageUpload, 
-  handlePartnerImageUploadErrors, 
+router.post('/',
+  auth(),
+  partnerRegistrationUpload,
+  handlePartnerRegistrationUploadErrors,
   partnerController.registerPartner
 );
 
