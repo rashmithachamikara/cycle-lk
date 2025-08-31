@@ -32,7 +32,7 @@ const BikeCard = ({ bike, isSelected, onSelect }: BikeCardProps) => {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900">{bike.name}</h3>
-          <div className="text-lg font-bold text-emerald-600">${bike.pricing.perDay}/day</div>
+          <div className="text-lg font-bold text-emerald-600">LKR {bike.pricing.perDay}/day</div>
         </div>
         
         <div className="flex items-center space-x-4">
