@@ -35,6 +35,7 @@ const PaymentsPage = () => {
         setLoading(true);
         setError(null);
         const payments = await paymentService.getPendingPayments();
+        console.log('Fetched pending payments:', payments);
         setPendingPayments(payments);
       } catch (err) {
         console.error('Error fetching pending payments:', err);
@@ -54,6 +55,7 @@ const PaymentsPage = () => {
     try {
       // Find the booking to get payment amount
       const booking = pendingPayments.find(b => b.id === bookingId);
+      console.log('Found booking for payment:', booking);
       if (!booking) {
         toast.error('Booking not found');
         return;

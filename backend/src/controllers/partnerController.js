@@ -64,14 +64,29 @@ exports.getAllPartners = async (req, res) => {
  */
 exports.getPartnerById = async (req, res) => {
   try {
-    console.log('Fetching partner by ID:', req.params.id);
+    const partnerId = req.params.id;
     
-    const partner = await Partner.findById(req.params.id)
+    // Validate that the ID is provided and is a string
+    if (!partnerId || typeof partnerId !== 'string') {
+      console.log('Invalid partner ID provided:', partnerId, 'Type:', typeof partnerId);
+      return res.status(400).json({ message: 'Invalid partner ID provided' });
+    }
+    
+    // Additional validation for ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(partnerId)) {
+      console.log('Invalid ObjectId format:', partnerId);
+      return res.status(400).json({ message: 'Invalid partner ID format' });
+    }
+    
+    console.log('Fetching partner by ID:', partnerId);
+    
+    const partner = await Partner.findById(partnerId)
       .populate('userId', 'firstName lastName email phone')
       .populate('location', 'name coordinates'); // Populate location details
       
     if (!partner) {
-      console.log('Partner not found with ID:', req.params.id);
+      console.log('Partner not found with ID:', partnerId);
       return res.status(404).json({ message: 'Partner not found' });
     }
     
@@ -99,6 +114,20 @@ exports.getPartnerById = async (req, res) => {
 exports.getPartnersByLocationId = async (req, res) => {
   try {
     const { locationId } = req.params;
+    
+    // Validate that the location ID is provided and is a string
+    if (!locationId || typeof locationId !== 'string') {
+      console.log('Invalid location ID provided:', locationId, 'Type:', typeof locationId);
+      return res.status(400).json({ message: 'Invalid location ID provided' });
+    }
+    
+    // Additional validation for ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(locationId)) {
+      console.log('Invalid ObjectId format for location:', locationId);
+      return res.status(400).json({ message: 'Invalid location ID format' });
+    }
+    
     console.log('Fetching partners for location ID:', locationId);
     
     const partners = await Partner.find({ location: locationId })

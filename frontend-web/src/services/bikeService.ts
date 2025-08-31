@@ -342,5 +342,11 @@ export const bikeService = {
       console.error('Error fetching available bikes for location:', error);
       throw error;
     }
+  },
+
+  //update bike current partnerId
+  updateBikePartnerId: async (id: string, partnerId: string) => {
+    const response = await api.patch(`/bikes/${id}/partner`, { partnerId });
+    return response.data;
   }
 };
