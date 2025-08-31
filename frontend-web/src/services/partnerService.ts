@@ -168,7 +168,7 @@ export interface BankDetails {
   branchCode: string;
 }
 
-// Interface for raw partner data from MongoDB API
+// Interface for raw partner data from MongoDB API (updated to handle both formats)
 export interface PartnerFromAPI {
   _id: string;
   userId: string | {
@@ -182,8 +182,6 @@ export interface PartnerFromAPI {
   category?: string;
   description?: string;
   location: string;
-  // serviceCities?: string[]; // removed
-  // serviceLocations?: CityServiceData[]; // removed
   mapLocation?: MapLocation;
   address?: string;
   coordinates?: Coordinates;
@@ -197,22 +195,93 @@ export interface PartnerFromAPI {
   reviews?: PartnerReview[];
   bikeCount?: number;
   yearsActive?: number;
-  images?: PartnerImages;
+  // Handle both old string format and new object format
+  images?: {
+    logo?: string | { url: string; publicId: string };
+    storefront?: string | { url: string; publicId: string };
+    gallery?: (string | { url: string; publicId: string })[];
+  };
   verified?: boolean;
   status?: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
 }
 
+// Helper function to normalize image data
+const normalizeImageData = (imageData: any): PartnerImages | undefined => {
+  if (!imageData) return undefined;
+
+  const normalized: PartnerImages = {};
+
+  // Handle logo
+  if (imageData.logo) {
+    if (typeof imageData.logo === 'string') {
+      normalized.logo = {
+        url: imageData.logo,
+        publicId: '' // Empty publicId for legacy string URLs
+      };
+    } else if (imageData.logo.url) {
+      normalized.logo = imageData.logo;
+    }
+  }
+
+  // Handle storefront
+  if (imageData.storefront) {
+    if (typeof imageData.storefront === 'string') {
+      normalized.storefront = {
+        url: imageData.storefront,
+        publicId: '' // Empty publicId for legacy string URLs
+      };
+    } else if (imageData.storefront.url) {
+      normalized.storefront = imageData.storefront;
+    }
+  }
+
+  // Handle gallery
+  if (imageData.gallery && Array.isArray(imageData.gallery)) {
+    normalized.gallery = imageData.gallery
+      .filter(item => item) // Remove null/undefined items
+      .map(item => {
+        if (typeof item === 'string') {
+          return {
+            url: item,
+            publicId: '' // Empty publicId for legacy string URLs
+          };
+        } else if (item && item.url) {
+          return item;
+        }
+        return null;
+      })
+      .filter(item => item !== null) as Array<{ url: string; publicId: string }>;
+  }
+
+  return normalized;
+};
+
 // Transform function to convert MongoDB partner to frontend partner
 export const transformPartner = (partnerFromAPI: PartnerFromAPI): Partner => {
-  return {
+  const transformed = {
     ...partnerFromAPI,
     id: partnerFromAPI._id, // Add id field for frontend consistency
     userId: typeof partnerFromAPI.userId === 'string' 
       ? partnerFromAPI.userId 
       : partnerFromAPI.userId._id, // Handle populated userId
+    images: normalizeImageData(partnerFromAPI.images)
   };
+
+  // Debug log image URLs
+  if (transformed.images) {
+    console.log('Partner images:', {
+      partnerId: transformed._id,
+      logo: transformed.images.logo?.url,
+      storefront: transformed.images.storefront?.url,
+      gallery: transformed.images.gallery?.map(img => img.url)
+    });
+  } else {
+    console.log('No images found for partner:', transformed._id);
+  }
+
+  return transformed;
 };
 
 // Helper function to create FormData with images
@@ -399,8 +468,19 @@ export const partnerService = {
 
   // Get a single partner by ID
   getPartnerById: async (id: string): Promise<Partner> => {
-    const response = await api.get(`/partners/${id}`);
-    return transformPartner(response.data);
+    try {
+      debugLog('Fetching partner by ID:', id);
+      const response = await api.get(`/partners/${id}`);
+      console.log('Partner by ID response:', response.data);
+      
+      const partner = transformPartner(response.data);
+      console.log('Transformed partner:', partner);
+      
+      return partner;
+    } catch (error) {
+      console.error('Error in getPartnerById:', error);
+      throw error;
+    }
   },
 
   // Get partners by location ID
