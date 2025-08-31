@@ -141,6 +141,33 @@ const partnerSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  verificationDocuments: [{
+    documentType: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    documentName: {
+      type: String,
+      required: true
+    },
+    url: {
+      type: String,
+      required: true
+    },
+    publicId: {
+      type: String,
+      required: true
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    },
+    verified: {
+      type: Boolean,
+      default: false
+    }
+  }],
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending'],

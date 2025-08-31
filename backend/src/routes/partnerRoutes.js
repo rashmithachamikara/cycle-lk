@@ -4,6 +4,7 @@ const router = express.Router();
 const partnerController = require('../controllers/partnerController');
 const { auth, admin } = require('../middleware/auth');
 const { partnerImageUpload, handlePartnerImageUploadErrors } = require('../middleware/partnerImageUpload');
+const { partnerDocumentUpload, handlePartnerDocumentUploadErrors } = require('../middleware/partnerDocumentUpload');
 
 /**
  * @route   GET /api/partners
@@ -87,5 +88,48 @@ router.get('/:id/bikes', partnerController.getPartnerBikes);
  * @access  Private/Partner
  */
 router.put('/:id/bank', auth(), partnerController.updateBankDetails);
+
+/**
+ * @route   POST /api/partners/:partnerId/documents
+ * @desc    Upload verification documents for a partner
+ * @access  Private/Partner
+ */
+router.post('/:partnerId/documents', 
+  auth(), 
+  partnerDocumentUpload, 
+  handlePartnerDocumentUploadErrors, 
+  partnerController.uploadVerificationDocuments
+);
+
+/**
+ * @route   GET /api/partners/:partnerId/documents
+ * @desc    Get all verification documents for a partner
+ * @access  Private/Partner or Admin
+ */
+router.get('/:partnerId/documents', 
+  auth(), 
+  partnerController.getVerificationDocuments
+);
+
+/**
+ * @route   DELETE /api/partners/:partnerId/documents/:documentId
+ * @desc    Delete a verification document
+ * @access  Private/Partner
+ */
+router.delete('/:partnerId/documents/:documentId', 
+  auth(), 
+  partnerController.deleteVerificationDocument
+);
+
+/**
+ * @route   PUT /api/partners/:partnerId/documents/:documentId/verify
+ * @desc    Update document verification status (admin only)
+ * @access  Private/Admin
+ */
+router.put('/:partnerId/documents/:documentId/verify', 
+  auth(), 
+  admin, 
+  partnerController.updateDocumentVerificationStatus
+);
 
 module.exports = router;

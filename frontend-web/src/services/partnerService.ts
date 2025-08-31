@@ -97,7 +97,18 @@ export interface PopulatedLocation {
   };
 }
 
-// Full Partner interface matching MongoDB structure
+// Interface for verification document
+export interface VerificationDocument {
+  _id: string;
+  documentType: string; // Changed from enum to flexible string
+  documentName: string;
+  url: string;
+  publicId: string;
+  uploadedAt: string;
+  verified: boolean;
+}
+
+// Interface for partner
 export interface Partner {
   _id: string;
   id?: string; // For frontend consistency
@@ -122,6 +133,7 @@ export interface Partner {
   yearsActive?: number;
   images?: PartnerImages;
   verified?: boolean;
+  verificationDocuments?: VerificationDocument[];
   status?: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
@@ -425,6 +437,46 @@ export const partnerService = {
   // Delete a gallery image
   deleteGalleryImage: async (partnerId: string, imageIndex: number) => {
     const response = await api.delete(`/partners/${partnerId}/gallery/${imageIndex}`);
+    return response.data;
+  },
+
+  // Upload verification documents
+  uploadVerificationDocuments: async (partnerId: string, documentData: DocumentUploadData) => {
+    const formData = new FormData();
+    
+    // Add document types and names as JSON strings
+    formData.append('documentTypes', JSON.stringify(documentData.documentTypes));
+    formData.append('documentNames', JSON.stringify(documentData.documentNames));
+    
+    // Add document files
+    documentData.files.forEach(file => {
+      formData.append('documents', file);
+    });
+    
+    const response = await api.post(`/partners/${partnerId}/documents`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data;
+  },
+
+  // Get verification documents
+  getVerificationDocuments: async (partnerId: string) => {
+    const response = await api.get(`/partners/${partnerId}/documents`);
+    return response.data;
+  },
+
+  // Delete verification document
+  deleteVerificationDocument: async (partnerId: string, documentId: string) => {
+    const response = await api.delete(`/partners/${partnerId}/documents/${documentId}`);
+    return response.data;
+  },
+
+  // Update document verification status (admin only)
+  updateDocumentVerificationStatus: async (partnerId: string, documentId: string, verified: boolean) => {
+    const response = await api.put(`/partners/${partnerId}/documents/${documentId}/verify`, { verified });
     return response.data;
   },
 
