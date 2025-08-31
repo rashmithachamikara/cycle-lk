@@ -56,6 +56,15 @@ export interface PartnerImages {
   }>;
 }
 
+// Document file interface for verification document upload
+export interface VerificationDocumentFile {
+  file: File;
+  name: string;
+  type: string;
+  size: number;
+  documentType?: string;
+}
+
 // Partner registration form interface
 export interface PartnerRegistrationForm {
   // User fields for non-authenticated users
@@ -93,6 +102,7 @@ export interface PartnerRegistrationForm {
   logoImage?: ImageFile;
   storefrontImage?: ImageFile;
   galleryImages: ImageFile[];
+  verificationDocuments?: VerificationDocumentFile[];
 }
 
 // Step component props interface
@@ -104,6 +114,7 @@ export interface StepProps {
   onBusinessHourChange: (day: keyof BusinessHours, field: 'open' | 'close', value: string) => void;
   onArrayFieldChange: (field: 'specialties' | 'features', value: string) => void;
   onImageChange?: (field: 'logo' | 'storefront' | 'gallery', files: ImageFile | ImageFile[] | null) => void;
+  onDocumentChange?: (documents: VerificationDocumentFile[]) => void;
   isUserAuthenticated: boolean;
 }
 

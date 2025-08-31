@@ -11,10 +11,11 @@ import CompanyInformationStep from './CompanyInformationStep';
 import ContactInformationStep from './ContactInformationStep';
 import BusinessHoursStep from './BusinessHoursStep';
 import ServicesAndFeaturesStep from './ServicesAndFeaturesStep';
-import { PartnerRegistrationForm as FormData, type ImageFile } from './types';
+import type { PartnerRegistrationForm as FormData, ImageFile, VerificationDocumentFile } from './types';
 import { DEFAULT_BUSINESS_HOURS } from './constants';
 import RegistrationSuccess from './RegistrationSuccess';
 import type { CityServiceData } from './types';
+
 interface PartnerRegistrationFormProps {
   onSuccess: () => void;
 }
@@ -54,7 +55,9 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     // Image fields
     logoImage: undefined,
     storefrontImage: undefined,
-    galleryImages: []
+    galleryImages: [],
+    // Document field
+    verificationDocuments: []
   });
 
   const handleInputChange = (
@@ -104,6 +107,13 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
       }
       return prev;
     });
+  };
+
+  const handleDocumentChange = (documents: VerificationDocumentFile[]) => {
+    setFormData(prev => ({
+      ...prev,
+      verificationDocuments: documents
+    }));
   };
 
   const validateStep = (step: number): boolean => {
@@ -308,7 +318,55 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         isMainLocation: true
       };
 
-      const registrationData = {
+      // Create FormData for API request
+      const formDataObj = new FormData();
+      
+      // Add partner data fields
+      formDataObj.append('userId', userId);
+      formDataObj.append('companyName', formData.companyName.trim());
+      formDataObj.append('category', formData.category);
+      formDataObj.append('description', formData.description.trim());
+      formDataObj.append('address', formData.address.trim());
+      formDataObj.append('contactPerson', formData.contactPerson.trim());
+      formDataObj.append('phone', formData.phone.trim() || formData.userPhone.trim());
+      formDataObj.append('email', formData.email.trim() || formData.userEmail.trim());
+      formDataObj.append('businessHours', JSON.stringify(formData.businessHours));
+      formDataObj.append('specialties', JSON.stringify(formData.specialties));
+      formDataObj.append('features', JSON.stringify(formData.features));
+      formDataObj.append('yearsActive', formData.yearsActive.toString());
+      formDataObj.append('mapLocation', JSON.stringify(normalizedMapLocation));
+      formDataObj.append('location', formData.location);
+      
+      // Add logo image if exists
+      if (formData.logoImage?.file) {
+        formDataObj.append('logo', formData.logoImage.file);
+      }
+      
+      // Add storefront image if exists
+      if (formData.storefrontImage?.file) {
+        formDataObj.append('storefront', formData.storefrontImage.file);
+      }
+      
+      // Add gallery images if exist
+      if (formData.galleryImages && formData.galleryImages.length > 0) {
+        formData.galleryImages.forEach(img => {
+          if (img.file) {
+            formDataObj.append('gallery', img.file);
+          }
+        });
+      }
+      
+      // Add verification document if exists
+      if (formData.verificationDocuments && formData.verificationDocuments.length > 0) {
+        await partnerService.uploadVerificationDocuments(userId, {
+          documentTypes: formData.verificationDocuments.map(d => d.documentType || d.name),
+          documentNames: formData.verificationDocuments.map(d => d.name),
+          files: formData.verificationDocuments.map(d => d.file)
+        });
+      }
+
+      // Register partner
+      await partnerService.registerPartner({
         userId,
         companyName: formData.companyName.trim(),
         category: formData.category,
@@ -321,14 +379,13 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         specialties: formData.specialties,
         features: formData.features,
         yearsActive: formData.yearsActive,
-        mapLocation: normalizedMapLocation, // <-- always send normalized
+        mapLocation: normalizedMapLocation,
         location: formData.location,
         logoImage: formData.logoImage,
         storefrontImage: formData.storefrontImage,
         galleryImages: formData.galleryImages
-      };
-
-      await partnerService.registerPartner(registrationData);
+      });
+      
       setCurrentStep(5);
       onSuccess();
 
@@ -363,6 +420,7 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     formData,
     onInputChange: handleInputChange,
     onImageChange: handleImageChange,
+    onDocumentChange: handleDocumentChange,
     onArrayFieldChange: handleArrayFieldChange,
     onBusinessHourChange: handleBusinessHourChange,
     onServiceCitiesChange: handleServiceCitiesChange,
