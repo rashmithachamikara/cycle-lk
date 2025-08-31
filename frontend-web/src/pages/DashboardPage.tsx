@@ -445,7 +445,7 @@ const DashboardPage = () => {
                 </button>
               </div>
               <BookingProgressCard
-                booking={bookings[0]}
+                booking={bookings[bookings.length - 1]} // Most recent booking
               />
             </div>
           )}
