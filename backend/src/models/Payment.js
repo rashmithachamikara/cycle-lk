@@ -11,6 +11,11 @@ const paymentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  partnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Partner',
+    required: true
+  },
   amount: {
     type: Number,
     required: true
@@ -21,8 +26,7 @@ const paymentSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['credit_card', 'paypal', 'cash', 'bank_transfer'],
-    required: true
+    enum: ['card', 'bank_transfer', 'mobile_payment', 'credit_card', 'paypal', 'cash']
   },
   status: {
     type: String,
@@ -62,6 +66,7 @@ const paymentSchema = new mongoose.Schema({
 // Create indexes
 paymentSchema.index({ bookingId: 1 });
 paymentSchema.index({ userId: 1 });
+paymentSchema.index({ partnerId: 1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ transactionId: 1 });
 
