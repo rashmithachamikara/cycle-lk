@@ -95,6 +95,7 @@ exports.processPayment = async (req, res) => {
       partnerId: booking.partnerId,
       amount: booking.pricing.totalAmount,
       paymentMethod,
+      method: paymentMethod, // For backward compatibility
       transactionId,
       status: 'completed',
       createdAt: new Date()
@@ -281,12 +282,13 @@ exports.getPendingPayments = async (req, res) => {
       partnerName: booking.partnerId?.companyName || 'Unknown Partner',
       startDate: booking.dates.startDate,
       endDate: booking.dates.endDate,
-      totalAmount: booking.pricing.totalAmount,
+      totalAmount: booking.pricing.total * 0.2,
       paymentStatus: booking.paymentStatus,
       status: booking.status,
       bookingNumber: booking._id.toString().slice(-8).toUpperCase(),
       dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
     }));
+    console.log('Pending payments for user:', userId, pendingPayments);
 
     res.json({ pendingPayments });
   } catch (err) {
@@ -304,6 +306,14 @@ exports.processInitialPayment = async (req, res) => {
   try {
     const { bookingId, amount, paymentMethod, paymentDetails } = req.body;
     const userId = req.user.id;
+    
+    // Debug logging
+    console.log('Payment request data:', {
+      bookingId,
+      amount,
+      paymentMethod,
+      userId
+    });
     
     // Validate booking exists and belongs to user
     const booking = await Booking.findById(bookingId).populate('partnerId');
@@ -335,8 +345,38 @@ exports.processInitialPayment = async (req, res) => {
       });
     }
     
+    // Validate required fields
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Valid payment amount is required' 
+      });
+    }
+    
+    if (!paymentMethod) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment method is required' 
+      });
+    }
+    
+    if (!booking.partnerId || !booking.partnerId._id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Partner information is missing from booking' 
+      });
+    }
+    
     // Simulate payment processing (in real app, integrate with payment gateway)
     const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log('Creating payment record with:', {
+      bookingId,
+      userId,
+      partnerId: booking.partnerId._id,
+      amount,
+      transactionId
+    });
     
     // Update booking payment info
     booking.paymentInfo = {
@@ -357,7 +397,7 @@ exports.processInitialPayment = async (req, res) => {
       userId,
       partnerId: booking.partnerId._id,
       amount,
-      paymentMethod,
+      method: paymentMethod, // For backward compatibility
       transactionId,
       status: 'completed',
       createdAt: new Date()
