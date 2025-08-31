@@ -21,7 +21,8 @@ import {
   Camera,
   FileText,
   Loader,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit
 } from 'lucide-react';
 
 const ReviewPartnerDetailsPage = () => {
@@ -125,6 +126,9 @@ const ReviewPartnerDetailsPage = () => {
     return imageErrors.has(imageId);
   };
 
+  const isPendingPartner = partner?.status === 'pending';
+  const isActivePartner = partner?.status === 'active';
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -178,28 +182,48 @@ const ReviewPartnerDetailsPage = () => {
               Back to Partners
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Partner Review</h1>
-              <p className="text-gray-600">Review and approve partner application</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {isPendingPartner ? 'Partner Review' : 'Partner Details'}
+              </h1>
+              <p className="text-gray-600">
+                {isPendingPartner 
+                  ? 'Review and approve partner application' 
+                  : 'View partner information and status'
+                }
+              </p>
             </div>
           </div>
           
           <div className="flex space-x-3">
-            <button
-              onClick={() => setShowRejectionForm(true)}
-              disabled={isProcessing}
-              className="flex items-center bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
-            >
-              <XCircle className="h-5 w-5 mr-2" />
-              Reject
-            </button>
-            <button
-              onClick={() => setShowApprovalForm(true)}
-              disabled={isProcessing}
-              className="flex items-center bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
-            >
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Approve
-            </button>
+            {isPendingPartner && (
+              <>
+                <button
+                  onClick={() => setShowRejectionForm(true)}
+                  disabled={isProcessing}
+                  className="flex items-center bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  <XCircle className="h-5 w-5 mr-2" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => setShowApprovalForm(true)}
+                  disabled={isProcessing}
+                  className="flex items-center bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                >
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Approve
+                </button>
+              </>
+            )}
+            {isActivePartner && (
+              <button
+                onClick={() => navigate(`/partners/${partner._id}`)}
+                className="flex items-center bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <Globe className="h-5 w-5 mr-2" />
+                View Public Profile
+              </button>
+            )}
           </div>
         </div>
 
@@ -217,11 +241,17 @@ const ReviewPartnerDetailsPage = () => {
               partner.status === 'active' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Application Status: {partner.status?.charAt(0).toUpperCase() + partner.status?.slice(1)}
+              {partner.status === 'pending' 
+                ? `Application Status: ${partner.status?.charAt(0).toUpperCase() + partner.status?.slice(1)}`
+                : `Partner Status: ${partner.status?.charAt(0).toUpperCase() + partner.status?.slice(1)}`
+              }
             </h3>
           </div>
           <p className="text-gray-600 mt-2">
-            Applied on {formatDate(partner.createdAt)}
+            {partner.status === 'pending' 
+              ? `Applied on ${formatDate(partner.createdAt)}`
+              : `Partner since ${formatDate(partner.createdAt)}`
+            }
           </p>
         </div>
 
@@ -465,21 +495,45 @@ const ReviewPartnerDetailsPage = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               
               <div className="space-y-3">
-                <button
-                  onClick={() => setShowApprovalForm(true)}
-                  className="w-full flex items-center justify-center bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  Approve Partner
-                </button>
+                {isPendingPartner && (
+                  <>
+                    <button
+                      onClick={() => setShowApprovalForm(true)}
+                      className="w-full flex items-center justify-center bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      Approve Partner
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowRejectionForm(true)}
+                      className="w-full flex items-center justify-center bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <XCircle className="h-5 w-5 mr-2" />
+                      Reject Application
+                    </button>
+                  </>
+                )}
                 
-                <button
-                  onClick={() => setShowRejectionForm(true)}
-                  className="w-full flex items-center justify-center bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  <XCircle className="h-5 w-5 mr-2" />
-                  Reject Application
-                </button>
+                {isActivePartner && (
+                  <>
+                    <button
+                      onClick={() => navigate(`/admin/partners/${partner._id}/edit`)}
+                      className="w-full flex items-center justify-center bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      <Edit className="h-5 w-5 mr-2" />
+                      Edit Partner
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowRejectionForm(true)}
+                      className="w-full flex items-center justify-center bg-orange-500 text-white px-4 py-3 rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                      <XCircle className="h-5 w-5 mr-2" />
+                      Suspend Partner
+                    </button>
+                  </>
+                )}
                 
                 <button
                   onClick={() => navigate(`/partners/${partner._id}`)}
@@ -491,18 +545,24 @@ const ReviewPartnerDetailsPage = () => {
               </div>
             </div>
 
-            {/* Application Summary */}
+            {/* Application/Partner Summary */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {isPendingPartner ? 'Application Summary' : 'Partner Summary'}
+              </h3>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Application ID</span>
+                  <span className="text-gray-600">
+                    {isPendingPartner ? 'Application ID' : 'Partner ID'}
+                  </span>
                   <span className="font-medium">{partner._id.slice(-8)}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Submitted</span>
+                  <span className="text-gray-600">
+                    {isPendingPartner ? 'Submitted' : 'Joined'}
+                  </span>
                   <span className="font-medium">{formatDate(partner.createdAt)}</span>
                 </div>
                 
@@ -525,14 +585,34 @@ const ReviewPartnerDetailsPage = () => {
                     {partner.verified ? 'Verified' : 'Pending'}
                   </span>
                 </div>
+
+                {isActivePartner && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Total Bikes</span>
+                      <span className="font-medium">{partner.bikeCount || 0}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Rating</span>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                        <span className="font-medium">
+                          {partner.rating ? partner.rating.toFixed(1) : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* Approval Modal */}
-      {showApprovalForm && (
+      {/* Approval Modal - Only for pending partners */}
+      {showApprovalForm && isPendingPartner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Approve Partner Application</h3>
@@ -571,19 +651,24 @@ const ReviewPartnerDetailsPage = () => {
         </div>
       )}
 
-      {/* Rejection Modal */}
+      {/* Rejection/Suspension Modal */}
       {showRejectionForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Partner Application</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {isPendingPartner ? 'Reject Partner Application' : 'Suspend Partner'}
+            </h3>
             <p className="text-gray-600 mb-4">
-              Please provide a reason for rejecting this application. This will help the applicant understand what needs to be improved.
+              {isPendingPartner 
+                ? 'Please provide a reason for rejecting this application. This will help the applicant understand what needs to be improved.'
+                : 'Please provide a reason for suspending this partner. They will be notified of the suspension.'
+              }
             </p>
             
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Reason for rejection..."
+              placeholder={isPendingPartner ? "Reason for rejection..." : "Reason for suspension..."}
               className="w-full p-3 border border-gray-300 rounded-lg resize-none mb-4"
               rows={4}
               required
@@ -604,7 +689,7 @@ const ReviewPartnerDetailsPage = () => {
                 {isProcessing ? (
                   <Loader className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Reject'
+                  isPendingPartner ? 'Reject' : 'Suspend'
                 )}
               </button>
             </div>

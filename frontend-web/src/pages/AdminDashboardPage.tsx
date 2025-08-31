@@ -721,7 +721,12 @@ const AdminDashboardPage = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button className="text-purple-600 hover:text-purple-900 mr-4">View</button>
+                            <button 
+                              onClick={() => navigate(`/admin/partners/${partner._id}/review`)}
+                              className="text-purple-600 hover:text-purple-900 mr-4"
+                            >
+                              View
+                            </button>
                             <button className="text-gray-600 hover:text-gray-900 mr-4">Edit</button>
                             <button className="text-red-600 hover:text-red-900">Suspend</button>
                           </td>
