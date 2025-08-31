@@ -486,6 +486,61 @@ const ReviewPartnerDetailsPage = () => {
                 </>
               )}
             </div>
+
+            {/* Documents */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Verification Documents</h3>
+              {(!partner.verificationDocuments || partner.verificationDocuments.length === 0) ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <p>No verification documents uploaded</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {partner.verificationDocuments.map((doc, idx) => {
+                    const isPdf = doc.url?.toLowerCase().endsWith('.pdf') || doc.mimetype === 'application/pdf';
+                    return (
+                      <div key={doc._id || idx} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="h-6 w-6 text-blue-500" />
+                          <span className="font-medium">{doc.documentName}</span>
+                          <span className="ml-2 text-xs text-gray-500">{doc.documentType || 'N/A'}</span>
+                          {doc.verified
+                            ? <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">Verified</span>
+                            : <span className="ml-2 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs">Pending</span>
+                          }
+                        </div>
+                        <div className="text-xs text-gray-400 mb-2">
+                          Uploaded: {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'N/A'}
+                        </div>
+                        {isPdf ? (
+                          <div className="border rounded bg-gray-50 p-2 mb-2">
+                            <iframe
+                              src={doc.url}
+                              title={`PDF-${doc.documentName}`}
+                              width="100%"
+                              height="400px"
+                              style={{ border: 'none' }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="mb-2">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 text-xs"
+                            >
+                              View Document
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}

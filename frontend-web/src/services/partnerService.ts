@@ -604,5 +604,17 @@ export const partnerService = {
     
     const response = await api.get(`/partners?${params.toString()}`);
     return response.data.map(transformPartner);
-  }
+  },
+
+  // Get current partner profile for authenticated user
+  getCurrentPartner: async (): Promise<Partner> => {
+    const response = await api.get('/partners/me');
+    return transformPartner(response.data);
+  },
+
+  // Get partner by user ID
+  getPartnerByUserId: async (userId: string): Promise<Partner> => {
+    const response = await api.get(`/partners/user/${userId}`);
+    return transformPartner(response.data);
+  },
 };

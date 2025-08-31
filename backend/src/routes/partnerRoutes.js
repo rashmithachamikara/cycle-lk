@@ -133,4 +133,18 @@ router.put('/:partnerId/documents/:documentId/verify',
   partnerController.updateDocumentVerificationStatus
 );
 
+/**
+ * @route   GET /api/partners/me
+ * @desc    Get current partner profile for authenticated user
+ * @access  Private/Partner
+ */
+router.get('/me', auth(), partnerController.getCurrentPartner);
+
+/**
+ * @route   GET /api/partners/user/:userId
+ * @desc    Get partner by user ID
+ * @access  Public (or Private if you want to restrict)
+ */
+router.get('/user/:userId', partnerController.getPartnerByUserId);
+
 module.exports = router;
