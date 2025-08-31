@@ -24,6 +24,7 @@ const BookingPage = () => {
   
   // State management
   const [currentStep, setCurrentStep] = useState(1);
+  const [pickupPartner, setPickupPartner] = useState<Partner | null>(null);
   const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
   const [pickupLocation, setPickupLocation] = useState<Location | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<Location | null>(null);
@@ -496,6 +497,8 @@ const BookingPage = () => {
               selectedBike={selectedBike}
               pickupLocation={pickupLocation}
               dropoffLocation={dropoffLocation}
+              pickupPartner={pickupPartner}
+              setPickupPartner={setPickupPartner}
               startDate={startDate}
               startTime={startTime}
               endDate={endDate}
@@ -513,6 +516,7 @@ const BookingPage = () => {
             <FinalConfirmationStep
               selectedBike={selectedBike}
               pickupLocation={pickupLocation}
+              pickupPartner={pickupPartner}
               selectedPartner={selectedPartner}
               startDate={startDate}
               startTime={startTime}

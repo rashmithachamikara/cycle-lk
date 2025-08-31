@@ -8,6 +8,7 @@ import { Partner } from '../../services/partnerService';
 interface FinalConfirmationStepProps {
   selectedBike: Bike;
   pickupLocation: Location;
+  pickupPartner: Partner | null;
   selectedPartner: Partner;
   startDate: string;
   startTime: string;
@@ -24,6 +25,7 @@ interface FinalConfirmationStepProps {
 const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   selectedBike,
   pickupLocation,
+  pickupPartner,
   selectedPartner,
   startDate,
   startTime,
@@ -128,10 +130,12 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               <div className="bg-green-50 rounded-xl p-6 border border-green-200">
                 <div className="flex items-center mb-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <h3 className="font-semibold text-gray-900">Pickup Location</h3>
+                  <h3 className="font-semibold text-gray-900">Pickup Partner</h3>
                 </div>
-                <p className="text-gray-700 font-medium">{pickupLocation.name}</p>
-                <p className="text-gray-600 text-sm">{pickupLocation.region}</p>
+                <p className="text-gray-700 font-medium">{pickupPartner?.companyName}</p>
+                <p className="text-gray-600 text-sm">
+                  {pickupPartner?.address || 'Address not available'}
+                </p>
               </div>
 
               {/* Drop-off Location */}
