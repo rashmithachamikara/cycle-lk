@@ -58,11 +58,16 @@ exports.getAllPartners = async (req, res) => {
 };
 
 /**
- * Get partner by ID
+ * Get partner by ID (skip if param is 'me')
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
+// REQUIRE FIXING
 exports.getPartnerById = async (req, res) => {
+  // If param is 'me', forward to getCurrentPartner
+  if (req.params.id === 'me') {
+    return exports.getCurrentPartner(req, res);
+  }
   try {
     console.log('Fetching partner by ID:', req.params.id);
     
@@ -909,6 +914,67 @@ exports.getVerificationDocuments = async (req, res) => {
     res.status(500).json({ 
       message: 'Server error', 
       error: error.message 
+    });
+  }
+};
+
+/**
+ * Get current partner profile for authenticated user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getCurrentPartner = async (req, res) => {
+  try {
+    // Ensure authentication middleware sets req.user
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Not authenticated. Please log in.' });
+    }
+
+    // Find partner by userId
+    const partner = await Partner.findOne({ userId: req.user.id })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates');
+
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner profile not found for this user' });
+    }
+
+    res.json(partner);
+  } catch (error) {
+    console.error('Error in getCurrentPartner:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get partner by user ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPartnerByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const partner = await Partner.findOne({ userId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates');
+
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found for this user' });
+    }
+
+    res.json(partner);
+  } catch (error) {
+    console.error('Error in getPartnerByUserId:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
     });
   }
 };
