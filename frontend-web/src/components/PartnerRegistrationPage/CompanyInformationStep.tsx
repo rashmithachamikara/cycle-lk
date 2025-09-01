@@ -1,10 +1,10 @@
 // frontend-web/components/PartnerRegistrationPage/CompanyInformationStep.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Building, Tag, FileText, MapPin, Camera, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Building, Tag, FileText, MapPin, Camera, Upload, X, Image as ImageIcon, FileCheck } from 'lucide-react';
 // import ServiceLocationManager from './ServiceLocationManager'; // REMOVE
 import GoogleMapsPlacesInput from '../forms/GoogleMapsPlacesInput';
 import { locationService } from '../../services/locationService';
-import { type StepProps, type ImageFile } from './types';
+import { type StepProps, type ImageFile, type VerificationDocumentFile } from './types';
 import { BUSINESS_CATEGORIES } from './constants';
 
 const CompanyInformationStep: React.FC<StepProps> = ({
@@ -13,12 +13,21 @@ const CompanyInformationStep: React.FC<StepProps> = ({
   // onServiceCitiesChange, // REMOVE
   // onServiceLocationsChange, // REMOVE
   onImageChange,
+  onDocumentChange,
   isUserAuthenticated
 }) => {
   // File input refs
   const logoInputRef = useRef<HTMLInputElement>(null);
   const storefrontInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+
+  // Custom document type state (per new doc)
+  const [customDocumentType, setCustomDocumentType] = useState('');
+  const [selectedDocumentType, setSelectedDocumentType] = useState('');
+
+  // New: local state for new document being added
+  const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null);
 
   // Location dropdown state
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
@@ -221,6 +230,76 @@ const CompanyInformationStep: React.FC<StepProps> = ({
     } as any);
   };
 
+  // Handle document file selection
+  const handleDocumentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file (PDF, DOC, DOCX, images)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      'application/pdf', 
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg', 
+      'image/jpg', 
+      'image/png'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload only PDF, DOC, DOCX, JPEG, or PNG files');
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      alert('File size should be less than 10MB');
+      return;
+    }
+
+    setNewDocumentFile(file);
+    setSelectedDocumentType('');
+    setCustomDocumentType('');
+    if (documentInputRef.current) documentInputRef.current.value = '';
+  };
+
+  // Handle document type selection for new doc
+  const handleDocumentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDocumentType(e.target.value);
+  };
+
+  // Handle custom document type input for new doc
+  const handleCustomDocumentTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomDocumentType(e.target.value);
+  };
+
+  // Add new document to formData
+  const handleAddDocument = () => {
+    if (!newDocumentFile || !selectedDocumentType || (selectedDocumentType === 'other' && !customDocumentType)) {
+      alert('Please select a file and document type.');
+      return;
+    }
+    const docType = selectedDocumentType === 'other' ? customDocumentType : selectedDocumentType;
+    const newDoc: VerificationDocumentFile = {
+      file: newDocumentFile,
+      name: newDocumentFile.name,
+      type: newDocumentFile.type,
+      size: newDocumentFile.size,
+      documentType: docType
+    };
+    onDocumentChange?.([...(formData.verificationDocuments || []), newDoc]);
+    setNewDocumentFile(null);
+    setSelectedDocumentType('');
+    setCustomDocumentType('');
+  };
+
+  // Remove document from array
+  const removeDocument = (index: number) => {
+    const docs = formData.verificationDocuments || [];
+    const updated = docs.slice();
+    updated.splice(index, 1);
+    onDocumentChange?.(updated);
+  };
+
   // Get current images from formData
   const logoImage = formData.logoImage;
   const storefrontImage = formData.storefrontImage;
@@ -324,6 +403,140 @@ const CompanyInformationStep: React.FC<StepProps> = ({
           <p className="text-sm text-gray-500 mt-1">
             This description will be shown to customers on your profile
           </p>
+        </div>
+      </div>
+
+      {/* Document Upload Section - Add before Images Section */}
+      <div className="border-t border-gray-200 pt-8">
+        <div className="flex items-center mb-6">
+          <FileCheck className="h-6 w-6 text-emerald-600 mr-2" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Verification Documents <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-sm text-gray-600">Upload documents to verify your business</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* List of uploaded documents */}
+          {(formData.verificationDocuments && formData.verificationDocuments.length > 0) && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded Documents</label>
+              <ul className="space-y-2">
+                {formData.verificationDocuments.map((doc, idx) => (
+                  <li key={idx} className="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
+                    <div>
+                      <span className="font-medium">{doc.name}</span>
+                      <span className="ml-2 text-xs text-gray-500">{doc.documentType}</span>
+                      <span className="ml-2 text-xs text-gray-400">{(doc.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeDocument(idx)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Add new document */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Add Business Document
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              {!newDocumentFile ? (
+                <div
+                  onClick={() => documentInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-1">Click to upload document</p>
+                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 10MB</p>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <FileText className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <p className="font-medium">{newDocumentFile.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {(newDocumentFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <label htmlFor="documentType" className="block text-sm font-medium text-gray-700 mb-2">
+                      Document Type *
+                    </label>
+                    <select
+                      id="documentType"
+                      value={selectedDocumentType}
+                      onChange={handleDocumentTypeChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                    >
+                      <option value="">Select document type</option>
+                      <option value="Business Registration Certificate">Business Registration Certificate (BRC)</option>
+                      <option value="Certificate of Incorporation">Certificate of Incorporation</option>
+                      <option value="TIN Certificate">Tax Identification Number (TIN) Certificate</option>
+                      <option value="VAT Registration Certificate">VAT Registration Certificate</option>
+                      <option value="Business License">Business License</option>
+                      <option value="Utility Bill">Utility Bill / Lease Agreement</option>
+                      <option value="other">Other (specify)</option>
+                    </select>
+                    {selectedDocumentType === 'other' && (
+                      <div className="mt-3">
+                        <label htmlFor="customDocumentType" className="block text-sm font-medium text-gray-700 mb-2">
+                          Specify Document Type *
+                        </label>
+                        <input
+                          type="text"
+                          id="customDocumentType"
+                          value={customDocumentType}
+                          onChange={handleCustomDocumentTypeChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          placeholder="Enter document type"
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={handleAddDocument}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
+                    >
+                      Add Document
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewDocumentFile(null)}
+                      className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              <input
+                ref={documentInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,image/*"
+                onChange={handleDocumentSelect}
+                className="hidden"
+              />
+            </div>
+            <p className="mt-2 text-sm text-gray-500">
+              Upload documents like business registration certificate, incorporation certificate, or business license
+            </p>
+          </div>
         </div>
       </div>
 
@@ -557,6 +770,9 @@ const CompanyInformationStep: React.FC<StepProps> = ({
               </li>
               <li className={`flex items-center ${formData.location ? 'line-through opacity-60' : ''}`}>
                 • Location (from database)
+              </li>
+              <li className={`flex items-center ${formData.verificationDocuments && formData.verificationDocuments.length > 0 ? 'line-through opacity-60' : ''}`}>
+                • At least one verification document
               </li>
             </ul>
           </div>
