@@ -69,7 +69,10 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
   const coordinates = getMainLocationCoordinates();
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-102 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] group cursor-pointer">
+    <Link 
+      to={`/partners/${partner.id || partner._id}`}
+      className="block bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-102 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] group cursor-pointer"
+    >
       {/* Partner Header */}
       <div className="h-48 bg-gradient-to-br from-[#00D4AA] to-[#00D4AA]/80 relative overflow-hidden">
         {partner.images?.storefront?.url ? (
@@ -124,7 +127,14 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
               </div>
             )}
           </div>
-          <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+          <button 
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+            onClick={(e) => {
+              e.preventDefault(); // Prevent link navigation
+              e.stopPropagation();
+              // Add save/favorite functionality here
+            }}
+          >
             <Heart className="h-5 w-5" />
           </button>
         </div>
@@ -206,15 +216,20 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <Link
-            to={`/partners/${partner.id || partner._id}/bikes`}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = `/partners/${partner.id || partner._id}/bikes`;
+            }}
             className="flex-1 bg-[#00D4AA] text-white py-3 rounded-lg hover:bg-[#00D4AA]/80 transition-colors font-medium text-center"
           >
             View Bikes
-          </Link>
+          </button>
           {partner.phone && (
             <a
               href={`tel:${partner.phone}`}
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center bg-[#00c851] text-white px-4 py-3 rounded-lg hover:bg-[#00c851]/80 transition-colors"
             >
               <Phone className="h-4 w-4" />
@@ -223,6 +238,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
           {partner.email && (
             <a
               href={`mailto:${partner.email}`}
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center bg-[#1e88e5] text-white px-4 py-3 rounded-lg hover:bg-[#1e88e5]/80 transition-colors"
             >
               <MessageCircle className="h-4 w-4" />
@@ -233,6 +249,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
               href={`https://maps.google.com/?q=${coordinates.lat},${coordinates.lng}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center border bg-[#ff6b35] text-white px-4 py-3 rounded-lg hover:bg-[#ff6b35]/80 transition-colors"
             >
               <Navigation className="h-4 w-4" />
@@ -240,7 +257,7 @@ const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
