@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
+import { bikeService } from "../../services/bikeService";
 import toast from 'react-hot-toast';
 
 interface BikeCondition {
@@ -63,15 +64,18 @@ const DropBikePage = () => {
   const fetchActiveBookings = async () => {
     try {
       setIsLoading(true);
-      const bookings = await bookingService.getMyBookings();
-      // Filter for active bookings (confirmed or active status)
-      const activeOnes = bookings.filter((booking: PartnerDashboardBooking) => 
-        booking.status === 'active' || booking.status === 'confirmed'
-      );
-      setActiveBookings(activeOnes);
+      // Fetch bookings where this partner is the dropoff partner
+      const bookings = await bookingService.getDropoffBookings();
+      console.log('Dropoff bookings from API:', bookings); // Debug log
+      
+      // These bookings are already filtered by the backend to include only:
+      // - Bookings where dropoffPartnerId matches current partner
+      // - Status is 'active' or 'confirmed' (ready for dropoff)
+      // - Data is transformed to PartnerDashboardBooking format
+      setActiveBookings(bookings);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to load active bookings');
+      console.error('Error fetching dropoff bookings:', error);
+      toast.error('Failed to load dropoff bookings');
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +88,7 @@ const DropBikePage = () => {
   );
 
   const handleBookingSelect = (booking: PartnerDashboardBooking) => {
+    console.log('Selected booking:', booking); // Debug log
     setSelectedBooking(booking);
     setDropOffData(prev => ({ ...prev, bookingId: booking.id }));
     setCurrentStep('assessment');
@@ -158,6 +163,12 @@ const DropBikePage = () => {
 
       // Update booking status to completed
       await bookingService.updateBookingStatus(selectedBooking.id, 'completed');
+
+      // Update bike's currentPartnerId to the dropoff partner
+      // This transfers the bike to the partner handling the dropoff
+      if (selectedBooking.dropoffPartnerId) {
+        await bikeService.updateBikePartnerId(selectedBooking.bikeId, selectedBooking.dropoffPartnerId);
+      }
 
       // Here you would also:
       // 1. Upload photos to cloud storage
@@ -237,7 +248,7 @@ const DropBikePage = () => {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Bike Drop-Off</h1>
-              <p className="text-gray-600">Process customer bike returns and finalize bookings</p>
+              <p className="text-gray-600">Process customer bike returns for your dropoff location</p>
             </div>
           </div>
         </div>
@@ -246,7 +257,7 @@ const DropBikePage = () => {
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
             {[
-              { key: 'search', label: 'Search Booking', icon: Search },
+              { key: 'search', label: 'Find Dropoff Booking', icon: Search },
               { key: 'assessment', label: 'Bike Assessment', icon: CheckCircle },
               { key: 'payment', label: 'Payment', icon: CreditCard },
               { key: 'confirmation', label: 'Confirmation', icon: FileText }
@@ -277,7 +288,15 @@ const DropBikePage = () => {
           {/* Step 1: Search Booking */}
           {currentStep === 'search' && (
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-6">Find Active Booking</h2>
+              <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                <h3 className="text-sm font-medium text-blue-800 mb-2">ℹ️ About Dropoff Bookings</h3>
+                <p className="text-sm text-blue-700">
+                  These are bookings where customers will return their bikes to your location. 
+                  You can process the bike return, assess condition, and finalize the booking here.
+                </p>
+              </div>
+              
+              <h2 className="text-xl font-semibold mb-6">Find Dropoff Booking</h2>
               
               {/* Search Bar */}
               <div className="mb-6">
@@ -293,13 +312,13 @@ const DropBikePage = () => {
                 </div>
               </div>
 
-              {/* Active Bookings List */}
+              {/* Dropoff Bookings List */}
               {filteredBookings.length === 0 ? (
                 <div className="text-center py-12">
                   <BikeIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Bookings</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Dropoff Bookings</h3>
                   <p className="text-gray-600">
-                    {searchTerm ? 'No bookings match your search.' : 'No active bookings available for drop-off.'}
+                    {searchTerm ? 'No bookings match your search.' : 'No bookings are scheduled for dropoff at your location.'}
                   </p>
                 </div>
               ) : (
@@ -333,6 +352,9 @@ const DropBikePage = () => {
                           <p className="text-sm text-gray-500 mt-1">
                             {booking.value}
                           </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Dropoff Location
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -354,18 +376,22 @@ const DropBikePage = () => {
 
               {/* Customer & Bike Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Booking Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Customer</p>
-                    <p className="text-gray-900">{selectedBooking.customerName}</p>
+                    <p className="text-gray-900">{selectedBooking?.customerName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">{selectedBooking?.customerPhone || ''}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Bike</p>
-                    <p className="text-gray-900">{selectedBooking.bikeName}</p>
+                    <p className="text-gray-900">{selectedBooking?.bikeName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">ID: {selectedBooking?.bikeId || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Original Amount</p>
-                    <p className="text-gray-900">{selectedBooking.value}</p>
+                    <p className="text-gray-900">{selectedBooking?.value || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Status: {selectedBooking?.paymentStatus || 'N/A'}</p>
                   </div>
                 </div>
               </div>

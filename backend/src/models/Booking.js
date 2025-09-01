@@ -71,6 +71,11 @@ const bookingSchema = new mongoose.Schema({
       required: true
     }
   },
+  dropoffPartnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Partner',
+    required: true
+  },
   status: {
     type: String,
     enum: ['requested', 'confirmed', 'active', 'completed', 'cancelled'],
@@ -117,6 +122,7 @@ const bookingSchema = new mongoose.Schema({
 bookingSchema.index({ userId: 1 });
 bookingSchema.index({ bikeId: 1 });
 bookingSchema.index({ partnerId: 1 });
+bookingSchema.index({ dropoffPartnerId: 1 });
 bookingSchema.index({ 'dates.startDate': 1, 'dates.endDate': 1 });
 bookingSchema.index({ status: 1 });
 

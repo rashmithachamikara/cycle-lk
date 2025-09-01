@@ -88,12 +88,13 @@ exports.validateBike = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 exports.validateBooking = (req, res, next) => {
-  const { bikeId, startTime, endTime } = req.body;
+  const { bikeId, startTime, endTime, dropoffPartnerId } = req.body;
   const errors = [];
 
   if (!bikeId) errors.push({ field: 'bikeId', message: 'Bike ID is required' });
   if (!startTime) errors.push({ field: 'startTime', message: 'Start time is required' });
   if (!endTime) errors.push({ field: 'endTime', message: 'End time is required' });
+  if (!dropoffPartnerId) errors.push({ field: 'dropoffPartnerId', message: 'Drop-off partner is required' });
 
   // Note: userId is obtained from req.user.id (from auth middleware), not from request body
 
@@ -113,6 +114,11 @@ exports.validateBooking = (req, res, next) => {
     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start >= end) {
       errors.push({ field: 'endTime', message: 'End time must be after start time' });
     }
+  }
+
+  // Validate dropoffPartnerId format (should be a valid MongoDB ObjectId)
+  if (dropoffPartnerId && !dropoffPartnerId.match(/^[0-9a-fA-F]{24}$/)) {
+    errors.push({ field: 'dropoffPartnerId', message: 'Invalid drop-off partner ID format' });
   }
 
   if (errors.length > 0) {
