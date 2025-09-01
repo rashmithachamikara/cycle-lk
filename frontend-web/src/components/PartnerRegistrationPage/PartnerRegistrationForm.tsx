@@ -11,10 +11,11 @@ import CompanyInformationStep from './CompanyInformationStep';
 import ContactInformationStep from './ContactInformationStep';
 import BusinessHoursStep from './BusinessHoursStep';
 import ServicesAndFeaturesStep from './ServicesAndFeaturesStep';
-import { PartnerRegistrationForm as FormData, type ImageFile } from './types';
+import type { PartnerRegistrationForm as FormData, ImageFile, VerificationDocumentFile } from './types';
 import { DEFAULT_BUSINESS_HOURS } from './constants';
 import RegistrationSuccess from './RegistrationSuccess';
 import type { CityServiceData } from './types';
+
 interface PartnerRegistrationFormProps {
   onSuccess: () => void;
 }
@@ -54,7 +55,10 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     // Image fields
     logoImage: undefined,
     storefrontImage: undefined,
-    galleryImages: []
+    galleryImages: [],
+    // Document field
+    verificationDocuments: [],
+    documentsUploaded: false // Track upload status
   });
 
   const handleInputChange = (
@@ -104,6 +108,14 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
       }
       return prev;
     });
+  };
+
+  const handleDocumentChange = (documents: VerificationDocumentFile[]) => {
+    setFormData(prev => ({
+      ...prev,
+      verificationDocuments: documents,
+      documentsUploaded: false // Reset upload status on change
+    }));
   };
 
   const validateStep = (step: number): boolean => {
@@ -205,6 +217,10 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
       case 4:
         if (formData.specialties.length === 0) errors.push('At least one bike specialty is required.');
         if (formData.features.length === 0) errors.push('At least one business feature is required.');
+        // Only check if documents are present, not uploaded yet
+        if (!formData.verificationDocuments || formData.verificationDocuments.length === 0) {
+          errors.push('At least one verification document is required.');
+        }
         break;
     }
     return errors;
@@ -308,6 +324,7 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         isMainLocation: true
       };
 
+      // Prepare registration data including verification documents
       const registrationData = {
         userId,
         companyName: formData.companyName.trim(),
@@ -321,14 +338,17 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
         specialties: formData.specialties,
         features: formData.features,
         yearsActive: formData.yearsActive,
-        mapLocation: normalizedMapLocation, // <-- always send normalized
+        mapLocation: normalizedMapLocation,
         location: formData.location,
         logoImage: formData.logoImage,
         storefrontImage: formData.storefrontImage,
-        galleryImages: formData.galleryImages
+        galleryImages: formData.galleryImages,
+        verificationDocuments: formData.verificationDocuments // <-- include docs here
       };
 
+      // Register partner with all files (images + documents)
       await partnerService.registerPartner(registrationData);
+
       setCurrentStep(5);
       onSuccess();
 
@@ -363,6 +383,7 @@ const PartnerRegistrationForm: React.FC<PartnerRegistrationFormProps> = ({ onSuc
     formData,
     onInputChange: handleInputChange,
     onImageChange: handleImageChange,
+    onDocumentChange: handleDocumentChange,
     onArrayFieldChange: handleArrayFieldChange,
     onBusinessHourChange: handleBusinessHourChange,
     onServiceCitiesChange: handleServiceCitiesChange,
