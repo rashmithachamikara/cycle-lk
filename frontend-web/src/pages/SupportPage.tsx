@@ -306,9 +306,9 @@ const SupportPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                   <div className="flex space-x-4">
                     {[
-                      { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
-                      { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-                      { value: 'high', label: 'High', color: 'bg-red-100 text-red-800' }
+                      { value: 'low', label: 'Low', color: 'bg-emerald-100 text-green-800 border-2 border-[#00D4AA]' },
+                      { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800 border-2 border-[#FFD700]' },
+                      { value: 'high', label: 'High', color: 'bg-red-100 text-red-800 border-2 border-[#FF4757]' }
                     ].map((priority) => (
                       <button
                         key={priority.value}
