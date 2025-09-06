@@ -58,20 +58,40 @@ exports.getAllPartners = async (req, res) => {
 };
 
 /**
- * Get partner by ID
+ * Get partner by ID (skip if param is 'me')
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
+// REQUIRE FIXING
 exports.getPartnerById = async (req, res) => {
+  // If param is 'me', forward to getCurrentPartner
+  if (req.params.id === 'me') {
+    return exports.getCurrentPartner(req, res);
+  }
   try {
-    console.log('Fetching partner by ID:', req.params.id);
+    const partnerId = req.params.id;
     
-    const partner = await Partner.findById(req.params.id)
+    // Validate that the ID is provided and is a string
+    if (!partnerId || typeof partnerId !== 'string') {
+      console.log('Invalid partner ID provided:', partnerId, 'Type:', typeof partnerId);
+      return res.status(400).json({ message: 'Invalid partner ID provided' });
+    }
+    
+    // Additional validation for ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(partnerId)) {
+      console.log('Invalid ObjectId format:', partnerId);
+      return res.status(400).json({ message: 'Invalid partner ID format' });
+    }
+    
+    console.log('Fetching partner by ID:', partnerId);
+    
+    const partner = await Partner.findById(partnerId)
       .populate('userId', 'firstName lastName email phone')
       .populate('location', 'name coordinates'); // Populate location details
       
     if (!partner) {
-      console.log('Partner not found with ID:', req.params.id);
+      console.log('Partner not found with ID:', partnerId);
       return res.status(404).json({ message: 'Partner not found' });
     }
     
@@ -99,6 +119,20 @@ exports.getPartnerById = async (req, res) => {
 exports.getPartnersByLocationId = async (req, res) => {
   try {
     const { locationId } = req.params;
+    
+    // Validate that the location ID is provided and is a string
+    if (!locationId || typeof locationId !== 'string') {
+      console.log('Invalid location ID provided:', locationId, 'Type:', typeof locationId);
+      return res.status(400).json({ message: 'Invalid location ID provided' });
+    }
+    
+    // Additional validation for ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(locationId)) {
+      console.log('Invalid ObjectId format for location:', locationId);
+      return res.status(400).json({ message: 'Invalid location ID format' });
+    }
+    
     console.log('Fetching partners for location ID:', locationId);
     
     const partners = await Partner.find({ location: locationId })
@@ -280,17 +314,51 @@ exports.registerPartner = async (req, res) => {
       // Continue with original values if parsing fails
     }
     
+    // Parse document fields
+    let parsedDocumentTypes = req.body.documentTypes;
+    let parsedDocumentNames = req.body.documentNames;
+    try {
+      if (typeof parsedDocumentTypes === 'string') {
+        parsedDocumentTypes = JSON.parse(parsedDocumentTypes);
+      }
+      if (typeof parsedDocumentNames === 'string') {
+        parsedDocumentNames = JSON.parse(parsedDocumentNames);
+      }
+    } catch (parseError) {
+      parsedDocumentTypes = [];
+      parsedDocumentNames = [];
+    }
+
+    // Handle verification documents upload (if present)
+    let verificationDocuments = [];
+    if (req.files && req.files.documents && req.files.documents.length > 0) {
+      // If documentTypes/names not provided, fallback to file names
+      const docTypes = Array.isArray(parsedDocumentTypes) && parsedDocumentTypes.length === req.files.documents.length
+        ? parsedDocumentTypes
+        : req.files.documents.map(f => f.originalname);
+      const docNames = Array.isArray(parsedDocumentNames) && parsedDocumentNames.length === req.files.documents.length
+        ? parsedDocumentNames
+        : req.files.documents.map(f => f.originalname);
+
+      verificationDocuments = req.files.documents.map((file, idx) => ({
+        documentType: docTypes[idx] || file.originalname,
+        documentName: docNames[idx] || file.originalname,
+        url: file.path,
+        publicId: file.filename,
+        uploadedAt: new Date(),
+        verified: false
+      }));
+    }
+
     // Create partner profile with all fields
     const partnerData = {
       userId,
       companyName,
       category: category || undefined,
       description: description || undefined,
-      // mapLocation replaces serviceCities/serviceLocations
       mapLocation: parsedMapLocation || undefined,
-      // location is now an ObjectId string (reference)
       location: location || undefined,
-      address: address || companyAddress, // Support both field names
+      address: address || companyAddress,
       contactPerson: contactPerson || undefined,
       phone: phone || contactPhone || user.phone,
       email: email || user.email,
@@ -298,7 +366,8 @@ exports.registerPartner = async (req, res) => {
       specialties: parsedSpecialties || [],
       features: parsedFeatures || [],
       yearsActive: yearsActive ? Number(yearsActive) : 0,
-      images: images, // Add processed images
+      images: images,
+      verificationDocuments, // <-- Add uploaded docs here
       status: 'pending'
     };
 
@@ -653,6 +722,288 @@ exports.updateBankDetails = async (req, res) => {
     res.status(500).json({ 
       message: 'Server error', 
       error: error.message 
+    });
+  }
+};
+
+/**
+ * Upload verification documents for a partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.uploadVerificationDocuments = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    const { documentTypes, documentNames } = req.body;
+    
+    console.log('Uploading verification documents for partner:', partnerId);
+    console.log('Uploaded files:', req.files);
+    
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    // Check authorization (partner owner or admin)
+    if (req.user && partner.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to upload documents for this partner' });
+    }
+    
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No documents uploaded' });
+    }
+    
+    // Parse document types and names if they're strings
+    let parsedDocumentTypes = documentTypes;
+    let parsedDocumentNames = documentNames;
+    
+    try {
+      if (typeof documentTypes === 'string') {
+        parsedDocumentTypes = JSON.parse(documentTypes);
+      }
+      if (typeof documentNames === 'string') {
+        parsedDocumentNames = JSON.parse(documentNames);
+      }
+    } catch (parseError) {
+      return res.status(400).json({ message: 'Invalid document types or names format' });
+    }
+    
+    if (!Array.isArray(parsedDocumentTypes) || !Array.isArray(parsedDocumentNames)) {
+      return res.status(400).json({ message: 'Document types and names must be arrays' });
+    }
+    
+    if (req.files.length !== parsedDocumentTypes.length || req.files.length !== parsedDocumentNames.length) {
+      return res.status(400).json({ message: 'Number of files, document types, and names must match' });
+    }
+    
+    // Process uploaded documents
+    const newDocuments = req.files.map((file, index) => ({
+      documentType: parsedDocumentTypes[index],
+      documentName: parsedDocumentNames[index],
+      url: file.path,
+      publicId: file.filename,
+      uploadedAt: new Date(),
+      verified: false
+    }));
+    
+    // Add to partner's verification documents
+    if (!partner.verificationDocuments) {
+      partner.verificationDocuments = [];
+    }
+    
+    partner.verificationDocuments.push(...newDocuments);
+    await partner.save();
+    
+    console.log(`Successfully uploaded ${newDocuments.length} verification documents`);
+    res.json({
+      message: 'Verification documents uploaded successfully',
+      documents: newDocuments,
+      totalDocuments: partner.verificationDocuments.length
+    });
+    
+  } catch (error) {
+    console.error('Error in uploadVerificationDocuments:', error);
+    
+    // Cleanup uploaded files on error
+    if (req.files) {
+      const cleanupPromises = req.files.map(file => {
+        if (file.filename) {
+          return cloudinary.uploader.destroy(file.filename, { resource_type: 'auto' });
+        }
+      });
+      
+      Promise.all(cleanupPromises).catch(cleanupError => {
+        console.error('Error cleaning up uploaded documents:', cleanupError);
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Delete a verification document
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.deleteVerificationDocument = async (req, res) => {
+  try {
+    const { partnerId, documentId } = req.params;
+    
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    // Check authorization (partner owner or admin)
+    if (req.user && partner.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete documents for this partner' });
+    }
+    
+    const documentIndex = partner.verificationDocuments.findIndex(
+      doc => doc._id.toString() === documentId
+    );
+    
+    if (documentIndex === -1) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    const documentToDelete = partner.verificationDocuments[documentIndex];
+    
+    // Delete from cloudinary
+    if (documentToDelete.publicId) {
+      try {
+        await cloudinary.uploader.destroy(documentToDelete.publicId, { resource_type: 'auto' });
+      } catch (error) {
+        console.error('Error deleting document from cloudinary:', error);
+      }
+    }
+    
+    // Remove from array
+    partner.verificationDocuments.splice(documentIndex, 1);
+    await partner.save();
+    
+    res.json({ 
+      message: 'Document deleted successfully',
+      remainingDocuments: partner.verificationDocuments.length
+    });
+  } catch (error) {
+    console.error('Error in deleteVerificationDocument:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Update document verification status (admin only)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updateDocumentVerificationStatus = async (req, res) => {
+  try {
+    const { partnerId, documentId } = req.params;
+    const { verified } = req.body;
+    
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    const document = partner.verificationDocuments.id(documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    document.verified = verified;
+    await partner.save();
+    
+    console.log(`Document verification status updated to ${verified} for document:`, documentId);
+    res.json({
+      message: 'Document verification status updated successfully',
+      document: document
+    });
+  } catch (error) {
+    console.error('Error in updateDocumentVerificationStatus:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Get all verification documents for a partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getVerificationDocuments = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    
+    const partner = await Partner.findById(partnerId)
+      .select('verificationDocuments companyName')
+      .lean();
+    
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    res.json({
+      partnerId: partnerId,
+      companyName: partner.companyName,
+      documents: partner.verificationDocuments || []
+    });
+  } catch (error) {
+    console.error('Error in getVerificationDocuments:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Get current partner profile for authenticated user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getCurrentPartner = async (req, res) => {
+  try {
+    // Ensure authentication middleware sets req.user
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Not authenticated. Please log in.' });
+    }
+
+    // Find partner by userId
+    const partner = await Partner.findOne({ userId: req.user.id })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates');
+
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner profile not found for this user' });
+    }
+
+    res.json(partner);
+  } catch (error) {
+    console.error('Error in getCurrentPartner:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get partner by user ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPartnerByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const partner = await Partner.findOne({ userId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('location', 'name coordinates');
+
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner not found for this user' });
+    }
+
+    res.json(partner);
+  } catch (error) {
+    console.error('Error in getPartnerByUserId:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
     });
   }
 };

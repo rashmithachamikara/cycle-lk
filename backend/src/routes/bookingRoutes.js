@@ -27,6 +27,13 @@ router.get('/my-bookings', auth(['user', 'partner', 'admin']), bookingController
 router.get('/partner/:partnerId', auth(['partner', 'admin']), bookingController.getBookingsByPartnerId);
 
 /**
+ * @route   GET /api/bookings/dropoff-bookings
+ * @desc    Get all bookings where the authenticated partner is the dropoff partner
+ * @access  Private/Partner
+ */
+router.get('/dropoff-bookings', auth(['partner']), bookingController.getDropoffBookings);
+
+/**
  * @route   GET /api/bookings/:id
  * @desc    Get booking by ID
  * @access  Private

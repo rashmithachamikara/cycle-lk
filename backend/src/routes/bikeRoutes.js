@@ -77,6 +77,13 @@ router.post('/:id/images', auth(), partner, upload.array('images', 5), bikeContr
 router.put('/:id/availability', auth(), partner, bikeController.updateBikeAvailability);
 
 /**
+ * @route   PATCH /api/bikes/:id/partner
+ * @desc    Update bike current partner (for transfers/dropoffs)
+ * @access  Private/Partner/Admin
+ */
+router.patch('/:id/partner', auth(['partner', 'admin']), bikeController.updateBikePartnerId);
+
+/**
  * @route   DELETE /api/bikes/:id
  * @desc    Delete a bike
  * @access  Private/Partner

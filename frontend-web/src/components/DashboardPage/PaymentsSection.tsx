@@ -161,7 +161,7 @@ const PaymentsSection: React.FC<PaymentsSectionProps> = ({
                 {/* Payment Amount and Action */}
                 <div className="text-right ml-4">
                   <div className="text-2xl font-bold text-gray-900 mb-2">
-                    ${booking.totalAmount}
+                    LKR {booking.totalAmount}
                   </div>
                   
                   {booking.status === 'confirmed' && (

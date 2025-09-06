@@ -26,6 +26,7 @@ import {
   PartnerDashboardBooking, 
   transformBookingForPartnerDashboard 
 } from '../../services/bookingService';
+import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
@@ -35,6 +36,8 @@ const PartnerDashboardPage = () => {
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [partner, setPartner] = useState<Partner | null>(null);
+  const [partnerLoading, setPartnerLoading] = useState(true);
   
   // Real-time events hook for partner
   const { 
@@ -113,6 +116,24 @@ const PartnerDashboardPage = () => {
     }
   }, [newBookingRequests, clearProcessedRequests]);
 
+  useEffect(() => {
+    // Fetch partner profile for approval status
+    const fetchPartnerProfile = async () => {
+      try {
+        setPartnerLoading(true);
+        if (user && user.role === 'partner') {
+          const partnerData = await partnerService.getPartnerByUserId(user.id);
+          setPartner(partnerData);
+        }
+      } catch (err) {
+        setPartner(null);
+      } finally {
+        setPartnerLoading(false);
+      }
+    };
+    fetchPartnerProfile();
+  }, [user]);
+  
   // Filter bookings by status
   const requestedBookings = bookings.filter(booking => booking.status === 'requested');
   const currentBookings = bookings.filter(booking => booking.status === 'active');
@@ -124,6 +145,41 @@ const PartnerDashboardPage = () => {
     const value = parseFloat(booking.value.replace('$', ''));
     return sum + value;
   }, 0);
+
+  // Approval status check
+  if (partnerLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex justify-center items-center py-24">
+          <Loader />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (partner && partner.status !== 'active') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-xl mx-auto px-4 py-24 text-center">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
+            <Clock className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Waiting for Approval</h2>
+            <p className="text-gray-700 mb-4">
+              Your partner account is currently <span className="font-semibold">{partner.status}</span>.<br />
+              You will be notified once your application is approved.
+            </p>
+            <p className="text-gray-500 text-sm">
+              If you have questions, please contact support.
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,7 +225,9 @@ const PartnerDashboardPage = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2"> Dashboard</h1>
-              <p className="text-black-100">Welcome back, Colombo Bikes!</p>
+              <p className="text-black-100">
+                Welcome back, {partner?.companyName || user?.firstName || 'Partner'}!
+              </p>
             </div>
             {/* <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
               <Bike className="h-8 w-8 text-white" />

@@ -8,7 +8,8 @@ import {
   Calendar, 
   Settings, 
   HelpCircle,
-  ExternalLink 
+  ExternalLink,
+  History
 } from 'lucide-react';
 
 interface NotificationProps {
@@ -43,6 +44,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       icon: MapPin,
       link: '/locations',
       color: 'bg-blue-50 text-blue-600 border-blue-200'
+    },
+    {
+      title: 'View Past Rentals',
+      description: 'Check your rental history',
+      icon: History,
+      link: '/dashboard?view=past',
+      color: 'bg-indigo-50 text-indigo-600 border-indigo-200'
     },
     {
       title: 'Invite Friends',
