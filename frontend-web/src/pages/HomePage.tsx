@@ -136,10 +136,10 @@ const HomePage = () => {
           
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
             <div className="w-full text-white space-y-8">
-              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 hover:border-teal-400 hover:bg-teal-400/20 transition-all duration-300">
+              {/* <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 hover:border-teal-400 hover:bg-teal-400/20 transition-all duration-300">
                 <CheckCircle className="h-5 w-5 text-teal-300 mr-2" />
                 <span className="text-sm font-medium">Trusted by 10,000+ travelers</span>
-              </div>
+              </div> */}
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
                 Explore
