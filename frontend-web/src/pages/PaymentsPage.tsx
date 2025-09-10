@@ -67,12 +67,6 @@ const PaymentsPage = () => {
         bookingId,
         amount: booking.totalAmount,
         paymentMethod: 'card', // This would come from user selection
-        paymentDetails: {
-          cardNumber: '4111111111111111', // Demo card
-          expiryDate: '12/25',
-          cvv: '123',
-          cardHolderName: user?.firstName + ' ' + user?.lastName
-        }
       };
 
       const response = await paymentService.processInitialPayment(paymentRequest);
