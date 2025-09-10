@@ -4,6 +4,13 @@ const paymentController = require('../controllers/paymentController');
 const { auth, admin } = require('../middleware/auth');
 
 /**
+ * @route   POST /api/payments/webhook
+ * @desc    Handle Stripe webhook events
+ * @access  Public (webhook)
+ */
+router.post('/webhook', paymentController.handleStripeWebhook);
+
+/**
  * @route   GET /api/payments
  * @desc    Get all payments with optional filtering
  * @access  Private
@@ -23,6 +30,13 @@ router.get('/stats', auth(), paymentController.getPaymentStats);
  * @access  Private
  */
 router.get('/pending', auth(['user']), paymentController.getPendingPayments);
+
+/**
+ * @route   GET /api/payments/verify-session/:sessionId
+ * @desc    Verify Stripe session status
+ * @access  Private
+ */
+router.get('/verify-session/:sessionId', auth(), paymentController.verifyStripeSession);
 
 /**
  * @route   POST /api/payments/initial
