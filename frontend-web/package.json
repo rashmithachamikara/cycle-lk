@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
+    "@stripe/react-stripe-js": "^4.0.1",
+    "@stripe/stripe-js": "^7.9.0",
     "axios": "^1.9.0",
     "firebase": "^12.1.0",
     "lucide-react": "^0.344.0",

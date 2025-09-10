@@ -78,17 +78,21 @@ const PaymentsPage = () => {
       const response = await paymentService.processInitialPayment(paymentRequest);
       
       if (response.success) {
-        toast.success('Payment processed successfully!');
-        
-        // Remove from pending payments
-        setPendingPayments(prev => prev.filter(p => p.id !== bookingId));
-        
-        // Show success message and option to go back to dashboard
-        setTimeout(() => {
-          toast.success('Redirecting to dashboard...', { duration: 2000 });
-          navigate('/dashboard');
-        }, 2000);
-        
+        if (response.sessionUrl) {
+          // Redirect to Stripe checkout
+          window.location.href = response.sessionUrl;
+        } else {
+          toast.success('Payment processed successfully!');
+          
+          // Remove from pending payments
+          setPendingPayments(prev => prev.filter(p => p.id !== bookingId));
+          
+          // Show success message and option to go back to dashboard
+          setTimeout(() => {
+            toast.success('Redirecting to dashboard...', { duration: 2000 });
+            navigate('/dashboard');
+          }, 2000);
+        }
       } else {
         toast.error(response.message || 'Payment failed. Please try again.');
       }
