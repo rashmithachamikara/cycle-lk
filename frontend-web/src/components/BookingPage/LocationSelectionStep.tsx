@@ -173,7 +173,7 @@ const LocationSelectionStep: React.FC<LocationSelectionStepProps> = ({
             <button
               onClick={handleContinue}
               disabled={!pickupLocation || !dropoffLocation}
-              className={`w-full py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center ${
+              className={`w-full py-4 px-8 rounded-full font-semibold text-lg transition-all duration-200 flex items-center justify-center ${
                 pickupLocation && dropoffLocation
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
