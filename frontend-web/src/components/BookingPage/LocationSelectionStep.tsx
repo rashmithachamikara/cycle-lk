@@ -83,7 +83,7 @@ const LocationSelectionStep: React.FC<LocationSelectionStepProps> = ({
                       setShowPickupDropdown(!showPickupDropdown);
                       setShowDropoffDropdown(false);
                     }}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-full px-4 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <div className="flex items-center">
                       <MapPin className="h-5 w-5 text-green-500 mr-3" />
@@ -131,7 +131,7 @@ const LocationSelectionStep: React.FC<LocationSelectionStepProps> = ({
                       setShowDropoffDropdown(!showDropoffDropdown);
                       setShowPickupDropdown(false);
                     }}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-full px-4 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <div className="flex items-center">
                       <MapPin className="h-5 w-5 text-red-500 mr-3" />
