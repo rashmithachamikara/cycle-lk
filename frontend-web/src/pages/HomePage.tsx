@@ -279,41 +279,69 @@ const HomePage = () => {
         {/* ============================================= */}
         {/* Locations Preview Section */}
         {/* ============================================= */}
-        <section className="py-24 bg-white">
+        <section className="py-32 bg-gradient-to-br from-white via-blue-50 to-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                <div className="text-center mb-24">
+                    <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
                         Explore Our Destinations
                     </h2>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Our partner network spans across Sri Lanka's most iconic and beautiful destinations.
+                    <p className="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                        Our partner network spans across Sri Lanka's most iconic and beautiful destinations, ready for your cycling adventure.
                     </p>
+                    
+                    {/* Decorative Line */}
+                    <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-teal-500 mx-auto mt-8 rounded-full"></div>
                 </div>
 
                 {locationsLoading ? (
-                    <div className="text-center py-12 text-gray-500">Loading locations...</div>
+                    <div className="text-center py-16">
+                        <div className="inline-flex items-center space-x-3 text-gray-500 text-xl">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <span>Discovering amazing locations...</span>
+                        </div>
+                    </div>
                 ) : locationsError ? (
-                    <div className="text-center py-12 text-red-600 bg-red-50 p-6 rounded-lg">{locationsError}</div>
+                    <div className="text-center py-16">
+                        <div className="max-w-md mx-auto bg-red-50 border border-red-200 text-red-700 p-8 rounded-2xl">
+                            <div className="text-lg font-medium mb-2">Oops! Something went wrong</div>
+                            <p className="text-sm">{locationsError}</p>
+                        </div>
+                    </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    {locations.slice(0, 6).map((location) => (
-                        <div key={location.id} className="group">
-                        <div>
-                            <LocationCard location={location} onMoreDetails={handleMoreDetails} />
-                        </div>
-                        </div>
-                    ))}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
+                        {locations.slice(0, 6).map((location, index) => (
+                            <div 
+                                key={location.id} 
+                                className="group transform transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                                style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                <div className="relative">
+                                    {/* Location Number Badge */}
+                                    <div className="absolute -top-4 -left-4 z-10">
+                                        <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                            {(index + 1).toString().padStart(2, '0')}
+                                        </div>
+                                    </div>
+                                    
+                                    <LocationCard location={location} onMoreDetails={handleMoreDetails} />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
-                <div className="text-center mt-16">
-                    <Link 
-                    to="/locations"
-                    className="inline-flex items-center gap-3 border-2 border-[#FF6B35] text-[#FF6B35] px-8 py-4 rounded-xl hover:bg-[#FF6B35]/10 hover:text-[#FF6B35] transition-colors duration-300 font-semibold text-lg transform hover:scale-105"
-                    >
-                    <span>View All Locations</span>
-                    <ArrowRight className="h-5 w-5" />
-                    </Link>
+                {/* Call to Action */}
+                <div className="text-center mt-24">
+                    <div className="inline-flex flex-col items-center space-y-8">
+                        <p className="text-2xl text-gray-600 font-medium">Ready to explore more destinations?</p>
+                        <Link 
+                            to="/locations"
+                            className="group inline-flex items-center gap-4 bg-gradient-to-r from-[#FF6B35] to-orange-500 text-white px-16 py-6 rounded-2xl hover:from-orange-500 hover:to-red-500 transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold text-2xl"
+                        >
+                            <span>View All Locations</span>
+                            <ArrowRight className="h-7 w-7 group-hover:translate-x-1 transition-transform duration-300" />
+                        </Link>
+                    </div>
                 </div>
             </div>
         </section>
