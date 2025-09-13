@@ -45,20 +45,29 @@ const HomePage = () => {
     { 
       step: '01', 
       title: 'Pick Location', 
-      desc: 'Choose from 50+ partner locations across Sri Lanka for ultimate convenience.', 
-      icon: <MapPin className="h-10 w-10" />
+      desc: 'Choose from 50+ partner locations across Sri Lanka for ultimate convenience and flexibility.', 
+      icon: '/icons/Location-review-bro.svg',
+      color: 'from-blue-500 to-cyan-500',
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600'
     },
     { 
       step: '02', 
       title: 'Start Cycling', 
-      desc: 'Unlock your bike instantly with our app and begin your adventure.', 
-      icon: <Bike className="h-10 w-10" />
+      desc: 'Unlock your bike instantly with our app and begin your cycling adventure across beautiful Sri Lanka.', 
+      icon: '/icons/bike-travellers-bro.svg',
+      color: 'from-green-500 to-teal-500',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600'
     },
     { 
       step: '03', 
       title: 'Drop Anywhere', 
-      desc: 'Return your bike at any partner location within your network area.', 
-      icon: <CheckCircle className="h-10 w-10" />
+      desc: 'Return your bike at any partner location within your network area when your journey is complete.', 
+      icon: '/icons/Bicycle-shop-bro.svg',
+      color: 'from-purple-500 to-pink-500',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600'
     }
   ];
 
@@ -184,44 +193,85 @@ const HomePage = () => {
         {/* How It Works Section */}
         {/* ============================================= */}
         
-        <section className="py-24 bg-gray-50">
+        <section className="py-32 bg-gradient-to-br from-gray-50 via-white to-blue-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <div className="text-center mb-24">
+              <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
                 How It Works
               </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Get started in three simple and straightforward steps.
+              <p className="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                Get started in three simple and straightforward steps to begin your Sri Lankan cycling adventure.
               </p>
             </div>
 
-            <div className="grid md:grid-rows-3 gap-8 lg:gap-12">
-              {howItWorksSteps.map((item) => (
+            <div className="space-y-24">
+              {howItWorksSteps.map((item, index) => (
                 <div
                   key={item.step}
-                  className="group text-center p-8 bg-white rounded-2xl  border-2 border-transparent transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] hover:border-[conic-gradient(at_top,_#10B981,_#14B8A6)]"
+                  className={`flex flex-col lg:flex-row items-center gap-12 lg:gap-16 ${
+                    index % 2 === 1 ? 'lg:flex-row-reverse' : ''
+                  }`}
                 >
-                  <div className="mb-6">
-                    <div className="w-24 h-24 bg-gradient-to-br from-[#00D4AA] to-teal-300 rounded-3xl mx-auto flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform duration-300">
-                      {item.icon}
+                  {/* Icon Section */}
+                  <div className="flex-shrink-0 lg:w-1/2 flex justify-center">
+                    <div className="relative group">
+                      {/* Step Number - Floating */}
+                      <div className="absolute -top-8 -left-8 z-10">
+                        <div className={`w-16 h-16 bg-gradient-to-r ${item.color} rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl`}>
+                          {item.step}
+                        </div>
+                      </div>
+                      
+                      {/* Icon */}
+                      <div className="w-80 h-80 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                        <img 
+                          src={item.icon} 
+                          alt={item.title}
+                          className="w-64 h-64 object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                          }}
+                        />
+                        {/* Fallback icon if SVG doesn't load */}
+                        <div className={`hidden w-64 h-64 ${item.iconColor} items-center justify-center`}>
+                          {index === 0 && <MapPin className="w-32 h-32" />}
+                          {index === 1 && <Bike className="w-32 h-32" />}
+                          {index === 2 && <CheckCircle className="w-32 h-32" />}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <span className="font-bold text-[#00D4AA] mb-2 block">{item.step}</span>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.desc}</p>
+
+                  {/* Content Section */}
+                  <div className="lg:w-1/2 text-center lg:text-left space-y-6">
+                    <h3 className="text-4xl lg:text-5xl font-bold text-gray-900">
+                      {item.title}
+                    </h3>
+                    <p className="text-xl text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                      {item.desc}
+                    </p>
+                    
+                    {/* Decorative Line */}
+                    <div className={`w-24 h-1 bg-gradient-to-r ${item.color} mx-auto lg:mx-0 rounded-full`}></div>
+                  </div>
                 </div>
               ))}
             </div>
 
-
-            <div className="text-center mt-16">
-              <Link 
-                to="/booking" 
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-[#00D4AA] to-teal-300 text-white px-8 py-4 rounded-xl hover:from-teal-300 hover:to-teal-200 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold text-lg"
-              >
-                <span>Book Your Bike Now</span>
-                <ArrowRight className="h-5 w-5" />
-              </Link>
+            {/* Call to Action */}
+            <div className="text-center mt-24">
+              <div className="inline-flex flex-col items-center space-y-8">
+                <p className="text-2xl text-gray-600 font-medium">Ready to start your adventure?</p>
+                <Link 
+                  to="/booking" 
+                  className="group inline-flex items-center gap-4 bg-gradient-to-r from-[#00D4AA] to-teal-400 text-white px-16 py-6 rounded-2xl hover:from-teal-400 hover:to-teal-500 transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold text-2xl"
+                >
+                  <span>Book Your Bike Now</span>
+                  <ArrowRight className="h-7 w-7 group-hover:translate-x-1 transition-transform duration-300" />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
