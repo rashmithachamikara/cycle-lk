@@ -195,11 +195,11 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid md:grid-rows-3 gap-8 lg:gap-12">
               {howItWorksSteps.map((item) => (
                 <div
                   key={item.step}
-                  className="group text-center p-8 bg-white rounded-2xl shadow-lg border-2 border-transparent transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] hover:border-[conic-gradient(at_top,_#10B981,_#14B8A6)]"
+                  className="group text-center p-8 bg-white rounded-2xl  border-2 border-transparent transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(0,212,170,0.4)] hover:border-[conic-gradient(at_top,_#10B981,_#14B8A6)]"
                 >
                   <div className="mb-6">
                     <div className="w-24 h-24 bg-gradient-to-br from-[#00D4AA] to-teal-300 rounded-3xl mx-auto flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform duration-300">
