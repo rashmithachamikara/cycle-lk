@@ -5,6 +5,23 @@ export { default as ErrorDisplay } from './ErrorDisplay';
 export { default as BackButton } from './BackButton';
 export { default as Breadcrumb } from './Breadcrumb';
 export { default as SearchAndFilters } from './SearchAndFilters';
+export { default as Icon } from './Icon';
+export { 
+  default as IconButton,
+  BookNowButton,
+  SearchButton,
+  LocationButton,
+  ContactButton,
+  CalendarButton,
+  PaymentButton,
+  IconBackButton,
+  SaveButton,
+  DeleteButton,
+  EditButton
+} from './IconButton';
+
+// Icon constants
+export { ICONS } from './iconConstants';
 
 // Bike-related components
 export { default as BikeCard } from './BikeCard';

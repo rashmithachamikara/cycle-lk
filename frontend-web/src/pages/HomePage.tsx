@@ -32,8 +32,8 @@ const HomePage = () => {
         setLocationsLoading(true);
         const data = await locationService.getAllLocations();
         setLocations(data);
-      } catch (err:any) {
-        setLocationsError(`Failed to load locations. ${err.message}`);
+      } catch (err: unknown) {
+        setLocationsError(`Failed to load locations. ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setLocationsLoading(false);
       }
@@ -127,10 +127,12 @@ const HomePage = () => {
             loop 
             muted 
             playsInline
+            preload="metadata"
             className="absolute inset-0 w-full h-full object-cover"
             poster="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.jpg"
           >
-            <source src="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.mp4" type="video/mp4" />
+            <source src="/videos/2187246-uhd_3840_2160_30fps.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
           <div className="absolute inset-0 bg-black/50"></div>
           
