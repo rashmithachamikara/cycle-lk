@@ -532,7 +532,7 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
           disabled={!selectedPartnerId}
           className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
             selectedPartnerId
-              ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+              ? 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-xl hover:shadow-2xl transform hover:scale-105'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
