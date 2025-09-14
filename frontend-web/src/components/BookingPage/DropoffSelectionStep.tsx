@@ -179,10 +179,14 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="my-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Select Drop-off Location
+        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          Select 
+           <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent block my-1 p-2">Drop-off Location</span>
+            
         </h1>
-        <p className="text-gray-600">
+         {/* Decorative Line */}
+            <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-teal-500 mx-auto mt-8 rounded-full"></div>
+        <p className="text-gray-600 text-xl mt-2">
           Choose your preferred partner location for returning the bike
         </p>
       </div>
@@ -192,10 +196,10 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
         <div className="lg:col-span-2 space-y-6">
           
           {/* DROP-OFF LOCATIONS SECTION */}
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl shadow-lg p-8 border border-blue-500">
+          <div className="rounded-3xl shadow-2xl p-10 border border-gray-100">
             <div className="flex items-center mb-6">
               <MapPin className="h-6 w-6 text-blue-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">Drop-off Information</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Drop-off Information</h2>
             </div>
             
             <div className="grid lg:grid-rows-2 gap-6">
@@ -378,7 +382,7 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                               key={partner._id} 
                               className={`w-full text-left cursor-pointer transition-all duration-200 rounded-lg ${
                                 selectedPartnerId === partner._id 
-                                  ? 'ring-2 ring-blue-500 shadow-md' 
+                                  ? 'ring-2  shadow-md' 
                                   : 'hover:shadow-sm'
                               }`}
                               onClick={() => handlePartnerSelect(partner._id)}
