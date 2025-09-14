@@ -55,7 +55,7 @@ const LocationSelectionStep: React.FC<LocationSelectionStepProps> = ({
           <div className="mb-24">
             <h1 className="text-6xl md:text-7xl font-bold text-gray-900 mb-8">
               Where would you like to
-              <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent block">Ride today?</span>
+              <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent block p-3">Ride today?</span>
             </h1>
             <p className="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
               Choose your pickup and drop-off locations to start your cycling adventure. 
