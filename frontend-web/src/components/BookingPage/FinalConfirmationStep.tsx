@@ -64,10 +64,12 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="my-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent block my-1 p-2">
           Confirm Your Booking
         </h1>
-        <p className="text-gray-600">
+         {/* Decorative Line */}
+            <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-teal-500 mx-auto mt-8 rounded-full"></div>
+        <p className="text-gray-600 text-xl mt-2">
           Review your booking details before confirming
         </p>
       </div>
@@ -77,7 +79,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
         <div className="lg:col-span-2 space-y-6">
           
           {/* Bike Details */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="rounded-3xl shadow-2xl  border border-gray-100 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Selected Bike</h2>
             <div className="flex items-start space-x-6">
               <img
@@ -119,7 +121,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
           </div>
 
           {/* Location Information */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="rounded-3xl shadow-2xl border border-gray-100 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <MapPin className="h-5 w-5 mr-2 text-blue-600" />
               Location Details
@@ -127,7 +129,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             
             <div className="grid md:grid-cols-2 gap-6">
               {/* Pickup Location */}
-              <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+              <div className=" rounded-xl p-6 border border-green-200">
                 <div className="flex items-center mb-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
                   <h3 className="font-semibold text-gray-900">Pickup Partner</h3>
@@ -139,7 +141,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               </div>
 
               {/* Drop-off Location */}
-              <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <div className="rounded-xl p-6 border border-blue-200">
                 <div className="flex items-center mb-3">
                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
                   <h3 className="font-semibold text-gray-900">Drop-off Partner</h3>
@@ -165,7 +167,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
           </div>
 
           {/* Rental Period */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="rounded-3xl shadow-2xl  border border-gray-100 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <Calendar className="h-5 w-5 mr-2 text-blue-600" />
               Rental Period
@@ -251,7 +253,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
 
         {/* Right Sidebar - Pricing Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-8">
+          <div className="rounded-3xl shadow-2xl border border-gray-100 p-8 sticky top-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
               <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
               Pricing Summary
@@ -281,7 +283,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-bold text-gray-900">Total Amount:</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent block my-1 p-2">
                     LKR {totalPrice.toLocaleString()}
                   </span>
                 </div>

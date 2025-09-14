@@ -110,8 +110,8 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
           {/* Left Column - Form */}
           <div className="space-y-12">
             {/* Date and Time Selection */}
-            <div className="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-8 flex items-center">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-8 flex items-center">
                 <Calendar className="h-7 w-7 mr-3 text-blue-600" />
                 Rental Period
               </h2>
@@ -202,8 +202,8 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
             </div>
 
             {/* Delivery Address */}
-            <div className="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-8">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-8">
                 Delivery Information (Optional)
               </h2>
               <div>
@@ -223,28 +223,7 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
               </div>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex flex-col md:flex-row gap-6">
-              <button
-                onClick={onBack}
-                className="w-full md:w-1/2 flex items-center justify-center px-8 py-5 text-gray-600 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all duration-300 font-semibold text-lg"
-              >
-                <ArrowLeft className="h-6 w-6 mr-3" />
-                Back to Bikes
-              </button>
-              <button
-                onClick={handleContinue}
-                disabled={!startDate || !endDate}
-                className={`w-full md:w-1/2 flex items-center justify-center px-8 py-5 rounded-2xl font-semibold text-lg transition-all duration-300 ${
-                  startDate && endDate
-                    ? 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-xl hover:shadow-2xl transform hover:scale-105'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Continue to Summary
-                <ArrowRight className="h-6 w-6 ml-3" />
-              </button>
-            </div>
+            
           </div>
 
           {/* Right Column - Summary */}
@@ -324,6 +303,29 @@ const RentalPeriodStep: React.FC<RentalPeriodStepProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Navigation Buttons */}
+            <div className="flex flex-col md:flex-row gap-6 my-4">
+              <button
+                onClick={onBack}
+                className="w-full md:w-1/2 flex items-center justify-center px-8 py-5 text-gray-600 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all duration-300 font-semibold text-lg"
+              >
+                <ArrowLeft className="h-6 w-6 mr-3" />
+                Back to Bikes
+              </button>
+              <button
+                onClick={handleContinue}
+                disabled={!startDate || !endDate}
+                className={`w-full md:w-1/2 flex items-center justify-center px-8 py-5 rounded-2xl font-semibold text-lg transition-all duration-300 ${
+                  startDate && endDate
+                    ? 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-xl hover:shadow-2xl transform hover:scale-105'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Continue to Summary
+                <ArrowRight className="h-6 w-6 ml-3" />
+              </button>
+            </div>
       </div>
     </div>
   );
