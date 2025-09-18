@@ -315,14 +315,7 @@ const HomePage = () => {
                                 className="group transform transition-all duration-500 hover:scale-105 hover:-translate-y-2"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
-                                <div className="relative">
-                                    {/* Location Number Badge */}
-                                    <div className="absolute -top-4 -left-4 z-10">
-                                        <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                                            {(index + 1).toString().padStart(2, '0')}
-                                        </div>
-                                    </div>
-                                    
+                                <div className="relative">  
                                     <LocationCard location={location} onMoreDetails={handleMoreDetails} />
                                 </div>
                             </div>
