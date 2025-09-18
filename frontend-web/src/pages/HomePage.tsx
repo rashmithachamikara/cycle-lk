@@ -140,7 +140,7 @@ const HomePage = () => {
             className="absolute inset-0 w-full h-full object-cover"
             poster="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.jpg"
           >
-            <source src="/videos/2187246-uhd_3840_2160_30fps.mp4" type="video/mp4" />
+            <source src="https://res.cloudinary.com/di9vcyned/video/upload/v1757962213/Landing_Page_Vid_avjzt8.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           <div className="absolute inset-0 bg-black/50"></div>
