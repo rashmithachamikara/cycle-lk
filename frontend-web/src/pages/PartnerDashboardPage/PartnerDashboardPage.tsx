@@ -26,6 +26,7 @@ import {
   PartnerDashboardBooking, 
   transformBookingForPartnerDashboard 
 } from '../../services/bookingService';
+import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
@@ -35,6 +36,8 @@ const PartnerDashboardPage = () => {
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [partner, setPartner] = useState<Partner | null>(null);
+  const [partnerLoading, setPartnerLoading] = useState(true);
   
   // Real-time events hook for partner
   const { 
@@ -113,6 +116,24 @@ const PartnerDashboardPage = () => {
     }
   }, [newBookingRequests, clearProcessedRequests]);
 
+  useEffect(() => {
+    // Fetch partner profile for approval status
+    const fetchPartnerProfile = async () => {
+      try {
+        setPartnerLoading(true);
+        if (user && user.role === 'partner') {
+          const partnerData = await partnerService.getPartnerByUserId(user.id);
+          setPartner(partnerData);
+        }
+      } catch (err) {
+        setPartner(null);
+      } finally {
+        setPartnerLoading(false);
+      }
+    };
+    fetchPartnerProfile();
+  }, [user]);
+  
   // Filter bookings by status
   const requestedBookings = bookings.filter(booking => booking.status === 'requested');
   const currentBookings = bookings.filter(booking => booking.status === 'active');
@@ -124,6 +145,41 @@ const PartnerDashboardPage = () => {
     const value = parseFloat(booking.value.replace('$', ''));
     return sum + value;
   }, 0);
+
+  // Approval status check
+  if (partnerLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex justify-center items-center py-24">
+          <Loader />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (partner && partner.status !== 'active') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-xl mx-auto px-4 py-24 text-center">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
+            <Clock className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Waiting for Approval</h2>
+            <p className="text-gray-700 mb-4">
+              Your partner account is currently <span className="font-semibold">{partner.status}</span>.<br />
+              You will be notified once your application is approved.
+            </p>
+            <p className="text-gray-500 text-sm">
+              If you have questions, please contact support.
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -166,12 +222,35 @@ const PartnerDashboardPage = () => {
 
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Partner Dashboard</h1>
-              <p className="text-blue-100">Welcome back, Colombo Bikes!</p>
+              <h1 className="text-3xl font-bold mb-2"> Dashboard</h1>
+              <p className="text-black-100">
+                Welcome back, {partner?.companyName || user?.firstName || 'Partner'}!
+              </p>
             </div>
+            {/* <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Bike className="h-8 w-8 text-white" />
+            </div> */}
+
+            {/* Action Buttons at the right end of welcome section */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              to="/partner-dashboard/drop-off-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              Drop Off a Bike
+            </Link>
+            <Link
+              to="/partner-dashboard/add-bike"
+              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+            >
+              + Add New Bike
+            </Link>
           </div>
+          </div>
+          
+          
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
@@ -228,32 +307,7 @@ const PartnerDashboardPage = () => {
               </div>
             </div>
 
-            {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-green-600 font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +12.5% from last month
-                  </span>
-                </div>
-              </div>
-              
-              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
-                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div 
-                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <div className="text-xs text-gray-600 mt-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Management Overview Cards */}
             <div className="bg-white rounded-2xl shadow-sm">
@@ -349,32 +403,54 @@ const PartnerDashboardPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Revenue Chart */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-green-600 font-medium flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    +12.5% from last month
+                  </span>
+                </div>
+              </div>
+              
+              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
+                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div 
+                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
+                      style={{ height: `${height}%` }}
+                    ></div>
+                    <div className="text-xs text-gray-600 mt-2">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3> */}
               <div className="space-y-3">
-                <Link
-                  to="/partner-dashboard/add-bike"
-                  className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium text-center block"
-                >
-                  Add New Bike +
                 
-                </Link>
                 <Link
                   to="/partner-dashboard/inventory"
                   className="w-full border border-green-500 text-black-600 py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium text-center flex items-center justify-center gap-2"
                 >
                   <Rows4  className="h-4 w-4" /> Inventory
                 </Link>
-                <button
+                <Link
+                  to="/partner-dashboard/bike-locations"
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
-                  Manage Settings
-                </button>
+                  My Bike Locations
+                </Link>
               </div>
             </div>
 

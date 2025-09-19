@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, 
-  Navigation, 
   Phone, 
   Download, 
   MessageCircle, 
+<<<<<<< HEAD
   CreditCard
+=======
+  CreditCard,
+  MapPin
+>>>>>>> 451b8a9c3ee5b53d7bfd5b36bb56f56f96bf031a
 } from 'lucide-react';
 import { UserDashboardBooking } from '../../services/bookingService';
+import LocationDetailsModal from './LocationDetailsModal';
 
 interface QuickActionsProps {
   booking: UserDashboardBooking;
@@ -16,6 +21,18 @@ interface QuickActionsProps {
 
 const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
   const navigate = useNavigate();
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [selectedLocationType, setSelectedLocationType] = useState<'pickup' | 'dropoff'>('pickup');
+
+  const showPickupLocation = () => {
+    setSelectedLocationType('pickup');
+    setLocationModalOpen(true);
+  };
+
+  const showDropoffLocation = () => {
+    setSelectedLocationType('dropoff');
+    setLocationModalOpen(true);
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -29,8 +46,16 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
               <QrCode className="h-4 w-4 mr-2" />
               Show QR Code
             </button>
+<<<<<<< HEAD
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               <Navigation className="h-4 w-4 mr-2" />
+=======
+            <button 
+              onClick={showDropoffLocation}
+              className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+>>>>>>> 451b8a9c3ee5b53d7bfd5b36bb56f56f96bf031a
               Get Drop Locations
             </button>
             {booking.partnerPhone && (
@@ -54,9 +79,25 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
 
         {booking.status === 'requested' && (
           <>
+<<<<<<< HEAD
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               <Navigation className="h-4 w-4 mr-2" />
               Navigate to Pickup Location
+=======
+            <button 
+              onClick={showPickupLocation}
+              className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              Navigate to Pickup Location
+            </button>
+            <button 
+              onClick={showDropoffLocation}
+              className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              Get Drop Locations
+>>>>>>> 451b8a9c3ee5b53d7bfd5b36bb56f56f96bf031a
             </button>
             <button className="w-full flex items-center justify-center border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
               Modify Booking
@@ -86,6 +127,14 @@ const QuickActions: React.FC<QuickActionsProps> = ({ booking }) => {
           Contact Support
         </button>
       </div>
+
+      {/* Location Details Modal */}
+      <LocationDetailsModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        locationType={selectedLocationType}
+        booking={booking}
+      />
     </div>
   );
 };

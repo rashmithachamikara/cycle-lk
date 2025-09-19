@@ -87,7 +87,28 @@ export interface MapLocation {
   isMainLocation?: boolean;
 }
 
-// Full Partner interface matching MongoDB structure
+// Interface for populated location object
+export interface PopulatedLocation {
+  _id: string;
+  name: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+// Interface for verification document
+export interface VerificationDocument {
+  _id: string;
+  documentType: string; // Changed from enum to flexible string
+  documentName: string;
+  url: string;
+  publicId: string;
+  uploadedAt: string;
+  verified: boolean;
+}
+
+// Interface for partner
 export interface Partner {
   _id: string;
   id?: string; // For frontend consistency
@@ -95,7 +116,7 @@ export interface Partner {
   companyName: string;
   category?: string;
   description?: string;
-  location: string; // Now ObjectId string (reference)
+  location: string | PopulatedLocation; // Can be ObjectId string or populated object
   // mapLocation replaces serviceCities/serviceLocations
   mapLocation?: MapLocation;
   address?: string;
@@ -112,6 +133,7 @@ export interface Partner {
   yearsActive?: number;
   images?: PartnerImages;
   verified?: boolean;
+  verificationDocuments?: VerificationDocument[];
   status?: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
@@ -148,6 +170,12 @@ export interface PartnerRegistrationFormData {
   logoImage?: ImageFile;
   storefrontImage?: ImageFile;
   galleryImages?: ImageFile[];
+  // Add verification documents to registration
+  verificationDocuments?: {
+    file: File;
+    name: string;
+    documentType?: string;
+  }[];
 }
 
 // Interface for bank details
@@ -158,7 +186,7 @@ export interface BankDetails {
   branchCode: string;
 }
 
-// Interface for raw partner data from MongoDB API
+// Interface for raw partner data from MongoDB API (updated to handle both formats)
 export interface PartnerFromAPI {
   _id: string;
   userId: string | {
@@ -172,8 +200,6 @@ export interface PartnerFromAPI {
   category?: string;
   description?: string;
   location: string;
-  // serviceCities?: string[]; // removed
-  // serviceLocations?: CityServiceData[]; // removed
   mapLocation?: MapLocation;
   address?: string;
   coordinates?: Coordinates;
@@ -187,22 +213,151 @@ export interface PartnerFromAPI {
   reviews?: PartnerReview[];
   bikeCount?: number;
   yearsActive?: number;
-  images?: PartnerImages;
+  // Handle both old string format and new object format
+  images?: {
+    logo?: string | { url: string; publicId: string };
+    storefront?: string | { url: string; publicId: string };
+    gallery?: (string | { url: string; publicId: string })[];
+  };
   verified?: boolean;
   status?: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
 }
 
+// Helper function to normalize image data
+const normalizeImageData = (imageData: any): PartnerImages | undefined => {
+  if (!imageData) return undefined;
+
+  const normalized: PartnerImages = {};
+
+  // Handle logo
+  if (imageData.logo) {
+    if (typeof imageData.logo === 'string') {
+      normalized.logo = {
+        url: imageData.logo,
+        publicId: '' // Empty publicId for legacy string URLs
+      };
+    } else if (imageData.logo.url) {
+      normalized.logo = imageData.logo;
+    }
+  }
+
+  // Handle storefront
+  if (imageData.storefront) {
+    if (typeof imageData.storefront === 'string') {
+      normalized.storefront = {
+        url: imageData.storefront,
+        publicId: '' // Empty publicId for legacy string URLs
+      };
+    } else if (imageData.storefront.url) {
+      normalized.storefront = imageData.storefront;
+    }
+  }
+
+  // Handle gallery
+  if (imageData.gallery && Array.isArray(imageData.gallery)) {
+    normalized.gallery = imageData.gallery
+      .filter(item => item) // Remove null/undefined items
+      .map(item => {
+        if (typeof item === 'string') {
+          return {
+            url: item,
+            publicId: '' // Empty publicId for legacy string URLs
+          };
+        } else if (item && item.url) {
+          return item;
+        }
+        return null;
+      })
+      .filter(item => item !== null) as Array<{ url: string; publicId: string }>;
+  }
+
+  return normalized;
+};
+
 // Transform function to convert MongoDB partner to frontend partner
 export const transformPartner = (partnerFromAPI: PartnerFromAPI): Partner => {
-  return {
+  const transformed = {
     ...partnerFromAPI,
     id: partnerFromAPI._id, // Add id field for frontend consistency
     userId: typeof partnerFromAPI.userId === 'string' 
       ? partnerFromAPI.userId 
       : partnerFromAPI.userId._id, // Handle populated userId
+    images: normalizeImageData(partnerFromAPI.images)
   };
+
+  // Debug log image URLs
+  if (transformed.images) {
+    console.log('Partner images:', {
+      partnerId: transformed._id,
+      logo: transformed.images.logo?.url,
+      storefront: transformed.images.storefront?.url,
+      gallery: transformed.images.gallery?.map(img => img.url)
+    });
+  } else {
+    console.log('No images found for partner:', transformed._id);
+  }
+
+  return transformed;
+};
+
+// Helper function to create FormData with images and documents
+const createPartnerFormData = (data: PartnerRegistrationFormData): FormData => {
+  const formData = new FormData();
+  
+  // Add text fields
+  Object.keys(data).forEach(key => {
+    const value = data[key as keyof PartnerRegistrationFormData];
+    
+    // Skip image fields - they'll be handled separately
+    if (key === 'logoImage' || key === 'storefrontImage' || key === 'galleryImages') {
+      return;
+    }
+    
+    // Handle arrays and objects
+    if (Array.isArray(value)) {
+      formData.append(key, JSON.stringify(value));
+    } else if (typeof value === 'object' && value !== null) {
+      formData.append(key, JSON.stringify(value));
+    } else if (value !== undefined && value !== null) {
+      formData.append(key, String(value));
+    }
+  });
+  
+  // Add image files
+  if (data.logoImage?.file) {
+    formData.append('logo', data.logoImage.file);
+  }
+  
+  if (data.storefrontImage?.file) {
+    formData.append('storefront', data.storefrontImage.file);
+  }
+  
+  if (data.galleryImages && data.galleryImages.length > 0) {
+    data.galleryImages.forEach(imageFile => {
+      if (imageFile.file) {
+        formData.append('gallery', imageFile.file);
+      }
+    });
+  }
+  
+  // Add verification documents
+  if (data.verificationDocuments && data.verificationDocuments.length > 0) {
+    // Document types and names arrays
+    const documentTypes = data.verificationDocuments.map(doc => doc.documentType || doc.name);
+    const documentNames = data.verificationDocuments.map(doc => doc.name);
+
+    formData.append('documentTypes', JSON.stringify(documentTypes));
+    formData.append('documentNames', JSON.stringify(documentNames));
+    data.verificationDocuments.forEach(doc => {
+      if (doc.file) {
+        formData.append('documents', doc.file);
+      }
+    });
+  }
+
+  return formData;
 };
 
 // Helper function to create FormData with images
@@ -303,12 +458,17 @@ export const isPartnerOpen = (businessHours: BusinessHours | undefined): boolean
 
 // Partner service object
 export const partnerService = {
-  // Register as a partner with image upload
+  // Register as a partner with image and document upload
   registerPartner: async (partnerData: PartnerRegistrationData | PartnerRegistrationFormData) => {
     let response;
-    
-    // Check if this is form data with images
-    if ('logoImage' in partnerData || 'storefrontImage' in partnerData || 'galleryImages' in partnerData) {
+
+    // Check if this is form data with images/documents
+    if (
+      'logoImage' in partnerData ||
+      'storefrontImage' in partnerData ||
+      'galleryImages' in partnerData ||
+      'verificationDocuments' in partnerData
+    ) {
       const formData = createPartnerFormData(partnerData as PartnerRegistrationFormData);
       response = await api.post('/partners', formData, {
         headers: {
@@ -319,7 +479,6 @@ export const partnerService = {
       // Regular JSON data
       response = await api.post('/partners', partnerData);
     }
-    
     return transformPartner(response.data);
   },
 
@@ -346,6 +505,24 @@ export const partnerService = {
   // Delete a gallery image
   deleteGalleryImage: async (partnerId: string, imageIndex: number) => {
     const response = await api.delete(`/partners/${partnerId}/gallery/${imageIndex}`);
+    return response.data;
+  },
+
+  // Get verification documents
+  getVerificationDocuments: async (partnerId: string) => {
+    const response = await api.get(`/partners/${partnerId}/documents`);
+    return response.data;
+  },
+
+  // Delete verification document
+  deleteVerificationDocument: async (partnerId: string, documentId: string) => {
+    const response = await api.delete(`/partners/${partnerId}/documents/${documentId}`);
+    return response.data;
+  },
+
+  // Update document verification status (admin only)
+  updateDocumentVerificationStatus: async (partnerId: string, documentId: string, verified: boolean) => {
+    const response = await api.put(`/partners/${partnerId}/documents/${documentId}/verify`, { verified });
     return response.data;
   },
 
@@ -389,8 +566,25 @@ export const partnerService = {
 
   // Get a single partner by ID
   getPartnerById: async (id: string): Promise<Partner> => {
-    const response = await api.get(`/partners/${id}`);
-    return transformPartner(response.data);
+    try {
+      debugLog('Fetching partner by ID:', id);
+      const response = await api.get(`/partners/${id}`);
+      console.log('Partner by ID response:', response.data);
+      
+      const partner = transformPartner(response.data);
+      console.log('Transformed partner:', partner);
+      
+      return partner;
+    } catch (error) {
+      console.error('Error in getPartnerById:', error);
+      throw error;
+    }
+  },
+
+  // Get partners by location ID
+  getPartnersByLocationId: async (locationId: string): Promise<Partner[]> => {
+    const response = await api.get(`/partners/location/${locationId}`);
+    return response.data.map(transformPartner);
   },
 
   // Update partner verification status (requires admin role)
@@ -420,8 +614,19 @@ export const partnerService = {
   },
 
   // Search partners
-  searchPartners: async (query: string): Promise<Partner[]> => {
-    const response = await api.get(`/partners/search?q=${encodeURIComponent(query)}`);
+  searchPartners: async (query: string, filters?: { location?: string; verified?: boolean }): Promise<Partner[]> => {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    
+    if (filters?.location) {
+      params.append('location', filters.location);
+    }
+    
+    if (filters?.verified !== undefined) {
+      params.append('verified', String(filters.verified));
+    }
+    
+    const response = await api.get(`/partners/search?${params.toString()}`);
     return response.data.map(transformPartner);
   },
 
@@ -429,5 +634,29 @@ export const partnerService = {
   getVerifiedPartners: async (): Promise<Partner[]> => {
     const response = await api.get('/partners?verified=true');
     return response.data.map(transformPartner);
-  }
+  },
+
+  // Get partners by location ID with optional verified filter
+  getPartnersByLocationIdFiltered: async (locationId: string, verifiedOnly: boolean = false): Promise<Partner[]> => {
+    const params = new URLSearchParams();
+    params.append('locationId', locationId);
+    if (verifiedOnly) {
+      params.append('verified', 'true');
+    }
+    
+    const response = await api.get(`/partners?${params.toString()}`);
+    return response.data.map(transformPartner);
+  },
+
+  // Get current partner profile for authenticated user
+  getCurrentPartner: async (): Promise<Partner> => {
+    const response = await api.get('/partners/me');
+    return transformPartner(response.data);
+  },
+
+  // Get partner by user ID
+  getPartnerByUserId: async (userId: string): Promise<Partner> => {
+    const response = await api.get(`/partners/user/${userId}`);
+    return transformPartner(response.data);
+  },
 };

@@ -13,6 +13,13 @@ const upload = require('../middleware/upload');
 router.get('/', bikeController.getAllBikes);
 
 /**
+ * @route   GET /api/bikes/location/:locationId/available
+ * @desc    Get available bikes for a specific location
+ * @access  Public
+ */
+router.get('/location/:locationId/available', bikeController.getAvailableBikesForLocation);
+
+/**
  * @route   GET /api/bikes/featured
  * @desc    Get featured bikes
  * @access  Public
@@ -68,6 +75,13 @@ router.post('/:id/images', auth(), partner, upload.array('images', 5), bikeContr
  * @access  Private/Partner
  */
 router.put('/:id/availability', auth(), partner, bikeController.updateBikeAvailability);
+
+/**
+ * @route   PATCH /api/bikes/:id/partner
+ * @desc    Update bike current partner (for transfers/dropoffs)
+ * @access  Private/Partner/Admin
+ */
+router.patch('/:id/partner', auth(['partner', 'admin']), bikeController.updateBikePartnerId);
 
 /**
  * @route   DELETE /api/bikes/:id

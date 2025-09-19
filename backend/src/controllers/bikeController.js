@@ -10,12 +10,13 @@ const cloudinary = require('../config/cloudinary');
  */
 exports.getAllBikes = async (req, res) => {
   try {
-    const { location, type, minPrice, maxPrice, availability, partnerId, limit, sort } = req.query;
+    const { location, type, minPrice, maxPrice, availability, partnerId, currentPartnerId, limit, sort } = req.query;
 
     // Build match filter for aggregation
     const match = {};
     if (type) match.type = type;
     if (partnerId) match.partnerId = partnerId;
+    if (currentPartnerId) match.currentPartnerId = currentPartnerId;
     if (availability) match['availability.status'] = availability;
     if (minPrice || maxPrice) {
       match['pricing.perDay'] = {};
@@ -90,7 +91,7 @@ exports.getMyBikes = async (req, res) => {
     console.log(`User role: ${req.user.role}, User's Partner ID: ${req.user.partnerId}`);
 
     const partnerId = req.user.partnerId;
-    const bikes = await Bike.find({ currentPartnerId: req.user.partnerId })
+    const bikes = await Bike.find({ partnerId: req.user.partnerId })
       .populate({
         path: 'currentPartnerId',
         select: 'companyName email phone location',
@@ -349,6 +350,87 @@ exports.deleteBike = async (req, res) => {
 };
 
 /**
+ * Get available bikes for a specific location
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getAvailableBikesForLocation = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const { type, minPrice, maxPrice, limit, sort } = req.query;
+
+    console.log(`Fetching available bikes for location: ${locationId}`);
+
+    // Step 1: Get all partners for this location
+    const partners = await Partner.find({ location: locationId }).select('_id');
+    const partnerIds = partners.map(partner => partner._id);
+
+    console.log(`Found ${partnerIds.length} partners for location: ${locationId}`);
+
+    if (partnerIds.length === 0) {
+      return res.json([]); // No partners in this location
+    }
+
+    // Step 2: Build query for bikes with these partner IDs
+    const bikeQuery = {
+      currentPartnerId: { $in: partnerIds },
+      'availability.status': 'available'
+    };
+
+    // Add additional filters
+    if (type) bikeQuery.type = type;
+    if (minPrice || maxPrice) {
+      bikeQuery['pricing.perDay'] = {};
+      if (minPrice) bikeQuery['pricing.perDay'].$gte = Number(minPrice);
+      if (maxPrice) bikeQuery['pricing.perDay'].$lte = Number(maxPrice);
+    }
+
+    // Build sort options
+    let sortOptions = {};
+    if (sort === 'price-asc') {
+      sortOptions['pricing.perDay'] = 1;
+    } else if (sort === 'price-desc') {
+      sortOptions['pricing.perDay'] = -1;
+    } else if (sort === 'rating') {
+      sortOptions['rating'] = -1;
+    } else {
+      sortOptions['rating'] = -1; // Default sort
+    }
+
+    // Find bikes and populate partner and location data
+    let bikesQuery = Bike.find(bikeQuery)
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName rating location',
+        populate: { 
+          path: 'location', 
+          select: 'name' 
+        }
+      })
+      .sort(sortOptions);
+
+    // Add limit if specified
+    if (limit) {
+      bikesQuery = bikesQuery.limit(Number(limit));
+    }
+
+    const bikes = await bikesQuery;
+
+    // Transform bikes to include location name
+    const bikesWithLocationName = bikes.map(bike => ({
+      ...bike.toObject(),
+      location: bike.currentPartnerId?.location?.name || ''
+    }));
+
+    console.log(`Found ${bikesWithLocationName.length} available bikes for location: ${locationId}`);
+    res.json(bikesWithLocationName);
+  } catch (err) {
+    console.error('Error in getAvailableBikesForLocation:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
  * Get featured bikes
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -480,6 +562,69 @@ exports.updateBikeAvailability = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Update bike current partner (for bike transfers/dropoffs)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updateBikePartnerId = async (req, res) => {
+  try {
+    const { partnerId } = req.body;
+    const bikeId = req.params.id;
+    
+    // Validate required fields
+    if (!partnerId) {
+      return res.status(400).json({ message: 'Partner ID is required' });
+    }
+    
+    // Find the bike
+    const bike = await Bike.findById(bikeId);
+    if (!bike) {
+      return res.status(404).json({ message: 'Bike not found' });
+    }
+    
+    // Verify the new partner exists
+    const newPartner = await Partner.findById(partnerId);
+    if (!newPartner) {
+      return res.status(404).json({ message: 'Partner not found' });
+    }
+    
+    // Check authorization - either the current partner holding the bike or an admin
+    const user = await require('../models').User.findById(req.user.id);
+    if (user.role !== 'admin' && bike.currentPartnerId && bike.currentPartnerId.toString() !== req.user.partnerId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to transfer this bike' });
+    }
+    
+    // Update the bike's current partner
+    bike.currentPartnerId = partnerId;
+    
+    // Update coordinates if the new partner has location coordinates
+    if (newPartner.mapLocation && newPartner.mapLocation.coordinates) {
+      bike.coordinates = {
+        latitude: newPartner.mapLocation.coordinates.lat,
+        longitude: newPartner.mapLocation.coordinates.lng
+      };
+    }
+    
+    await bike.save();
+    
+    console.log(`Bike ${bikeId} transferred to partner ${partnerId} (${newPartner.companyName})`);
+    
+    res.json({ 
+      message: 'Bike partner updated successfully', 
+      bike: {
+        id: bike._id,
+        currentPartnerId: bike.currentPartnerId,
+        coordinates: bike.coordinates,
+        partnerName: newPartner.companyName
+      }
+    });
+  } catch (err) {
+    console.error('Error updating bike partner:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

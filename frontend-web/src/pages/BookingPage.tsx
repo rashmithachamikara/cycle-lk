@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
-import { bikeService, Bike } from '../services/bikeService';
+import { bikeService, Bike, BikeType } from '../services/bikeService';
 import { bookingService, CreateBookingRequest } from '../services/bookingService';
 import { Location } from '../services/locationService';
+import { Partner, partnerService } from '../services/partnerService';
 import {
   BookingProgressSteps,
   BikeSelectionStep,
   LocationSelectionStep,
   RentalPeriodStep,
+  DropoffSelectionStep,
   FinalConfirmationStep,
   LoadingSpinner
 } from '../components/BookingPage';
@@ -22,9 +24,11 @@ const BookingPage = () => {
   
   // State management
   const [currentStep, setCurrentStep] = useState(1);
+  const [pickupPartner, setPickupPartner] = useState<Partner | null>(null);
   const [selectedBike, setSelectedBike] = useState<Bike | null>(null);
   const [pickupLocation, setPickupLocation] = useState<Location | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<Location | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [availableBikes, setAvailableBikes] = useState<Bike[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +49,8 @@ const BookingPage = () => {
     { number: 1, title: 'Select Locations', description: 'Choose pickup and drop-off points' },
     { number: 2, title: 'Choose Bike', description: 'Select your preferred bike' },
     { number: 3, title: 'Rental Period', description: 'Set dates and delivery info' },
-    { number: 4, title: 'Confirmation', description: 'Review and confirm booking' }
+    { number: 4, title: 'Drop-off Location', description: 'Select partner for drop-off' },
+    { number: 5, title: 'Confirmation', description: 'Review and confirm booking' }
   ];
 
   // Fetch bikes when locations are selected
@@ -54,14 +59,22 @@ const BookingPage = () => {
       const fetchBikes = async () => {
         try {
           setLoading(true);
-          const bikes = await bikeService.getAllBikes({ 
-            availability: 'available',
-            location: pickupLocation.name
+          setError(null);
+          console.log(`Fetching bikes for location: ${pickupLocation.id}`);
+          // Use the new optimized method to get available bikes for the pickup location
+          const bikes = await bikeService.getAvailableBikesForLocation(pickupLocation.id, {
+            sort: 'rating' // Default to highest rated bikes first
           });
+          console.log("bikes", bikes);
           setAvailableBikes(bikes);
+          
+          if (bikes.length === 0) {
+            setError('No bikes are currently available at this location. Please try a different location.');
+          }
         } catch (err) {
           setError('Failed to load available bikes');
           console.error('Error fetching bikes:', err);
+          setAvailableBikes([]);
         } finally {
           setLoading(false);
         }
@@ -207,6 +220,33 @@ const BookingPage = () => {
     setCurrentStep(3);
   };
 
+  // Refresh bikes with filters
+  const refreshBikesWithFilters = async (filters?: {
+    type?: BikeType;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: 'price-asc' | 'price-desc' | 'rating';
+  }) => {
+    if (!pickupLocation) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const bikes = await bikeService.getAvailableBikesForLocation(pickupLocation.id, filters);
+      setAvailableBikes(bikes);
+      
+      if (bikes.length === 0) {
+        setError('No bikes match your current filters. Try adjusting your criteria.');
+      }
+    } catch (err) {
+      setError('Failed to load bikes with selected filters');
+      console.error('Error fetching filtered bikes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle rental period selection (Step 3)
   const handleRentalPeriodSelect = (rentalData: {
     startDate: string;
@@ -223,7 +263,20 @@ const BookingPage = () => {
     setCurrentStep(4);
   };
 
-  // Handle final booking confirmation (Step 4)
+  // Handle dropoff selection (Step 4)
+  const handleDropoffSelection = async (selectedPartnerId: string) => {
+    try {
+      // Fetch the selected partner details
+      const partner = await partnerService.getPartnerById(selectedPartnerId);
+      setSelectedPartner(partner);
+      setCurrentStep(5);
+    } catch (error) {
+      console.error('Error fetching partner details:', error);
+      setError('Failed to load partner details');
+    }
+  };
+
+  // Handle final booking confirmation (Step 5)
   const handleCreateBooking = async () => {
     // Check if user is authenticated before proceeding with booking
     if (!isAuthenticated) {
@@ -231,7 +284,7 @@ const BookingPage = () => {
       return;
     }
 
-    if (!selectedBike || !startDate || !endDate || !user) {
+    if (!selectedBike || !startDate || !endDate || !user || !selectedPartner) {
       setError('Please fill in all required fields');
       return;
     }
@@ -247,7 +300,10 @@ const BookingPage = () => {
         bikeId: selectedBike.id,
         startTime: startDateTime,
         endTime: endDateTime,
-        deliveryAddress: deliveryAddress || undefined
+        deliveryAddress: deliveryAddress || undefined,
+        pickupLocation: pickupLocation?.name || undefined,
+        dropoffLocation: `${selectedPartner.companyName} - ${selectedPartner.address || selectedPartner.mapLocation?.address || dropoffLocation?.name || 'Address not available'}`,
+        dropoffPartnerId: selectedPartner._id
       };
 
       const response = await bookingService.createBooking(bookingPayload);
@@ -363,6 +419,7 @@ const BookingPage = () => {
                   setSelectedBike(null);
                   setPickupLocation(null);
                   setDropoffLocation(null);
+                  setSelectedPartner(null);
                   setStartDate('');
                   setEndDate('');
                   setDeliveryAddress('');
@@ -410,8 +467,11 @@ const BookingPage = () => {
               selectedBike={selectedBike}
               showFilters={showFilters}
               error={error}
+              loading={loading}
               onBikeSelect={setSelectedBike}
               onToggleFilters={() => setShowFilters(!showFilters)}
+              onApplyFilters={refreshBikesWithFilters}
+              onBack={() => setCurrentStep(1)}
               onContinue={() => selectedBike && handleBikeSelect(selectedBike)}
             />
           </div>
@@ -430,22 +490,44 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Step 4: Final Confirmation */}
+        {/* Step 4: Dropoff Selection */}
         {currentStep === 4 && selectedBike && pickupLocation && dropoffLocation && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <DropoffSelectionStep
+              selectedBike={selectedBike}
+              pickupLocation={pickupLocation}
+              dropoffLocation={dropoffLocation}
+              pickupPartner={pickupPartner}
+              setPickupPartner={setPickupPartner}
+              startDate={startDate}
+              startTime={startTime}
+              endDate={endDate}
+              endTime={endTime}
+              deliveryAddress={deliveryAddress}
+              onBack={() => setCurrentStep(3)}
+              onContinue={handleDropoffSelection}
+            />
+          </div>
+        )}
+
+        {/* Step 5: Final Confirmation */}
+        {currentStep === 5 && selectedBike && pickupLocation && dropoffLocation && selectedPartner && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <FinalConfirmationStep
               selectedBike={selectedBike}
               pickupLocation={pickupLocation}
-              dropoffLocation={dropoffLocation}
+              pickupPartner={pickupPartner}
+              selectedPartner={selectedPartner}
               startDate={startDate}
               startTime={startTime}
               endDate={endDate}
               endTime={endTime}
               deliveryAddress={deliveryAddress}
               totalPrice={calculateTotalPrice()}
-              onBack={() => setCurrentStep(3)}
+              onBack={() => setCurrentStep(4)}
               onConfirmBooking={handleCreateBooking}
               isBooking={isBooking}
+              isAuthenticated={isAuthenticated}
             />
           </div>
         )}
