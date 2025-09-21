@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, CreditCard, CheckCircle, ArrowLeft, MapPin, LogIn } from 'lucide-react';
+
 import { Bike } from '../../services/bikeService';
 import { Location } from '../../services/locationService';
 import { Partner } from '../../services/partnerService';
@@ -24,7 +25,6 @@ interface FinalConfirmationStepProps {
 
 const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   selectedBike,
-  pickupLocation,
   pickupPartner,
   selectedPartner,
   startDate,
@@ -78,6 +78,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
         {/* Main Content - Confirmation Details */}
         <div className="lg:col-span-2 space-y-6">
           
+          
           {/* Bike Details */}
           <div className="rounded-3xl shadow-2xl  border border-gray-100 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Selected Bike</h2>
@@ -93,6 +94,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-gray-500">Type:</span>
+                    <p className="font-medium capitalize">{selectedBike.type}</p>
                     <p className="font-medium capitalize">{selectedBike.type}</p>
                   </div>
                   <div>
@@ -164,6 +166,13 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
                 <p className="text-gray-700">{deliveryAddress}</p>
               </div>
             )}
+
+            {deliveryAddress && (
+              <div className="mt-6 bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                <h4 className="font-semibold text-gray-900 mb-2">Custom Delivery Address:</h4>
+                <p className="text-gray-700">{deliveryAddress}</p>
+              </div>
+            )}
           </div>
 
           {/* Rental Period */}
@@ -208,6 +217,47 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             </div>
           </div>
 
+          {/* Information message */}
+          {isBooking && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Please wait...</strong> We're creating your booking and notifying the partner. This may take a few moments.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Authentication warning */}
+          {!isAuthenticated && (
+            <div className="mt-4 p-6 bg-amber-50 rounded-lg border-2 border-amber-400">
+              <div className="flex items-start">
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-semibold text-amber-800 mb-2">Login Required</h3>
+                  <p className="text-sm text-amber-700 mb-4">
+                    You need to log in to your account to confirm this booking. Don't have an account yet? Sign up to get started!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="flex items-center justify-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors duration-200"
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Login
+                    </button>
+                    <button
+                      onClick={() => navigate('/register')}
+                      className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Information message */}
           {isBooking && (
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
@@ -311,6 +361,54 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className={`grid ${!isAuthenticated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 mt-8`}>
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Drop-off Selection
+        </button>
+        
+        {!isAuthenticated && (
+          <button
+            onClick={() => navigate('/login')}
+            className="flex items-center justify-center px-6 py-3 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors duration-200"
+          >
+            <LogIn className="h-4 w-4 mr-2" />
+            Login to Continue
+          </button>
+        )}
+        
+        <button
+          onClick={onConfirmBooking}
+          disabled={isBooking || !isAuthenticated}
+          className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            isBooking || !isAuthenticated
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
+          }`}
+        >
+          {isBooking ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Creating Booking...
+            </>
+          ) : !isAuthenticated ? (
+            <>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Login Required to Confirm
+            </>
+          ) : (
+            <>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Confirm Booking
+            </>
+          )}
+        </button>
       </div>
 
       {/* Navigation Buttons */}
