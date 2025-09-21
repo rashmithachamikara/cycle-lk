@@ -7,7 +7,11 @@ const app = express();
 // Import models
 const models = require('./models');
 
-// Middleware
+// Middleware - Special handling for Stripe webhook
+// Stripe webhook needs raw body, so we handle it before express.json()
+app.use('/api/payments/webhook', express.raw({type: 'application/json'}));
+
+// Regular JSON parsing for all other routes
 app.use(express.json());
 app.use(cors());
 

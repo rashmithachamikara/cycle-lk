@@ -38,8 +38,10 @@ export interface InitialPaymentRequest {
 // Interface for payment response
 export interface PaymentResponse {
   success: boolean;
-  transactionId: string;
-  paymentStatus: 'completed' | 'pending' | 'failed';
+  sessionId?: string;
+  sessionUrl?: string;
+  transactionId?: string;
+  paymentStatus: 'completed' | 'pending' | 'failed' | 'processing';
   message: string;
   booking?: object;
 }
