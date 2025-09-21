@@ -360,49 +360,6 @@ const createPartnerFormData = (data: PartnerRegistrationFormData): FormData => {
   return formData;
 };
 
-// Helper function to create FormData with images
-const createPartnerFormData = (data: PartnerRegistrationFormData): FormData => {
-  const formData = new FormData();
-  
-  // Add text fields
-  Object.keys(data).forEach(key => {
-    const value = data[key as keyof PartnerRegistrationFormData];
-    
-    // Skip image fields - they'll be handled separately
-    if (key === 'logoImage' || key === 'storefrontImage' || key === 'galleryImages') {
-      return;
-    }
-    
-    // Handle arrays and objects
-    if (Array.isArray(value)) {
-      formData.append(key, JSON.stringify(value));
-    } else if (typeof value === 'object' && value !== null) {
-      formData.append(key, JSON.stringify(value));
-    } else if (value !== undefined && value !== null) {
-      formData.append(key, String(value));
-    }
-  });
-  
-  // Add image files
-  if (data.logoImage?.file) {
-    formData.append('logo', data.logoImage.file);
-  }
-  
-  if (data.storefrontImage?.file) {
-    formData.append('storefront', data.storefrontImage.file);
-  }
-  
-  if (data.galleryImages && data.galleryImages.length > 0) {
-    data.galleryImages.forEach(imageFile => {
-      if (imageFile.file) {
-        formData.append('gallery', imageFile.file);
-      }
-    });
-  }
-  
-  return formData;
-};
-
 // Helper function to format business hours for display
 export const formatBusinessHours = (businessHours: BusinessHours | undefined): string => {
   if (!businessHours) return 'Contact for hours';
