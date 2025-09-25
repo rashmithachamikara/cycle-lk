@@ -5,6 +5,7 @@ import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
 import { bikeService } from "../../services/bikeService";
+import { paymentService, DropOffPaymentRequest } from "../../services/paymentService";
 import toast from 'react-hot-toast';
 
 interface BikeCondition {
@@ -27,6 +28,10 @@ interface DropOffData {
   totalAdditionalAmount: number;
   notes: string;
   photos: File[];
+  paymentMethod: 'card' | 'cash' | '';
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed' | '';
+  stripeSessionId?: string;
+  transactionId?: string;
 }
 
 const DropBikePage = () => {
@@ -54,7 +59,9 @@ const DropBikePage = () => {
     additionalCharges: [],
     totalAdditionalAmount: 0,
     notes: '',
-    photos: []
+    photos: [],
+    paymentMethod: '',
+    paymentStatus: ''
   });
 
   useEffect(() => {
@@ -147,18 +154,112 @@ const DropBikePage = () => {
     }));
   };
 
+  const handlePaymentProcess = async () => {
+    if (!selectedBooking || dropOffData.totalAdditionalAmount <= 0) return;
+
+    try {
+      setDropOffData(prev => ({ ...prev, paymentStatus: 'processing' }));
+
+      const paymentRequest: DropOffPaymentRequest = {
+        bookingId: selectedBooking.id,
+        amount: dropOffData.totalAdditionalAmount,
+        paymentMethod: dropOffData.paymentMethod as 'card' | 'cash',
+        additionalCharges: dropOffData.additionalCharges
+      };
+
+      const response = await paymentService.processDropOffPayment(paymentRequest);
+
+      if (response.success) {
+        if (dropOffData.paymentMethod === 'card' && response.sessionUrl) {
+          // For card payments, redirect to Stripe
+          setDropOffData(prev => ({ 
+            ...prev, 
+            stripeSessionId: response.sessionId,
+            paymentStatus: 'processing'
+          }));
+          
+          // Open Stripe checkout in new window/tab
+          window.open(response.sessionUrl, '_blank');
+          
+          // Poll for payment completion
+          pollPaymentStatus(response.sessionId!);
+        } else {
+          // For cash payments, mark as completed
+          setDropOffData(prev => ({ 
+            ...prev, 
+            paymentStatus: 'completed',
+            transactionId: response.transactionId
+          }));
+          
+          toast.success('Cash payment recorded successfully!');
+          setTimeout(() => processDropOff(), 1000);
+        }
+      } else {
+        throw new Error(response.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Payment processing failed. Please try again.');
+      setDropOffData(prev => ({ ...prev, paymentStatus: 'failed' }));
+    }
+  };
+
+  const pollPaymentStatus = async (sessionId: string) => {
+    const maxAttempts = 30; // 5 minutes with 10-second intervals
+    let attempts = 0;
+
+    const checkStatus = async () => {
+      try {
+        const result = await paymentService.verifyDropOffSession(sessionId);
+        
+        if (result.sessionStatus === 'complete' && result.paymentStatus === 'paid') {
+          setDropOffData(prev => ({ 
+            ...prev, 
+            paymentStatus: 'completed',
+            transactionId: result.transactionId
+          }));
+          toast.success('Card payment completed successfully!');
+          setTimeout(() => processDropOff(), 1000);
+          return;
+        } else if (result.sessionStatus === 'expired') {
+          setDropOffData(prev => ({ ...prev, paymentStatus: 'failed' }));
+          toast.error('Payment session expired. Please try again.');
+          return;
+        }
+        
+        // Continue polling if payment is still in progress
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 10000); // Check every 10 seconds
+        } else {
+          setDropOffData(prev => ({ ...prev, paymentStatus: 'failed' }));
+          toast.error('Payment verification timeout. Please check your payment status.');
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 10000);
+        } else {
+          setDropOffData(prev => ({ ...prev, paymentStatus: 'failed' }));
+          toast.error('Unable to verify payment status. Please contact support.');
+        }
+      }
+    };
+
+    checkStatus();
+  };
+
   const processDropOff = async () => {
     if (!selectedBooking) return;
 
     try {
       setIsProcessing(true);
 
-      // Process additional payment if needed
-      if (dropOffData.totalAdditionalAmount > 0) {
+      // If there are additional charges but payment not completed, go to payment step
+      if (dropOffData.totalAdditionalAmount > 0 && dropOffData.paymentStatus !== 'completed') {
         setCurrentStep('payment');
-        // Here you would integrate with payment gateway
-        // For now, we'll simulate payment processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        return;
       }
 
       // Update booking status to completed
@@ -216,7 +317,9 @@ const DropBikePage = () => {
       additionalCharges: [],
       totalAdditionalAmount: 0,
       notes: '',
-      photos: []
+      photos: [],
+      paymentMethod: '',
+      paymentStatus: ''
     });
   };
 
@@ -575,14 +678,98 @@ const DropBikePage = () => {
           {/* Step 3: Payment Processing */}
           {currentStep === 'payment' && (
             <div className="p-6">
-              <div className="text-center py-12">
-                <CreditCard className="h-16 w-16 text-[#00D4AA] mx-auto mb-4" />
-                <h2 className="text-xl font-semibold mb-2">Processing Additional Payment</h2>
-                <p className="text-gray-600 mb-4">
-                  Processing payment for additional charges: LKR {dropOffData.totalAdditionalAmount.toLocaleString()}
-                </p>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00D4AA] mx-auto"></div>
-              </div>
+              {dropOffData.paymentStatus === 'processing' ? (
+                <div className="text-center py-12">
+                  <CreditCard className="h-16 w-16 text-[#00D4AA] mx-auto mb-4" />
+                  <h2 className="text-xl font-semibold mb-2">Processing Payment</h2>
+                  <p className="text-gray-600 mb-4">
+                    Please wait while we process your payment...
+                  </p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00D4AA] mx-auto"></div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">Final Payment</h2>
+                    <button
+                      onClick={() => setCurrentStep('assessment')}
+                      className="text-gray-600 hover:text-[#00D4AA]"
+                    >
+                      ← Back to Assessment
+                    </button>
+                  </div>
+
+                  {/* Payment Summary */}
+                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 className="font-semibold mb-3">Payment Summary</h3>
+                    <div className="space-y-2">
+                      {dropOffData.additionalCharges.map((charge, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span>{charge.description}</span>
+                          <span>LKR {charge.amount.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between font-semibold">
+                          <span>Total Additional Amount</span>
+                          <span>LKR {dropOffData.totalAdditionalAmount.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method Selection */}
+                  <div className="mb-6">
+                    <h3 className="font-semibold mb-3">Select Payment Method</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setDropOffData(prev => ({ ...prev, paymentMethod: 'cash' }))}
+                        className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors ${
+                          dropOffData.paymentMethod === 'cash'
+                            ? 'border-[#00D4AA] bg-[#00D4AA]/5 text-[#00D4AA]'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          💵
+                        </div>
+                        <span className="font-medium">Cash Payment</span>
+                        <span className="text-sm text-gray-500">Pay in cash</span>
+                      </button>
+
+                      <button
+                        onClick={() => setDropOffData(prev => ({ ...prev, paymentMethod: 'card' }))}
+                        className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors ${
+                          dropOffData.paymentMethod === 'card'
+                            ? 'border-[#00D4AA] bg-[#00D4AA]/5 text-[#00D4AA]'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <CreditCard className="w-8 h-8" />
+                        <span className="font-medium">Card Payment</span>
+                        <span className="text-sm text-gray-500">Pay with card</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payment Actions */}
+                  <div className="flex justify-between">
+                    <button
+                      onClick={() => setCurrentStep('assessment')}
+                      className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handlePaymentProcess}
+                      disabled={!dropOffData.paymentMethod || dropOffData.totalAdditionalAmount <= 0}
+                      className="px-6 py-2 bg-[#00D4AA] text-white rounded-lg hover:bg-[#00D4AA]/90 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {dropOffData.paymentMethod === 'cash' ? 'Confirm Cash Payment' : 'Pay with Card'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

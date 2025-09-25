@@ -506,7 +506,7 @@ exports.handleStripeWebhook = async (req, res) => {
  */
 async function handleCheckoutSessionCompleted(session) {
   try {
-    const { bookingId, userId, partnerId } = session.metadata;
+    const { bookingId, userId, partnerId, paymentType } = session.metadata;
     
     // Get booking and update payment status
     const booking = await Booking.findById(bookingId).populate('partnerId');
@@ -518,32 +518,61 @@ async function handleCheckoutSessionCompleted(session) {
     // Generate transaction ID
     const transactionId = session.payment_intent || `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Update booking
-    booking.paymentInfo = {
-      ...booking.paymentInfo,
-      transactionId,
-      paid: true,
-      paymentDate: new Date(),
-      stripePaymentIntentId: session.payment_intent
-    };
-    booking.paymentStatus = 'paid';
-    booking.status = 'active';
-    
-    await booking.save();
+    if (paymentType === 'dropoff_additional') {
+      // Handle drop-off additional charges payment
+      const additionalCharges = session.metadata.additionalCharges ? 
+        JSON.parse(session.metadata.additionalCharges) : [];
+      
+      // Create payment record for additional charges
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100, // Convert from cents
+        method: 'card',
+        paymentMethod: 'card',
+        transactionId,
+        status: 'completed',
+        additionalCharges,
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+      
+      console.log('Drop-off additional charges payment completed:', {
+        bookingId,
+        amount: session.amount_total / 100,
+        transactionId
+      });
+    } else {
+      // Handle regular initial booking payment
+      booking.paymentInfo = {
+        ...booking.paymentInfo,
+        transactionId,
+        paid: true,
+        paymentDate: new Date(),
+        stripePaymentIntentId: session.payment_intent
+      };
+      booking.paymentStatus = 'paid';
+      booking.status = 'active';
+      
+      await booking.save();
 
-    // Create payment record
-    const payment = new Payment({
-      bookingId,
-      userId,
-      partnerId,
-      amount: session.amount_total / 100, // Convert from cents
-      method: 'card',
-      transactionId,
-      status: 'completed',
-      createdAt: new Date()
-    });
-    
-    await payment.save();
+      // Create payment record
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100, // Convert from cents
+        method: 'card',
+        paymentMethod: 'card',
+        transactionId,
+        status: 'completed',
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+    }
 
     // Send real-time notification to partner
     if (booking.partnerId && firebaseAdmin) {
@@ -602,3 +631,139 @@ async function handleCheckoutSessionExpired(session) {
     console.error('Error handling checkout session expired:', error);
   }
 }
+
+/**
+ * Process drop-off cash payment
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processDropOffCashPayment = async (req, res) => {
+  try {
+    const { bookingId, amount, additionalCharges } = req.body;
+    const partnerId = req.user.id;
+    
+    // Validate booking exists
+    const booking = await Booking.findById(bookingId).populate('userId partnerId');
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Booking not found' 
+      });
+    }
+    
+    // Validate amount
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid payment amount' 
+      });
+    }
+    
+    // Generate transaction ID for cash payment
+    const transactionId = `CASH_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create payment record for additional charges
+    const payment = new Payment({
+      bookingId,
+      userId: booking.userId._id,
+      partnerId,
+      amount,
+      paymentMethod: 'cash',
+      method: 'cash',
+      transactionId,
+      status: 'completed',
+      additionalCharges: additionalCharges || [],
+      createdAt: new Date()
+    });
+    
+    await payment.save();
+    
+    res.json({
+      success: true,
+      paymentStatus: 'completed',
+      transactionId,
+      message: 'Cash payment recorded successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error processing drop-off cash payment:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};
+
+/**
+ * Process drop-off card payment via Stripe
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processDropOffCardPayment = async (req, res) => {
+  try {
+    const { bookingId, amount, additionalCharges } = req.body;
+    const partnerId = req.user.id;
+    
+    // Validate booking exists
+    const booking = await Booking.findById(bookingId).populate('userId partnerId');
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Booking not found' 
+      });
+    }
+    
+    // Validate amount
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid payment amount' 
+      });
+    }
+    
+    // Create Stripe checkout session for additional charges
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Additional Charges - Booking #${booking.bookingNumber || booking._id.toString().slice(-8).toUpperCase()}`,
+              description: `Drop-off additional charges for bike rental`,
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${DOMAIN}/partner-dashboard/drop-bike?session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId}&payment=success`,
+      cancel_url: `${DOMAIN}/partner-dashboard/drop-bike?bookingId=${bookingId}&payment=cancelled`,
+      metadata: {
+        bookingId: bookingId,
+        partnerId: partnerId,
+        userId: booking.userId._id.toString(),
+        paymentType: 'dropoff_additional',
+        additionalCharges: JSON.stringify(additionalCharges || [])
+      },
+      customer_email: booking.userId.email,
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
+    });
+    
+    res.json({
+      success: true,
+      sessionId: session.id,
+      sessionUrl: session.url,
+      paymentStatus: 'processing',
+      message: 'Stripe session created successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error processing drop-off card payment:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};

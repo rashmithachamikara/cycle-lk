@@ -46,6 +46,20 @@ router.get('/verify-session/:sessionId', auth(), paymentController.verifyStripeS
 router.post('/initial', auth(['user']), paymentController.processInitialPayment);
 
 /**
+ * @route   POST /api/payments/dropoff-cash
+ * @desc    Process drop-off cash payment
+ * @access  Private (Partner only)
+ */
+router.post('/dropoff-cash', auth(['partner']), paymentController.processDropOffCashPayment);
+
+/**
+ * @route   POST /api/payments/dropoff-card
+ * @desc    Process drop-off card payment via Stripe
+ * @access  Private (Partner only)
+ */
+router.post('/dropoff-card', auth(['partner']), paymentController.processDropOffCardPayment);
+
+/**
  * @route   GET /api/payments/:id
  * @desc    Get payment by ID
  * @access  Private
