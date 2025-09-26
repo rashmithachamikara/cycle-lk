@@ -161,7 +161,8 @@ export interface CreateBookingRequest{
         deliveryAddress?: string,
         pickupLocation?: string,
         dropoffLocation?: string,
-        dropoffPartnerId: string
+        dropoffPartnerId: string,
+        totalAmount: number
 }
 
 // Utility function to transform backend booking to partner dashboard format
@@ -273,6 +274,13 @@ export const bookingService = {
   getBookingsByPartnerId: async (partnerId: string) => {
     const response = await api.get(`/bookings/partner/${partnerId}`);
     return response.data;
+  },
+
+  // Get all AVAILABLE PICKUP bookings for the authenticated partner
+  getMyPickupBookings: async (): Promise<PartnerDashboardBooking[]> => {
+    const response = await api.get('/bookings/my-pickup-bookings');
+    const backendBookings: BackendBooking[] = response.data;
+    return backendBookings.map(transformBookingForPartnerDashboard);
   },
 
   // Get bookings for the authenticated partner

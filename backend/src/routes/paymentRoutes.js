@@ -46,6 +46,20 @@ router.get('/verify-session/:sessionId', auth(), paymentController.verifyStripeS
 router.post('/initial', auth(['user']), paymentController.processInitialPayment);
 
 /**
+ * @route   POST /api/payments/remaining
+ * @desc    Process remaining payment for a booking
+ * @access  Private (User and Partner)
+ */
+router.post('/remaining', auth(['user', 'partner']), paymentController.processRemainingPayment);
+
+/**
+ * @route   GET /api/payments/summary/:bookingId
+ * @desc    Get payment summary for a booking
+ * @access  Private
+ */
+router.get('/summary/:bookingId', auth(), paymentController.getBookingPaymentSummary);
+
+/**
  * @route   POST /api/payments/dropoff-cash
  * @desc    Process drop-off cash payment
  * @access  Private (Partner only)

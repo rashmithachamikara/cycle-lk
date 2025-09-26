@@ -158,10 +158,10 @@ exports.createBooking = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('User from token:', req.user);
     
-    const { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId } = req.body;
+    const { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, totalAmount } = req.body;
     const userId = req.user.id; // From auth middleware
     
-    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, userId });
+    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, totalAmount, userId });
     
     // Validate bike exists and is available
     const bike = await Bike.findById(bikeId);
@@ -252,21 +252,38 @@ exports.createBooking = async (req, res) => {
       };
     }
     
-    // Calculate pricing
+    // Calculate pricing - use totalAmount from frontend if provided, otherwise calculate
     let basePrice = 0;
-    if (durationHours <= 24) {
-      basePrice = bike.pricing.perHour * durationHours;
+    let total = 0;
+    
+    if (totalAmount && totalAmount > 0) {
+      // Use the total amount calculated and sent from frontend
+      total = totalAmount;
+      basePrice = totalAmount; // For now, set basePrice equal to total (can be refined later)
     } else {
-      basePrice = bike.pricing.perDay * durationDays;
+      // Fallback to backend calculation if no totalAmount provided
+      if (durationHours <= 24) {
+        basePrice = bike.pricing.perHour * durationHours;
+      } else {
+        basePrice = bike.pricing.perDay * durationDays;
+      }
+      
+      const insurance = basePrice * 0.1; // 10% insurance
+      const extras = 0; // No extras for now
+      const discount = 0; // No discount for now
+      total = basePrice + insurance + extras - discount;
     }
     
-    const insurance = basePrice * 0.1; // 10% insurance
+    const insurance = 0; // Set to 0 when using frontend total
     const extras = 0; // No extras for now
     const discount = 0; // No discount for now
-    const total = basePrice + insurance + extras - discount;
     
     // Generate unique booking number
     const bookingNumber = `BK${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    
+    // Calculate payment amounts
+    const initialAmount = Math.round(total * 0.2 * 100) / 100; // 20%
+    const remainingAmount = Math.round(total * 0.8 * 100) / 100; // 80%
     
     // Create booking with proper model structure
     const booking = new Booking({
@@ -291,7 +308,20 @@ exports.createBooking = async (req, res) => {
         dropoff: dropoffLocation || deliveryAddress || 'Default dropoff location'
       },
       dropoffPartnerId,
-      status: 'requested'
+      status: 'requested',
+      payments: {
+        initial: {
+          amount: initialAmount,
+          percentage: 20,
+          status: 'pending'
+        },
+        remaining: {
+          amount: remainingAmount,
+          percentage: 80,
+          status: 'pending',
+          additionalCharges: []
+        }
+      }
     });
     
     await booking.save();
@@ -401,6 +431,33 @@ exports.createBooking = async (req, res) => {
       message: 'Server error during booking creation',
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
+  }
+};
+
+/**
+ * Get all AVAILABLE PICKUP bookings for the authenticated partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyPickupBookings = async (req, res) => {
+  try {
+    const partnerId = req.user.partnerId;
+
+    if (!partnerId) {
+      return res.status(403).json({ message: 'Partner profile not found.' });
+    }
+
+    const bookings = await Booking.find({ dropoffPartnerId: req.user.partnerId })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location')
+      .populate('dropoffPartnerId', 'companyName email phone location')
+      .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get available pickup bookings error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

@@ -36,7 +36,7 @@ export interface InitialPaymentRequest {
   };
 }
 
-// Interface for drop-off final payment request
+// Interface for drop-off final payment request (legacy)
 export interface DropOffPaymentRequest {
   bookingId: string;
   amount: number;
@@ -52,6 +52,17 @@ export interface DropOffPaymentRequest {
     cvv?: string;
     cardHolderName?: string;
   };
+}
+
+// Interface for remaining payment request
+export interface RemainingPaymentRequest {
+  bookingId: string;
+  paymentMethod: 'card' | 'cash';
+  additionalCharges?: {
+    type: 'damage' | 'cleaning' | 'late_return' | 'fuel' | 'other';
+    description: string;
+    amount: number;
+  }[];
 }
 
 // Interface for payment response
@@ -163,6 +174,20 @@ export const paymentService = {
   verifyDropOffSession: async (sessionId: string): Promise<PaymentResponse> => {
     debugLog('Verifying drop-off payment session', { sessionId });
     const response = await api.get(`/payments/verify-session/${sessionId}`);
+    return response.data;
+  },
+
+  // Process remaining payment for a booking
+  processRemainingPayment: async (paymentRequest: RemainingPaymentRequest): Promise<PaymentResponse> => {
+    debugLog('Processing remaining payment', paymentRequest);
+    const response = await api.post('/payments/remaining', paymentRequest);
+    return response.data;
+  },
+
+  // Get payment summary for a booking
+  getPaymentSummary: async (bookingId: string) => {
+    debugLog('Fetching payment summary', { bookingId });
+    const response = await api.get(`/payments/summary/${bookingId}`);
     return response.data;
   }
 };

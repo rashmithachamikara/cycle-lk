@@ -5,7 +5,7 @@ import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
 import { bikeService } from "../../services/bikeService";
-import { paymentService, DropOffPaymentRequest } from "../../services/paymentService";
+import { paymentService } from "../../services/paymentService";
 import toast from 'react-hot-toast';
 
 interface BikeCondition {
@@ -155,19 +155,19 @@ const DropBikePage = () => {
   };
 
   const handlePaymentProcess = async () => {
-    if (!selectedBooking || dropOffData.totalAdditionalAmount <= 0) return;
+    if (!selectedBooking) return;
 
     try {
       setDropOffData(prev => ({ ...prev, paymentStatus: 'processing' }));
 
-      const paymentRequest: DropOffPaymentRequest = {
+      // Use the new remaining payment endpoint with additional charges array
+      const paymentRequest = {
         bookingId: selectedBooking.id,
-        amount: dropOffData.totalAdditionalAmount,
         paymentMethod: dropOffData.paymentMethod as 'card' | 'cash',
         additionalCharges: dropOffData.additionalCharges
       };
 
-      const response = await paymentService.processDropOffPayment(paymentRequest);
+      const response = await paymentService.processRemainingPayment(paymentRequest);
 
       if (response.success) {
         if (dropOffData.paymentMethod === 'card' && response.sessionUrl) {
@@ -283,13 +283,8 @@ const DropBikePage = () => {
   };
 
   const handleNextStep = () => {
-    // If there are additional charges, go to payment step
-    if (dropOffData.totalAdditionalAmount > 0) {
-      setCurrentStep('payment');
-    } else {
-      // If no additional charges, proceed directly to completion
-      processDropOff();
-    }
+    // Always proceed to payment step to handle remaining payment
+    setCurrentStep('payment');
   };
 
   const getConditionColor = (condition: string) => {
@@ -673,12 +668,7 @@ const DropBikePage = () => {
                   disabled={isProcessing}
                   className="px-6 py-3 bg-[#00D4AA] text-white rounded-lg hover:bg-[#00B399] disabled:opacity-50"
                 >
-                  {isProcessing 
-                    ? 'Processing...' 
-                    : dropOffData.totalAdditionalAmount > 0 
-                      ? 'Proceed to Payment' 
-                      : 'Complete Drop-Off'
-                  }
+                  {isProcessing ? 'Processing...' : 'Proceed to Payment'}
                 </button>
               </div>
             </div>
@@ -712,16 +702,30 @@ const DropBikePage = () => {
                   <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <h3 className="font-semibold mb-3">Payment Summary</h3>
                     <div className="space-y-2">
-                      {dropOffData.additionalCharges.map((charge, index) => (
-                        <div key={index} className="flex justify-between text-sm">
-                          <span>{charge.description}</span>
-                          <span>LKR {charge.amount.toLocaleString()}</span>
-                        </div>
-                      ))}
+                      <div className="flex justify-between text-sm">
+                        <span>Remaining Payment (80%)</span>
+                        <span>LKR {selectedBooking ? (parseFloat(selectedBooking.value.replace(/[^\d.-]/g, '')) * 0.8).toLocaleString() : 'Calculating...'}</span>
+                      </div>
+                      {dropOffData.additionalCharges.length > 0 && (
+                        <>
+                          <div className="border-t pt-2 mt-2">
+                            <div className="text-sm font-medium text-gray-700 mb-2">Additional Charges:</div>
+                            {dropOffData.additionalCharges.map((charge, index) => (
+                              <div key={index} className="flex justify-between text-sm ml-4">
+                                <span>{charge.description}</span>
+                                <span>LKR {charge.amount.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between font-semibold">
-                          <span>Total Additional Amount</span>
-                          <span>LKR {dropOffData.totalAdditionalAmount.toLocaleString()}</span>
+                          <span>Total Amount Due</span>
+                          <span>LKR {(
+                            (selectedBooking ? parseFloat(selectedBooking.value.replace(/[^\d.-]/g, '')) * 0.8 : 0) + 
+                            dropOffData.totalAdditionalAmount
+                          ).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -771,7 +775,7 @@ const DropBikePage = () => {
                     </button>
                     <button
                       onClick={handlePaymentProcess}
-                      disabled={!dropOffData.paymentMethod || dropOffData.totalAdditionalAmount <= 0}
+                      disabled={!dropOffData.paymentMethod}
                       className="px-6 py-2 bg-[#00D4AA] text-white rounded-lg hover:bg-[#00D4AA]/90 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {dropOffData.paymentMethod === 'cash' ? 'Confirm Cash Payment' : 'Pay with Card'}

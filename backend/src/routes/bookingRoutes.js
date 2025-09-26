@@ -20,6 +20,13 @@ router.get('/', auth(), bookingController.getAllBookings);
 router.get('/my-bookings', auth(['user', 'partner', 'admin']), bookingController.getMyBookings);
 
 /**
+ * @route   GET /api/bookings/my-pickup-bookings
+ * @desc    Get all AVAILABLE PICKUP bookings for the authenticated partner
+ * @access  Private/Partner
+ */
+router.get('/my-pickup-bookings', auth(['partner']), bookingController.getMyPickupBookings);
+
+/**
  * @route   GET /api/bookings/partner/:partnerId
  * @desc    Get all bookings for a specific partner
  * @access  Private/Partner/Admin

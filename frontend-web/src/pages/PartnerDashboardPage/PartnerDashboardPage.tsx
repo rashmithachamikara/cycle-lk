@@ -54,7 +54,7 @@ const PartnerDashboardPage = () => {
       setError(null);
       
       // Use the new endpoint that doesn't require partnerId in URL
-      const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
+      const backendBookings: BackendBooking[] = await bookingService.getMyPickupBookings();
       console.log('Raw backend bookings:', backendBookings);
       const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
       console.log('Transformed bookings:', transformedBookings);
@@ -131,7 +131,7 @@ const PartnerDashboardPage = () => {
           const partnerData = await partnerService.getPartnerByUserId(user.id);
           setPartner(partnerData);
         }
-      } catch (err) {
+      } catch {
         setPartner(null);
       } finally {
         setPartnerLoading(false);
