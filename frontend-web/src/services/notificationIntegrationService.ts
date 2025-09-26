@@ -129,6 +129,12 @@ class NotificationIntegrationService {
         }
         break;
 
+      case EventType.NEW_DROPOFF:
+        if (this.userRole === 'partner') {
+          toast.success('A new drop-off has been scheduled!');
+        }
+        break;
+
       case EventType.BOOKING_ACCEPTED:
         if (this.userRole === 'user') {
           toast.success('Your booking has been confirmed!');

@@ -256,12 +256,6 @@ const DropBikePage = () => {
     try {
       setIsProcessing(true);
 
-      // If there are additional charges but payment not completed, go to payment step
-      if (dropOffData.totalAdditionalAmount > 0 && dropOffData.paymentStatus !== 'completed') {
-        setCurrentStep('payment');
-        return;
-      }
-
       // Update booking status to completed
       await bookingService.updateBookingStatus(selectedBooking.id, 'completed');
 
@@ -285,6 +279,16 @@ const DropBikePage = () => {
       toast.error('Failed to process drop-off. Please try again.');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleNextStep = () => {
+    // If there are additional charges, go to payment step
+    if (dropOffData.totalAdditionalAmount > 0) {
+      setCurrentStep('payment');
+    } else {
+      // If no additional charges, proceed directly to completion
+      processDropOff();
     }
   };
 
@@ -665,11 +669,16 @@ const DropBikePage = () => {
                   Back
                 </button>
                 <button
-                  onClick={processDropOff}
+                  onClick={handleNextStep}
                   disabled={isProcessing}
                   className="px-6 py-3 bg-[#00D4AA] text-white rounded-lg hover:bg-[#00B399] disabled:opacity-50"
                 >
-                  {isProcessing ? 'Processing...' : 'Complete Drop-Off'}
+                  {isProcessing 
+                    ? 'Processing...' 
+                    : dropOffData.totalAdditionalAmount > 0 
+                      ? 'Proceed to Payment' 
+                      : 'Complete Drop-Off'
+                  }
                 </button>
               </div>
             </div>
