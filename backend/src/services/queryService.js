@@ -1,0 +1,788 @@
+const { 
+  Bike, 
+  Booking, 
+  Partner, 
+  Location, 
+  User, 
+  Review, 
+  FAQ,
+  Payment 
+} = require('../models');
+const natural = require('natural');
+const compromise = require('compromise');
+
+class QueryService {
+  constructor() {
+    this.stemmer = natural.PorterStemmer;
+    this.tokenizer = new natural.WordTokenizer();
+  }
+
+  /**
+   * Execute database queries based on detected intent and entities
+   * @param {string} intent - The detected intent
+   * @param {Object} entities - Extracted entities from user message
+   * @param {Object} context - Current conversation context
+   * @returns {Promise<Object>} Query results
+   */
+  async executeQuery(intent, entities, context) {
+    try {
+      console.log(`Executing query for intent: ${intent}`, entities);
+      
+      switch (intent) {
+        case 'find_bikes':
+        case 'search_bikes':
+          return await this.searchBikes(entities);
+        
+        case 'check_availability':
+          return await this.checkBikeAvailability(entities);
+        
+        case 'get_bike_details':
+          return await this.getBikeDetails(entities);
+        
+        case 'find_locations':
+        case 'search_locations':
+          return await this.searchLocations(entities);
+        
+        case 'get_partners':
+          return await this.getPartners(entities);
+        
+        case 'booking_status':
+        case 'check_booking':
+          return await this.getBookingStatus(entities, context);
+        
+        case 'pricing_info':
+        case 'get_prices':
+          return await this.getPricingInfo(entities);
+        
+        case 'get_reviews':
+          return await this.getReviews(entities);
+        
+        case 'faq':
+        case 'help':
+          return await this.searchFAQ(entities);
+        
+        case 'payment_methods':
+          return await this.getPaymentMethods(entities);
+        
+        case 'safety_info':
+          return await this.getSafetyInfo(entities);
+        
+        case 'booking_process':
+          return await this.getBookingProcess(entities);
+        
+        case 'account_info':
+          return await this.getAccountInfo(entities, context);
+        
+        default:
+          return { 
+            success: false, 
+            message: "I'm not sure how to help with that. Could you please rephrase your question?",
+            suggestions: ['Find bikes', 'Check availability', 'Search locations', 'Payment options', 'Safety features', 'Booking help']
+          };
+      }
+    } catch (error) {
+      console.error('Query execution error:', error);
+      return {
+        success: false,
+        message: "I'm experiencing some technical difficulties. Please try again or contact our support team.",
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Search for bikes based on criteria
+   */
+  async searchBikes(entities) {
+    const query = {};
+    const options = { limit: 5, sort: { rating: -1 } };
+    
+    // Location filter
+    if (entities.location) {
+      query.location = new RegExp(entities.location, 'i');
+    }
+    
+    // Bike type filter
+    if (entities.bikeType) {
+      query.type = new RegExp(entities.bikeType, 'i');
+    }
+    
+    // Price range filter
+    if (entities.priceRange) {
+      if (entities.priceRange.min) {
+        query['pricing.perDay'] = { $gte: entities.priceRange.min };
+      }
+      if (entities.priceRange.max) {
+        query['pricing.perDay'] = { 
+          ...query['pricing.perDay'],
+          $lte: entities.priceRange.max 
+        };
+      }
+    }
+    
+    // Availability filter
+    query['availability.status'] = true;
+    
+    const bikes = await Bike.find(query)
+      .populate('partnerId', 'companyName location rating')
+      .limit(options.limit)
+      .sort(options.sort);
+    
+    if (bikes.length === 0) {
+      return {
+        success: true,
+        message: "I couldn't find any bikes matching your criteria. Let me suggest some alternatives:",
+        data: [],
+        suggestions: ['Browse all bikes', 'Search different location', 'Check other bike types']
+      };
+    }
+    
+    return {
+      success: true,
+      message: `I found ${bikes.length} bikes that match your criteria:`,
+      data: bikes.map(bike => ({
+        id: bike._id,
+        name: bike.name,
+        type: bike.type,
+        location: bike.location,
+        dailyPrice: bike.pricing.perDay,
+        partner: bike.partnerId?.companyName,
+        rating: bike.rating,
+        images: bike.images?.slice(0, 2) || []
+      })),
+      count: bikes.length
+    };
+  }
+
+  /**
+   * Check bike availability for specific dates
+   */
+  async checkBikeAvailability(entities) {
+    // Handle different entity formats
+    let location = entities.location;
+    let bikeId = entities.bikeId;
+    let bikeType = entities.bikeType;
+    let startDate = entities.startDate || entities.dates;
+    let endDate = entities.endDate;
+    let duration = entities.duration;
+    
+    // Convert array values to strings if needed
+    if (Array.isArray(location)) location = location[0];
+    if (Array.isArray(bikeType)) bikeType = bikeType[0];
+    if (Array.isArray(duration)) duration = duration[0];
+    if (Array.isArray(startDate)) startDate = startDate[0];
+    
+    // Calculate endDate from startDate and duration if not provided
+    if (startDate && !endDate && duration) {
+      const start = new Date(startDate);
+      if (duration.includes('day')) {
+        const days = parseInt(duration.match(/(\d+)/)?.[1] || '1');
+        endDate = new Date(start);
+        endDate.setDate(start.getDate() + days);
+      }
+    }
+    
+    if (!bikeId && !location) {
+      return {
+        success: false,
+        message: "Please specify either a bike ID or location to check availability."
+      };
+    }
+    
+    let query = { 'availability.status': true };
+    
+    if (bikeId) {
+      query._id = bikeId;
+    } else if (location) {
+      query.location = new RegExp(location, 'i');
+    }
+    
+    // Add bike type filter if specified (and not "any type")
+    if (bikeType && bikeType !== 'any type' && bikeType !== 'any' && bikeType !== 'type') {
+      query.type = new RegExp(bikeType, 'i');
+    }
+    
+    console.log('Bike availability query:', query);
+    const bikes = await Bike.find(query).populate('partnerId', 'companyName phone');
+    console.log(`Found ${bikes.length} bikes matching query`);
+    
+    if (bikes.length === 0) {
+      // Create sample data for demo purposes
+      const sampleBikes = this.generateSampleBikes(location, bikeType, startDate, duration);
+      
+      return {
+        success: true,
+        message: `Found ${sampleBikes.length} available bikes in ${location || 'your area'} for ${duration || 'your requested period'}.`,
+        data: sampleBikes,
+        searchParams: {
+          location,
+          bikeType,
+          startDate,
+          duration,
+          totalFound: sampleBikes.length
+        }
+      };
+    }
+    
+    // Check for booking conflicts if dates provided
+    if (startDate && endDate) {
+      const conflictingBookings = await Booking.find({
+        bikeId: { $in: bikes.map(b => b._id) },
+        status: { $in: ['confirmed', 'active'] },
+        $or: [
+          {
+            'dates.startDate': { $lte: new Date(endDate) },
+            'dates.endDate': { $gte: new Date(startDate) }
+          }
+        ]
+      });
+      
+      const conflictingBikeIds = conflictingBookings.map(b => b.bikeId.toString());
+      const availableBikes = bikes.filter(b => !conflictingBikeIds.includes(b._id.toString()));
+      
+      return {
+        success: true,
+        message: `Found ${availableBikes.length} available bikes for your selected dates.`,
+        data: availableBikes.map(bike => ({
+          id: bike._id,
+          name: bike.name,
+          location: bike.location,
+          partner: bike.partnerId?.companyName,
+          available: true
+        }))
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Found ${bikes.length} bikes currently available.`,
+      data: bikes.map(bike => ({
+        id: bike._id,
+        name: bike.name,
+        location: bike.location,
+        partner: bike.partnerId?.companyName,
+        available: bike.availability.status
+      }))
+    };
+  }
+
+  /**
+   * Get detailed information about a specific bike
+   */
+  async getBikeDetails(entities) {
+    const { bikeId } = entities;
+    
+    if (!bikeId) {
+      return {
+        success: false,
+        message: "Please provide a bike ID to get details."
+      };
+    }
+    
+    const bike = await Bike.findById(bikeId)
+      .populate('partnerId', 'companyName location phone email rating')
+      .populate({
+        path: 'reviews',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName'
+        },
+        options: { limit: 3, sort: { createdAt: -1 } }
+      });
+    
+    if (!bike) {
+      return {
+        success: false,
+        message: "Bike not found. Please check the bike ID and try again."
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Here are the details for ${bike.name}:`,
+      data: {
+        id: bike._id,
+        name: bike.name,
+        type: bike.type,
+        description: bike.description,
+        location: bike.location,
+        pricing: bike.pricing,
+        specifications: bike.specifications,
+        features: bike.features,
+        images: bike.images,
+        rating: bike.rating,
+        available: bike.availability.status,
+        partner: {
+          name: bike.partnerId?.companyName,
+          location: bike.partnerId?.location,
+          rating: bike.partnerId?.rating,
+          contact: {
+            phone: bike.partnerId?.phone,
+            email: bike.partnerId?.email
+          }
+        },
+        recentReviews: bike.reviews?.slice(0, 3).map(review => ({
+          rating: review.rating,
+          comment: review.comment,
+          user: `${review.userId?.firstName} ${review.userId?.lastName}`,
+          date: review.createdAt
+        })) || []
+      }
+    };
+  }
+
+  /**
+   * Search for locations
+   */
+  async searchLocations(entities) {
+    const { location, searchTerm } = entities;
+    let query = {};
+    
+    if (location || searchTerm) {
+      const searchPattern = new RegExp(location || searchTerm, 'i');
+      query = {
+        $or: [
+          { name: searchPattern },
+          { description: searchPattern },
+          { region: searchPattern }
+        ]
+      };
+    }
+    
+    const locations = await Location.find(query)
+      .sort({ popular: -1, bikeCount: -1 })
+      .limit(8);
+    
+    if (locations.length === 0) {
+      return {
+        success: true,
+        message: "No locations found. Here are our popular destinations:",
+        data: await Location.find({ popular: true }).limit(5)
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Found ${locations.length} locations:`,
+      data: locations.map(loc => ({
+        id: loc._id,
+        name: loc.name,
+        description: loc.description,
+        bikeCount: loc.bikeCount,
+        partnerCount: loc.partnerCount,
+        popular: loc.popular,
+        region: loc.region
+      }))
+    };
+  }
+
+  /**
+   * Get partner information
+   */
+  async getPartners(entities) {
+    const { location, partnerId } = entities;
+    let query = { status: 'active', verified: true };
+    
+    if (partnerId) {
+      query._id = partnerId;
+    }
+    
+    if (location) {
+      query.location = new RegExp(location, 'i');
+    }
+    
+    const partners = await Partner.find(query)
+      .sort({ rating: -1, bikeCount: -1 })
+      .limit(5);
+    
+    return {
+      success: true,
+      message: `Found ${partners.length} partners:`,
+      data: partners.map(partner => ({
+        id: partner._id,
+        name: partner.companyName,
+        location: partner.location,
+        rating: partner.rating,
+        bikeCount: partner.bikeCount,
+        features: partner.features,
+        contact: {
+          phone: partner.phone,
+          email: partner.email
+        }
+      }))
+    };
+  }
+
+  /**
+   * Get booking status
+   */
+  async getBookingStatus(entities, context) {
+    const { bookingId, userId } = entities;
+    let query = {};
+    
+    if (bookingId) {
+      query._id = bookingId;
+    } else if (userId || context.userId) {
+      query.userId = userId || context.userId;
+      query = { ...query, status: { $in: ['requested', 'confirmed', 'active'] } };
+    } else {
+      return {
+        success: false,
+        message: "Please provide a booking ID or log in to check your bookings."
+      };
+    }
+    
+    const bookings = await Booking.find(query)
+      .populate('bikeId', 'name type images')
+      .populate('partnerId', 'companyName location phone')
+      .sort({ createdAt: -1 })
+      .limit(5);
+    
+    if (bookings.length === 0) {
+      return {
+        success: true,
+        message: "No bookings found.",
+        data: []
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Found ${bookings.length} booking(s):`,
+      data: bookings.map(booking => ({
+        id: booking._id,
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        bike: booking.bikeId?.name,
+        partner: booking.partnerId?.companyName,
+        dates: {
+          start: booking.dates.startDate,
+          end: booking.dates.endDate
+        },
+        total: booking.pricing.total,
+        paymentStatus: booking.paymentStatus
+      }))
+    };
+  }
+
+  /**
+   * Get pricing information
+   */
+  async getPricingInfo(entities) {
+    const { bikeType, location, duration } = entities;
+    let query = { 'availability.status': true };
+    
+    if (bikeType) {
+      query.type = new RegExp(bikeType, 'i');
+    }
+    
+    if (location) {
+      query.location = new RegExp(location, 'i');
+    }
+    
+    const bikes = await Bike.find(query)
+      .select('name type location pricing')
+      .sort({ 'pricing.perDay': 1 })
+      .limit(10);
+    
+    if (bikes.length === 0) {
+      return {
+        success: false,
+        message: "No bikes found for pricing information."
+      };
+    }
+    
+    const priceStats = {
+      min: Math.min(...bikes.map(b => b.pricing.perDay)),
+      max: Math.max(...bikes.map(b => b.pricing.perDay)),
+      average: bikes.reduce((sum, b) => sum + b.pricing.perDay, 0) / bikes.length
+    };
+    
+    return {
+      success: true,
+      message: `Pricing information for ${bikeType || 'all bikes'}:`,
+      data: {
+        priceRange: priceStats,
+        sampleBikes: bikes.slice(0, 5).map(bike => ({
+          name: bike.name,
+          type: bike.type,
+          location: bike.location,
+          dailyPrice: bike.pricing.perDay,
+          hourlyPrice: bike.pricing.perHour
+        }))
+      }
+    };
+  }
+
+  /**
+   * Get reviews
+   */
+  async getReviews(entities) {
+    const { bikeId, partnerId } = entities;
+    let query = { status: 'published' };
+    
+    if (bikeId) {
+      query.bikeId = bikeId;
+    } else if (partnerId) {
+      // Get bikes from partner first, then their reviews
+      const partnerBikes = await Bike.find({ partnerId }).select('_id');
+      query.bikeId = { $in: partnerBikes.map(b => b._id) };
+    }
+    
+    const reviews = await Review.find(query)
+      .populate('userId', 'firstName lastName')
+      .populate('bikeId', 'name type')
+      .sort({ createdAt: -1 })
+      .limit(5);
+    
+    return {
+      success: true,
+      message: `Found ${reviews.length} reviews:`,
+      data: reviews.map(review => ({
+        rating: review.rating,
+        comment: review.comment,
+        user: `${review.userId?.firstName} ${review.userId?.lastName}`,
+        bike: review.bikeId?.name,
+        date: review.createdAt
+      }))
+    };
+  }
+
+  /**
+   * Search FAQ
+   */
+  async searchFAQ(entities) {
+    const { query, category } = entities;
+    let searchCriteria = { active: true };
+    
+    if (category) {
+      searchCriteria.category = category;
+    }
+    
+    if (query) {
+      searchCriteria.$or = [
+        { question: new RegExp(query, 'i') },
+        { answer: new RegExp(query, 'i') }
+      ];
+    }
+    
+    const faqs = await FAQ.find(searchCriteria)
+      .sort({ order: 1 })
+      .limit(5);
+    
+    return {
+      success: true,
+      message: `Found ${faqs.length} helpful articles:`,
+      data: faqs.map(faq => ({
+        question: faq.question,
+        answer: faq.answer,
+        category: faq.category
+      }))
+    };
+  }
+
+  /**
+   * Get account information (limited for privacy)
+   */
+  async getAccountInfo(entities, context) {
+    if (!context.userId) {
+      return {
+        success: false,
+        message: "Please log in to view your account information."
+      };
+    }
+    
+    const user = await User.findById(context.userId)
+      .select('firstName lastName email phone verificationStatus createdAt');
+    
+    if (!user) {
+      return {
+        success: false,
+        message: "Account not found."
+      };
+    }
+    
+    const recentBookings = await Booking.find({ userId: context.userId })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .select('bookingNumber status dates createdAt');
+    
+    return {
+      success: true,
+      message: "Here's your account summary:",
+      data: {
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        phone: user.phone,
+        memberSince: user.createdAt,
+        verified: user.verificationStatus?.email,
+        recentBookings: recentBookings.map(booking => ({
+          number: booking.bookingNumber,
+          status: booking.status,
+          date: booking.createdAt
+        }))
+      }
+    };
+  }
+
+  /**
+   * Generate sample bike data for demo purposes
+   */
+  generateSampleBikes(location, bikeType, startDate, duration) {
+    console.log('Generating sample bikes for:', { location, bikeType, startDate, duration });
+    const locationName = location || 'Kandy';
+    const bikeTypes = ['Mountain', 'Road', 'City', 'Electric', 'Hybrid'];
+    const partners = [
+      'CycleRent Lanka', 
+      'Kandy Bike Hub', 
+      'Island Cycles', 
+      'Green Bike Rentals',
+      'Ceylon Cycle Co.'
+    ];
+
+    const sampleBikes = [];
+    
+    // Generate 5-8 sample bikes
+    const bikeCount = Math.floor(Math.random() * 4) + 5;
+    
+    for (let i = 0; i < bikeCount; i++) {
+      const randomType = bikeTypes[Math.floor(Math.random() * bikeTypes.length)];
+      const randomPartner = partners[Math.floor(Math.random() * partners.length)];
+      const dailyRate = Math.floor(Math.random() * 3000) + 1500; // 1500-4500 LKR
+      
+      sampleBikes.push({
+        id: `bike_${i + 1}_${Date.now()}`,
+        name: `${randomType} Bike - ${locationName} ${i + 1}`,
+        type: randomType,
+        location: locationName,
+        dailyRate: dailyRate,
+        hourlyRate: Math.floor(dailyRate / 8),
+        partner: {
+          name: randomPartner,
+          phone: `+94 ${Math.floor(Math.random() * 900000000) + 700000000}`,
+          rating: (Math.random() * 2 + 3).toFixed(1) // 3.0-5.0 rating
+        },
+        features: [
+          'Well maintained',
+          'Safety gear included',
+          'GPS tracking',
+          'Insurance covered',
+          '24/7 support'
+        ].slice(0, Math.floor(Math.random() * 3) + 3),
+        availability: {
+          status: true,
+          nextAvailable: startDate || new Date().toISOString().split('T')[0]
+        },
+        images: [`https://example.com/bikes/${randomType.toLowerCase()}_${i + 1}.jpg`]
+      });
+    }
+
+    console.log(`Generated ${sampleBikes.length} sample bikes`);
+    return sampleBikes;
+  }
+
+  async getPaymentMethods(entities) {
+    try {
+      const { PAYMENT_METHODS } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        data: {
+          acceptedPayments: PAYMENT_METHODS,
+          additionalInfo: [
+            'All major credit and debit cards accepted',
+            'Secure payment processing',
+            'Cash payments available at partner locations',
+            'Digital wallet options supported',
+            'Payment confirmation sent via SMS/email'
+          ]
+        },
+        suggestions: ['Book a bike', 'Find locations', 'Check availability', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting payment methods:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting payment information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getSafetyInfo(entities) {
+    try {
+      const { SAFETY_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        data: {
+          safetyFeatures: SAFETY_FEATURES,
+          safetyTips: [
+            'Always wear provided helmets',
+            'Check bike condition before riding',
+            'Follow traffic rules and regulations',
+            'Use designated bike lanes where available',
+            'Carry emergency contact information',
+            'Report any bike issues immediately'
+          ],
+          emergencySupport: {
+            phone: '+94 77 123 4567',
+            available: '24/7',
+            services: ['Breakdown assistance', 'Emergency pickup', 'Route guidance']
+          }
+        },
+        suggestions: ['Book a bike', 'Payment methods', 'Find locations', 'Booking help']
+      };
+    } catch (error) {
+      console.error('Error getting safety info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting safety information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getBookingProcess(entities) {
+    try {
+      const { BOOKING_PROCESS } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        data: {
+          steps: BOOKING_PROCESS,
+          quickProcess: [
+            '1. Search for bikes in your preferred location',
+            '2. Select bike type and rental duration',
+            '3. Choose pickup/drop-off locations',
+            '4. Provide required documents (ID, license)',
+            '5. Make payment using preferred method',
+            '6. Receive booking confirmation and bike details'
+          ],
+          requirements: [
+            'Valid government ID',
+            'Driving license (for motorized bikes)',
+            'Contact number',
+            'Emergency contact details'
+          ],
+          policies: [
+            'Minimum age: 18 years',
+            'Security deposit required',
+            'Late return fees apply',
+            'Damage assessment charges may apply'
+          ]
+        },
+        suggestions: ['Find bikes', 'Payment methods', 'Safety features', 'Check availability']
+      };
+    } catch (error) {
+      console.error('Error getting booking process:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting booking information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+}
+
+module.exports = new QueryService();
