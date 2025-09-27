@@ -330,6 +330,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <span></span>
                   <span></span>
                   <span></span>
+                  <span></span>
                 </div>
               )}
             </div>
