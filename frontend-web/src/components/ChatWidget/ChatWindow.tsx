@@ -33,6 +33,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isOnline, setIsOnline] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -127,6 +128,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setInputValue('');
+    
+    // Maintain focus on input field
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
 
     // Add loading message
     const loadingMessage: Message = {
@@ -198,11 +204,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      // Restore focus to input after response is received
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     handleSendMessage(suggestion);
+    // Maintain focus after suggestion click
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const handleClearChat = async () => {
@@ -362,6 +376,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       <div className="chat-window__input">
         <div className="message-input">
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
