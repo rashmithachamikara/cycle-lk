@@ -21,6 +21,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Partner',
     required: true
   },
+  currentBikePartnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Partner',
+    // The partner who currently has the bike (for pickup)
+  },
   package: {
     id: {
       type: String,

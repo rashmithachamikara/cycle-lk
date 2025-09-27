@@ -335,7 +335,7 @@ exports.getPendingPayments = async (req, res) => {
     const confirmedBookings = await Booking.find({
       userId,
       status: 'confirmed',
-      paymentStatus: 'pending'
+      paymentStatus: { $in: ['pending', 'partial_paid'] }
     })
     .populate('bikeId', 'name images')
     .populate('partnerId', 'companyName')
@@ -485,19 +485,19 @@ exports.processInitialPayment = async (req, res) => {
     });
     
     // Update booking with session info (but don't mark as paid yet)
-    // booking.paymentInfo = {
-    //   method: paymentMethod,
-    //   stripeSessionId: session.id,
-    //   paid: false, // Will be updated after successful payment
-    //   sessionCreatedAt: new Date(),
-    //   ...paymentDetails
-    // };
-    // booking.paymentStatus = 'processing'; // Intermediate status
-
-    booking.payments.initial = {
-      ...booking.payments.initial,
-      status: 'completed',
+    booking.paymentInfo = {
+      method: paymentMethod,
+      stripeSessionId: session.id,
+      paid: false, // Will be updated after successful payment
+      sessionCreatedAt: new Date(),
+      ...paymentDetails
     };
+    booking.paymentStatus = 'processing'; // Intermediate status
+
+    // booking.payments.initial = {
+    //   ...booking.payments.initial,
+    //   status: 'completed',
+    // };
 
     await booking.save();
     

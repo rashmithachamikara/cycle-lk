@@ -87,10 +87,7 @@ exports.auth = (allowedRoles = []) => {
       const decoded = jwt.verify(token, config.jwtSecret);
       req.user = decoded.user; // req.user now has { id: 'user_id_from_token' }
 
-      if (allowedRoles.length === 0) {
-        return next();
-      }
-      
+      // If no roles are specified, just authenticate (but still get user for partner logic)
       const user = await User.findById(req.user.id);
       console.log(`Auth middleware: User found - ID: ${user._id}, Role: ${user.role}`);
       
@@ -99,7 +96,8 @@ exports.auth = (allowedRoles = []) => {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      if (!allowedRoles.includes(user.role)) {
+      // Only check role if specific roles are required
+      if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
         console.error(`Auth middleware: Access denied for user ${user._id} with role ${user.role}.`);
         return res.status(403).json({ message: `Access denied. Required role: ${allowedRoles.join(' or ')}` });
       }

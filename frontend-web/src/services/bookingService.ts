@@ -277,10 +277,10 @@ export const bookingService = {
   },
 
   // Get all AVAILABLE PICKUP bookings for the authenticated partner
-  getMyPickupBookings: async (): Promise<PartnerDashboardBooking[]> => {
+  getMyPickupBookings: async () => {
+    console.log('Frontend calling getMyPickupBookings - URL: /bookings/my-pickup-bookings');
     const response = await api.get('/bookings/my-pickup-bookings');
-    const backendBookings: BackendBooking[] = response.data;
-    return backendBookings.map(transformBookingForPartnerDashboard);
+    return response.data;
   },
 
   // Get bookings for the authenticated partner

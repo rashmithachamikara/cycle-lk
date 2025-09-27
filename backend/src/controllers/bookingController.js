@@ -291,6 +291,7 @@ exports.createBooking = async (req, res) => {
       userId,
       bikeId,
       partnerId: bike.partnerId,
+      currentBikePartnerId: bike.currentPartnerId,
       package: packageInfo,
       pricing: {
         basePrice,
@@ -340,6 +341,7 @@ exports.createBooking = async (req, res) => {
       try {
         // Send notification to partner about new booking request
         await notificationService.notifyBookingCreated(booking, bike.partnerId);
+        await notificationService.notifyBookingCreated(booking, bike.currentPartnerId);
         console.log('Notification sent to partner successfully');
       } catch (notificationError) {
         console.error('Error sending notification to partner:', notificationError);
@@ -351,8 +353,9 @@ exports.createBooking = async (req, res) => {
           // Get the partner document to find the associated userId
           const Partner = require('../models/Partner');
           const partner = await Partner.findById(bike.partnerId);
-          
-          if (!partner) {
+          const pickupPartner = await Partner.findById(bike.currentPartnerId);
+
+          if (!partner || !pickupPartner) {
             console.error('Partner not found for partnerId:', bike.partnerId);
             throw new Error('Partner not found');
           }
@@ -362,7 +365,41 @@ exports.createBooking = async (req, res) => {
           const db = firebaseAdmin.firestore();
           await db.collection('realtimeEvents').add({
             type: 'BOOKING_CREATED',
-            targetUserId: partner.userId.toString(), // Use partner's userId instead of partnerId
+            targetUserId: pickupPartner.userId.toString(), // Use pickupPartner's userId instead of partnerId
+            targetUserRole: 'partner',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: bikeId,
+              userId: userId,
+              bookingData: {
+                id: booking._id.toString(),
+                bookingNumber: booking.bookingNumber,
+                customerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                customerEmail: req.user.email || '',
+                customerPhone: req.user.phone || '',
+                bikeName: bike.name,
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                status: booking.status,
+                total: booking.pricing.total,
+                pickupLocation: booking.locations.pickup,
+                dropoffLocation: booking.locations.dropoff,
+                packageType: booking.package.name
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: userId,
+              sourceUserRole: 'user'
+            }
+          });
+          console.log('Real-time event sent to dropoff partner dashboard');
+
+
+          await db.collection('realtimeEvents').add({
+            type: 'BOOKING_CREATED_FOR_OWNER',
+            targetUserId: partner.userId.toString(), // Use partner's userId instead of dropoffPartnerId
             targetUserRole: 'partner',
             data: {
               bookingId: booking._id.toString(),
@@ -441,13 +478,21 @@ exports.createBooking = async (req, res) => {
  */
 exports.getMyPickupBookings = async (req, res) => {
   try {
+
+    console.log('Request URL:', req.originalUrl);
     const partnerId = req.user.partnerId;
 
     if (!partnerId) {
       return res.status(403).json({ message: 'Partner profile not found.' });
     }
 
-    const bookings = await Booking.find({ dropoffPartnerId: req.user.partnerId })
+    // Get bookings where this partner is the PICKUP partner (either currentBikePartnerId or partnerId matches)
+    const bookings = await Booking.find({ 
+      $or: [
+        { currentBikePartnerId: req.user.partnerId },
+        { partnerId: req.user.partnerId }
+      ]
+    })
       .populate('userId', 'firstName lastName email phone')
       .populate('bikeId', 'name type brand model images pricing location')
       .populate('partnerId', 'companyName email phone location')
@@ -456,7 +501,7 @@ exports.getMyPickupBookings = async (req, res) => {
 
     res.json(bookings);
   } catch (err) {
-    console.error('Get available pickup bookings error:', err);
+    console.error('Get pickup bookings error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -491,7 +536,10 @@ exports.getMyBookings = async (req, res) => {
       }
       
       // Get all bookings for the authenticated partner
-      const bookings = await Booking.find({ partnerId: req.user.partnerId })
+      const bookings = await Booking.find({ $or: [
+        { currentBikePartnerId: req.user.partnerId },
+        { partnerId: req.user.partnerId }
+      ]})
         .populate('userId', 'firstName lastName email phone')
         .populate('bikeId', 'name type brand model images pricing location')
         .populate('partnerId', 'companyName email phone location')

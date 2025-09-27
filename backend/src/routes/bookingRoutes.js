@@ -12,6 +12,13 @@ const { validateBooking } = require('../middleware/validation');
 router.get('/', auth(), bookingController.getAllBookings);
 
 /**
+ * @route   GET /api/bookings/my-pickup-bookings
+ * @desc    Get all AVAILABLE PICKUP bookings for the authenticated partner
+ * @access  Private/Partner
+ */
+router.get('/my-pickup-bookings', auth(['partner']), bookingController.getMyPickupBookings);
+
+/**
  * @route   GET /api/bookings/my-bookings
  * @desc    Get all bookings for the authenticated partner
  * @access  Private/Partner/Admin/user
@@ -19,12 +26,7 @@ router.get('/', auth(), bookingController.getAllBookings);
  */
 router.get('/my-bookings', auth(['user', 'partner', 'admin']), bookingController.getMyBookings);
 
-/**
- * @route   GET /api/bookings/my-pickup-bookings
- * @desc    Get all AVAILABLE PICKUP bookings for the authenticated partner
- * @access  Private/Partner
- */
-router.get('/my-pickup-bookings', auth(['partner']), bookingController.getMyPickupBookings);
+
 
 /**
  * @route   GET /api/bookings/partner/:partnerId
