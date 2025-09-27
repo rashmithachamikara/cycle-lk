@@ -99,7 +99,7 @@ export interface BikeImage {
 export interface BikeFromAPI {
   _id: string;
   partnerId: string | Partner; // Can be either string ID or populated partner object
-  currentPartnerId?: string | CurrentPartnerId; // Current partner holding the bike
+  currentPartnerId?: CurrentPartnerId; // Current partner holding the bike
   name: string;
   type: BikeType;
   description?: string;
@@ -121,7 +121,7 @@ export interface BikeFromAPI {
 export interface Bike {
   id: string;
   partnerId: string;
-  currentPartnerId?: string | CurrentPartnerId; // Current partner holding the bike
+  currentPartnerId?: CurrentPartnerId; // Current partner holding the bike
   partner?: Partner; // Separated partner object for frontend use
   name: string;
   type: BikeType;
@@ -168,7 +168,7 @@ export interface BikeData {
 
 // Transform function to convert MongoDB _id to id
 export const transformBike = (bikeFromAPI: BikeFromAPI): Bike => {
-  const { _id, partnerId, currentPartnerId, ...rest } = bikeFromAPI;
+  const { _id, partnerId, ...rest } = bikeFromAPI;
   
   // Handle populated partner data
   let partnerIdString: string;
@@ -184,17 +184,17 @@ export const transformBike = (bikeFromAPI: BikeFromAPI): Bike => {
   }
 
   // Handle currentPartnerId
-  let currentPartnerIdValue: string | CurrentPartnerId | undefined;
-  if (typeof currentPartnerId === 'object' && currentPartnerId !== null) {
-    currentPartnerIdValue = currentPartnerId;
-  } else if (typeof currentPartnerId === 'string') {
-    currentPartnerIdValue = currentPartnerId;
-  }
+  // let currentPartnerIdValue:  CurrentPartnerId ;
+  // if (typeof currentPartnerId === 'object' && currentPartnerId !== null) {
+  //   currentPartnerIdValue = currentPartnerId;
+  // } else if (typeof currentPartnerId === 'string') {
+  //   currentPartnerIdValue = currentPartnerId;
+  // }
   
   return {
     id: _id,
     partnerId: partnerIdString,
-    currentPartnerId: currentPartnerIdValue,
+    // currentPartnerId: currentPartnerIdValue,
     partner: partnerData,
     ...rest
   };

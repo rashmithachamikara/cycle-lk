@@ -4,6 +4,70 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const DOMAIN = 'http://localhost:5173'; // Replace with your frontend domain
 
+// Payment configuration
+const PAYMENT_CONFIG = {
+  INITIAL_PAYMENT_PERCENTAGE: 0.2, // 20% initial payment
+  REMAINING_PAYMENT_PERCENTAGE: 0.8, // 80% remaining payment
+};
+
+/**
+ * Calculate payment amounts for a booking
+ */
+const calculatePaymentAmounts = (totalAmount) => {
+  const initialAmount = Math.round(totalAmount * PAYMENT_CONFIG.INITIAL_PAYMENT_PERCENTAGE * 100) / 100;
+  const remainingAmount = Math.round(totalAmount * PAYMENT_CONFIG.REMAINING_PAYMENT_PERCENTAGE * 100) / 100;
+  
+  return {
+    totalAmount,
+    initialAmount,
+    remainingAmount,
+    initialPercentage: PAYMENT_CONFIG.INITIAL_PAYMENT_PERCENTAGE * 100,
+    remainingPercentage: PAYMENT_CONFIG.REMAINING_PAYMENT_PERCENTAGE * 100
+  };
+};
+
+/**
+ * Get payment summary for a booking
+ */
+const getBookingPaymentSummary = async (bookingId) => {
+  const payments = await Payment.find({ bookingId }).sort({ createdAt: 1 });
+  const booking = await Booking.findById(bookingId);
+  
+  if (!booking) {
+    throw new Error('Booking not found');
+  }
+  
+  const totalBookingAmount = booking.pricing.total;
+  const paymentAmounts = calculatePaymentAmounts(totalBookingAmount);
+  
+  const initialPayment = payments.find(p => p.paymentType === 'initial');
+  const remainingPayment = payments.find(p => p.paymentType === 'remaining');
+  const additionalChargesPayments = payments.filter(p => p.paymentType === 'additional_charges');
+  
+  const totalAdditionalCharges = additionalChargesPayments.reduce((sum, payment) => {
+    return sum + (payment.additionalCharges?.reduce((chargeSum, charge) => chargeSum + charge.amount, 0) || 0);
+  }, 0);
+  
+  return {
+    booking,
+    totalBookingAmount,
+    paymentAmounts,
+    payments: {
+      initial: initialPayment,
+      remaining: remainingPayment,
+      additionalCharges: additionalChargesPayments
+    },
+    status: {
+      initialPaid: !!initialPayment && initialPayment.status === 'completed',
+      remainingPaid: !!remainingPayment && remainingPayment.status === 'completed',
+      totalAdditionalCharges,
+      isFullyPaid: !!initialPayment && !!remainingPayment && 
+                   initialPayment.status === 'completed' && 
+                   remainingPayment.status === 'completed'
+    }
+  };
+};
+
 /**
  * Get all payments with optional filtering
  * @param {Object} req - Express request object
@@ -271,7 +335,7 @@ exports.getPendingPayments = async (req, res) => {
     const confirmedBookings = await Booking.find({
       userId,
       status: 'confirmed',
-      paymentStatus: 'pending'
+      paymentStatus: { $in: ['pending', 'partial_paid'] }
     })
     .populate('bikeId', 'name images')
     .populate('partnerId', 'companyName')
@@ -370,6 +434,18 @@ exports.processInitialPayment = async (req, res) => {
       });
     }
     
+    // Calculate payment amounts
+    const totalBookingAmount = booking.pricing.total;
+    const paymentAmounts = calculatePaymentAmounts(totalBookingAmount);
+    
+    // Validate that the amount matches expected initial payment
+    if (Math.abs(amount - paymentAmounts.initialAmount) > 0.01) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid initial payment amount. Expected: ${paymentAmounts.initialAmount}, Received: ${amount}` 
+      });
+    }
+    
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -379,7 +455,7 @@ exports.processInitialPayment = async (req, res) => {
             currency: 'usd',
             product_data: {
               name: `Bike Rental - ${booking.bikeId?.name || 'Bike Booking'}`,
-              description: `Initial payment for booking #${booking.bookingNumber}`,
+              description: `Initial payment (${paymentAmounts.initialPercentage}%) for booking #${booking.bookingNumber}`,
             },
             unit_amount: Math.round(amount * 100), // Convert to cents and ensure integer
           },
@@ -392,7 +468,10 @@ exports.processInitialPayment = async (req, res) => {
       metadata: {
         bookingId: bookingId,
         userId: userId,
-        partnerId: booking.partnerId._id.toString()
+        partnerId: booking.partnerId._id.toString(),
+        paymentType: 'initial',
+        totalBookingAmount: totalBookingAmount.toString(),
+        paymentPercentage: paymentAmounts.initialPercentage.toString()
       },
       customer_email: req.user.email,
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes from now
@@ -414,7 +493,12 @@ exports.processInitialPayment = async (req, res) => {
       ...paymentDetails
     };
     booking.paymentStatus = 'processing'; // Intermediate status
-    
+
+    // booking.payments.initial = {
+    //   ...booking.payments.initial,
+    //   status: 'completed',
+    // };
+
     await booking.save();
     
     // Return the session URL for frontend redirect
@@ -506,7 +590,7 @@ exports.handleStripeWebhook = async (req, res) => {
  */
 async function handleCheckoutSessionCompleted(session) {
   try {
-    const { bookingId, userId, partnerId } = session.metadata;
+    const { bookingId, userId, partnerId, paymentType } = session.metadata;
     
     // Get booking and update payment status
     const booking = await Booking.findById(bookingId).populate('partnerId');
@@ -518,32 +602,147 @@ async function handleCheckoutSessionCompleted(session) {
     // Generate transaction ID
     const transactionId = session.payment_intent || `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Update booking
-    booking.paymentInfo = {
-      ...booking.paymentInfo,
-      transactionId,
-      paid: true,
-      paymentDate: new Date(),
-      stripePaymentIntentId: session.payment_intent
-    };
-    booking.paymentStatus = 'paid';
-    booking.status = 'active';
-    
-    await booking.save();
+    if (paymentType === 'initial') {
+      // Handle initial booking payment
+      const totalBookingAmount = parseFloat(session.metadata.totalBookingAmount);
+      const paymentPercentage = parseFloat(session.metadata.paymentPercentage);
+      
+      // Create initial payment record
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100,
+        totalBookingAmount,
+        paymentPercentage,
+        paymentType: 'initial',
+        method: 'card',
+        transactionId,
+        status: 'completed',
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+      
+      // Update booking with initial payment info
+      booking.payments.initial = {
+        ...booking.payments.initial,
+        paymentId: payment._id,
+        status: 'completed',
+        transactionId,
+        paidAt: new Date(),
+        stripeSessionId: session.id
+      };
+      
+      // Update legacy payment info for backward compatibility
+      booking.paymentInfo = {
+        ...booking.paymentInfo,
+        transactionId,
+        paid: true,
+        paymentDate: new Date(),
+        stripePaymentIntentId: session.payment_intent
+      };
+      
+      booking.status = 'active';
+      await booking.save(); // paymentStatus will be auto-updated to 'partial_paid' via pre-save middleware
+      
+      console.log('Initial payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
+      
+    } else if (paymentType === 'remaining') {
+      // Handle remaining payment
+      const totalBookingAmount = parseFloat(session.metadata.totalBookingAmount);
+      const paymentPercentage = parseFloat(session.metadata.paymentPercentage);
+      const additionalCharges = session.metadata.additionalCharges ? 
+        JSON.parse(session.metadata.additionalCharges) : [];
+      const relatedPaymentId = session.metadata.relatedPaymentId;
+      
+      // Create remaining payment record
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100,
+        totalBookingAmount,
+        paymentPercentage,
+        paymentType: 'remaining',
+        relatedPaymentId,
+        method: 'card',
+        transactionId,
+        status: 'completed',
+        additionalCharges,
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+      
+      // Update booking with remaining payment info
+      booking.payments.remaining = {
+        ...booking.payments.remaining,
+        paymentId: payment._id,
+        status: 'completed',
+        transactionId,
+        paidAt: new Date(),
+        stripeSessionId: session.id,
+        additionalCharges
+      };
+      
+      booking.status = 'completed';
+      await booking.save(); // paymentStatus will be auto-updated to 'fully_paid' via pre-save middleware
+      
+      console.log('Remaining payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
+      
+    } else if (paymentType === 'dropoff_additional') {
+      // Handle drop-off additional charges payment (legacy support)
+      const additionalCharges = session.metadata.additionalCharges ? 
+        JSON.parse(session.metadata.additionalCharges) : [];
+      
+      // Create payment record for additional charges
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100,
+        paymentType: 'additional_charges',
+        method: 'card',
+        transactionId,
+        status: 'completed',
+        additionalCharges,
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+      
+      console.log('Additional charges payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
+      
+    } else {
+      // Handle regular initial booking payment
+      booking.paymentInfo = {
+        ...booking.paymentInfo,
+        transactionId,
+        paid: true,
+        paymentDate: new Date(),
+        stripePaymentIntentId: session.payment_intent
+      };
+      booking.paymentStatus = 'paid';
+      booking.status = 'active';
+      
+      await booking.save();
 
-    // Create payment record
-    const payment = new Payment({
-      bookingId,
-      userId,
-      partnerId,
-      amount: session.amount_total / 100, // Convert from cents
-      method: 'card',
-      transactionId,
-      status: 'completed',
-      createdAt: new Date()
-    });
-    
-    await payment.save();
+      // Create payment record
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId,
+        amount: session.amount_total / 100, // Convert from cents
+        method: 'card',
+        paymentMethod: 'card',
+        transactionId,
+        status: 'completed',
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+    }
 
     // Send real-time notification to partner
     if (booking.partnerId && firebaseAdmin) {
@@ -602,3 +801,320 @@ async function handleCheckoutSessionExpired(session) {
     console.error('Error handling checkout session expired:', error);
   }
 }
+
+/**
+ * Process remaining payment for a booking
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processRemainingPayment = async (req, res) => {
+  try {
+    const { bookingId, paymentMethod, additionalCharges } = req.body;
+    const userId = req.user.id;
+    
+    // Get booking payment summary
+    const paymentSummary = await getBookingPaymentSummary(bookingId);
+    const { booking, paymentAmounts, status } = paymentSummary;
+    
+    // Validate user is authorized to process payment for this booking
+    // Either the booking owner (customer) or the dropoff partner can process remaining payment
+    const isBookingOwner = booking.userId.toString() === userId;
+    const isDropoffPartner = req.user.partnerId && booking.dropoffPartnerId && 
+                           booking.dropoffPartnerId.toString() === req.user.partnerId.toString();
+    
+    if (!isBookingOwner && !isDropoffPartner) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized to pay for this booking' 
+      });
+    }
+    
+    // Check if initial payment is completed
+    if (booking.payments.initial.status !== 'completed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Initial payment must be completed before remaining payment' 
+      });
+    }
+    
+    // Check if remaining payment already completed
+    if (booking.payments.remaining.status === 'completed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Remaining payment already completed' 
+      });
+    }
+    
+    // Calculate total amount including additional charges
+    const additionalChargesTotal = (additionalCharges || []).reduce((sum, charge) => sum + charge.amount, 0);
+    const totalAmount = paymentAmounts.remainingAmount + additionalChargesTotal;
+    
+    if (paymentMethod === 'cash') {
+      // Process cash payment directly
+      const initialPayment = paymentSummary.payments.initial;
+      
+      const payment = new Payment({
+        bookingId,
+        userId,
+        partnerId: isDropoffPartner ? booking.dropoffPartnerId : booking.partnerId,
+        amount: totalAmount,
+        totalBookingAmount: paymentAmounts.totalAmount,
+        paymentPercentage: paymentAmounts.remainingPercentage,
+        paymentType: 'remaining',
+        relatedPaymentId: initialPayment._id,
+        method: 'cash',
+        status: 'completed',
+        additionalCharges: additionalCharges || [],
+        transactionId: `CASH_REMAINING_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date()
+      });
+      
+      await payment.save();
+      
+      // Update booking remaining payment info
+      booking.payments.remaining = {
+        ...booking.payments.remaining,
+        paymentId: payment._id,
+        status: 'completed',
+        transactionId: payment.transactionId,
+        paidAt: new Date(),
+        additionalCharges: additionalCharges || []
+      };
+      
+      booking.status = 'completed';
+      await booking.save(); // paymentStatus will be auto-updated to 'fully_paid'
+      
+      res.json({
+        success: true,
+        paymentStatus: 'completed',
+        transactionId: payment.transactionId,
+        message: 'Remaining payment completed successfully',
+        paymentSummary: await getBookingPaymentSummary(bookingId)
+      });
+      
+    } else if (paymentMethod === 'card') {
+      // Create Stripe session for remaining payment
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Final Payment - Booking #${booking.bookingNumber}`,
+                description: `Remaining payment (${paymentAmounts.remainingPercentage}%) + additional charges`,
+              },
+              unit_amount: Math.round(totalAmount * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId}&type=remaining`,
+        cancel_url: `${DOMAIN}/payment-cancel?bookingId=${bookingId}&type=remaining`,
+        metadata: {
+          bookingId: bookingId,
+          userId: userId,
+          partnerId: (isDropoffPartner ? booking.dropoffPartnerId : booking.partnerId).toString(),
+          paymentType: 'remaining',
+          totalBookingAmount: paymentAmounts.totalAmount.toString(),
+          paymentPercentage: paymentAmounts.remainingPercentage.toString(),
+          additionalCharges: JSON.stringify(additionalCharges || []),
+          relatedPaymentId: paymentSummary.payments.initial._id.toString()
+        },
+        customer_email: req.user.email,
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 60),
+      });
+      
+      res.json({
+        success: true,
+        sessionId: session.id,
+        sessionUrl: session.url,
+        paymentStatus: 'processing',
+        message: 'Stripe session created for remaining payment'
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Use "cash" or "card"'
+      });
+    }
+    
+  } catch (err) {
+    console.error('Error processing remaining payment:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};
+
+/**
+ * Get payment summary for a booking
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getBookingPaymentSummary = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const userId = req.user.id;
+    
+    const paymentSummary = await getBookingPaymentSummary(bookingId);
+    
+    // Check if user is authorized to view this booking's payment info
+    if (paymentSummary.booking.userId.toString() !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized to view payment information' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      ...paymentSummary
+    });
+    
+  } catch (err) {
+    console.error('Error getting payment summary:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to get payment summary' 
+    });
+  }
+};
+
+/**
+ * Process drop-off cash payment
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processDropOffCashPayment = async (req, res) => {
+  try {
+    const { bookingId, amount, additionalCharges } = req.body;
+    const partnerId = req.user.id;
+    
+    // Validate booking exists
+    const booking = await Booking.findById(bookingId).populate('userId partnerId');
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Booking not found' 
+      });
+    }
+    
+    // Validate amount
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid payment amount' 
+      });
+    }
+    
+    // Generate transaction ID for cash payment
+    const transactionId = `CASH_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create payment record for additional charges
+    const payment = new Payment({
+      bookingId,
+      userId: booking.userId._id,
+      partnerId,
+      amount,
+      paymentMethod: 'cash',
+      method: 'cash',
+      transactionId,
+      status: 'completed',
+      additionalCharges: additionalCharges || [],
+      createdAt: new Date()
+    });
+    
+    await payment.save();
+    
+    res.json({
+      success: true,
+      paymentStatus: 'completed',
+      transactionId,
+      message: 'Cash payment recorded successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error processing drop-off cash payment:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};
+
+/**
+ * Process drop-off card payment via Stripe
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processDropOffCardPayment = async (req, res) => {
+  try {
+    const { bookingId, amount, additionalCharges } = req.body;
+    const partnerId = req.user.id;
+    
+    // Validate booking exists
+    const booking = await Booking.findById(bookingId).populate('userId partnerId');
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Booking not found' 
+      });
+    }
+    
+    // Validate amount
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid payment amount' 
+      });
+    }
+    
+    // Create Stripe checkout session for additional charges
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Additional Charges - Booking #${booking.bookingNumber || booking._id.toString().slice(-8).toUpperCase()}`,
+              description: `Drop-off additional charges for bike rental`,
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${DOMAIN}/partner-dashboard/drop-bike?session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId}&payment=success`,
+      cancel_url: `${DOMAIN}/partner-dashboard/drop-bike?bookingId=${bookingId}&payment=cancelled`,
+      metadata: {
+        bookingId: bookingId,
+        partnerId: partnerId,
+        userId: booking.userId._id.toString(),
+        paymentType: 'dropoff_additional',
+        additionalCharges: JSON.stringify(additionalCharges || [])
+      },
+      customer_email: booking.userId.email,
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
+    });
+    
+    res.json({
+      success: true,
+      sessionId: session.id,
+      sessionUrl: session.url,
+      paymentStatus: 'processing',
+      message: 'Stripe session created successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error processing drop-off card payment:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};

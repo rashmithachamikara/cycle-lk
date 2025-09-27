@@ -34,6 +34,7 @@ import notificationIntegrationService from '../../services/notificationIntegrati
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
+  const [dropOffBookings, setDropOffBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -59,6 +60,11 @@ const PartnerDashboardPage = () => {
       console.log('Transformed bookings:', transformedBookings);
       
       setBookings(transformedBookings);
+
+      const dropOffBookings = await bookingService.getDropoffBookings();
+      setDropOffBookings(dropOffBookings);
+      console.log('Drop-off bookings count:', dropOffBookings.length);
+
     } catch (err) {
       console.error('Error fetching bookings:', err);
       setError('Failed to load bookings');
@@ -125,7 +131,7 @@ const PartnerDashboardPage = () => {
           const partnerData = await partnerService.getPartnerByUserId(user.id);
           setPartner(partnerData);
         }
-      } catch (err) {
+      } catch {
         setPartner(null);
       } finally {
         setPartnerLoading(false);
@@ -237,9 +243,14 @@ const PartnerDashboardPage = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               to="/partner-dashboard/drop-off-bike"
-              className="bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
+              className="relative bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg hover:bg-white hover:bg-opacity-30 transition-colors font-medium text-center"
             >
               Drop Off a Bike
+              {dropOffBookings.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                  {dropOffBookings.length}
+                </span>
+              )}
             </Link>
             <Link
               to="/partner-dashboard/add-bike"

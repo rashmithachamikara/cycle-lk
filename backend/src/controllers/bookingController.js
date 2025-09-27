@@ -158,10 +158,10 @@ exports.createBooking = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('User from token:', req.user);
     
-    const { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId } = req.body;
+    const { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, totalAmount } = req.body;
     const userId = req.user.id; // From auth middleware
     
-    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, userId });
+    console.log('Extracted data:', { bikeId, startTime, endTime, deliveryAddress, pickupLocation, dropoffLocation, dropoffPartnerId, totalAmount, userId });
     
     // Validate bike exists and is available
     const bike = await Bike.findById(bikeId);
@@ -252,21 +252,38 @@ exports.createBooking = async (req, res) => {
       };
     }
     
-    // Calculate pricing
+    // Calculate pricing - use totalAmount from frontend if provided, otherwise calculate
     let basePrice = 0;
-    if (durationHours <= 24) {
-      basePrice = bike.pricing.perHour * durationHours;
+    let total = 0;
+    
+    if (totalAmount && totalAmount > 0) {
+      // Use the total amount calculated and sent from frontend
+      total = totalAmount;
+      basePrice = totalAmount; // For now, set basePrice equal to total (can be refined later)
     } else {
-      basePrice = bike.pricing.perDay * durationDays;
+      // Fallback to backend calculation if no totalAmount provided
+      if (durationHours <= 24) {
+        basePrice = bike.pricing.perHour * durationHours;
+      } else {
+        basePrice = bike.pricing.perDay * durationDays;
+      }
+      
+      const insurance = basePrice * 0.1; // 10% insurance
+      const extras = 0; // No extras for now
+      const discount = 0; // No discount for now
+      total = basePrice + insurance + extras - discount;
     }
     
-    const insurance = basePrice * 0.1; // 10% insurance
+    const insurance = 0; // Set to 0 when using frontend total
     const extras = 0; // No extras for now
     const discount = 0; // No discount for now
-    const total = basePrice + insurance + extras - discount;
     
     // Generate unique booking number
     const bookingNumber = `BK${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    
+    // Calculate payment amounts
+    const initialAmount = Math.round(total * 0.2 * 100) / 100; // 20%
+    const remainingAmount = Math.round(total * 0.8 * 100) / 100; // 80%
     
     // Create booking with proper model structure
     const booking = new Booking({
@@ -274,6 +291,7 @@ exports.createBooking = async (req, res) => {
       userId,
       bikeId,
       partnerId: bike.partnerId,
+      currentBikePartnerId: bike.currentPartnerId,
       package: packageInfo,
       pricing: {
         basePrice,
@@ -291,7 +309,20 @@ exports.createBooking = async (req, res) => {
         dropoff: dropoffLocation || deliveryAddress || 'Default dropoff location'
       },
       dropoffPartnerId,
-      status: 'requested'
+      status: 'requested',
+      payments: {
+        initial: {
+          amount: initialAmount,
+          percentage: 20,
+          status: 'pending'
+        },
+        remaining: {
+          amount: remainingAmount,
+          percentage: 80,
+          status: 'pending',
+          additionalCharges: []
+        }
+      }
     });
     
     await booking.save();
@@ -310,6 +341,7 @@ exports.createBooking = async (req, res) => {
       try {
         // Send notification to partner about new booking request
         await notificationService.notifyBookingCreated(booking, bike.partnerId);
+        await notificationService.notifyBookingCreated(booking, bike.currentPartnerId);
         console.log('Notification sent to partner successfully');
       } catch (notificationError) {
         console.error('Error sending notification to partner:', notificationError);
@@ -321,8 +353,9 @@ exports.createBooking = async (req, res) => {
           // Get the partner document to find the associated userId
           const Partner = require('../models/Partner');
           const partner = await Partner.findById(bike.partnerId);
-          
-          if (!partner) {
+          const pickupPartner = await Partner.findById(bike.currentPartnerId);
+
+          if (!partner || !pickupPartner) {
             console.error('Partner not found for partnerId:', bike.partnerId);
             throw new Error('Partner not found');
           }
@@ -332,7 +365,41 @@ exports.createBooking = async (req, res) => {
           const db = firebaseAdmin.firestore();
           await db.collection('realtimeEvents').add({
             type: 'BOOKING_CREATED',
-            targetUserId: partner.userId.toString(), // Use partner's userId instead of partnerId
+            targetUserId: pickupPartner.userId.toString(), // Use pickupPartner's userId instead of partnerId
+            targetUserRole: 'partner',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: bikeId,
+              userId: userId,
+              bookingData: {
+                id: booking._id.toString(),
+                bookingNumber: booking.bookingNumber,
+                customerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                customerEmail: req.user.email || '',
+                customerPhone: req.user.phone || '',
+                bikeName: bike.name,
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                status: booking.status,
+                total: booking.pricing.total,
+                pickupLocation: booking.locations.pickup,
+                dropoffLocation: booking.locations.dropoff,
+                packageType: booking.package.name
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: userId,
+              sourceUserRole: 'user'
+            }
+          });
+          console.log('Real-time event sent to dropoff partner dashboard');
+
+
+          await db.collection('realtimeEvents').add({
+            type: 'BOOKING_CREATED_FOR_OWNER',
+            targetUserId: partner.userId.toString(), // Use partner's userId instead of dropoffPartnerId
             targetUserRole: 'partner',
             data: {
               bookingId: booking._id.toString(),
@@ -405,6 +472,41 @@ exports.createBooking = async (req, res) => {
 };
 
 /**
+ * Get all AVAILABLE PICKUP bookings for the authenticated partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyPickupBookings = async (req, res) => {
+  try {
+
+    console.log('Request URL:', req.originalUrl);
+    const partnerId = req.user.partnerId;
+
+    if (!partnerId) {
+      return res.status(403).json({ message: 'Partner profile not found.' });
+    }
+
+    // Get bookings where this partner is the PICKUP partner (either currentBikePartnerId or partnerId matches)
+    const bookings = await Booking.find({ 
+      $or: [
+        { currentBikePartnerId: req.user.partnerId },
+        { partnerId: req.user.partnerId }
+      ]
+    })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('bikeId', 'name type brand model images pricing location')
+      .populate('partnerId', 'companyName email phone location')
+      .populate('dropoffPartnerId', 'companyName email phone location')
+      .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get pickup bookings error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
  * Get all bookings for the authenticated partner
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -434,7 +536,10 @@ exports.getMyBookings = async (req, res) => {
       }
       
       // Get all bookings for the authenticated partner
-      const bookings = await Booking.find({ partnerId: req.user.partnerId })
+      const bookings = await Booking.find({ $or: [
+        { currentBikePartnerId: req.user.partnerId },
+        { partnerId: req.user.partnerId }
+      ]})
         .populate('userId', 'firstName lastName email phone')
         .populate('bikeId', 'name type brand model images pricing location')
         .populate('partnerId', 'companyName email phone location')

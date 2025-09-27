@@ -1,5 +1,5 @@
 //backend/src/controllers/userController.js
-const { User } = require('../models');
+const { User, Partner } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/db');
@@ -17,6 +17,37 @@ exports.getAllUsers = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+ /**
+  * Get the partner details of the authenticated user (if any)
+  * @param {Object} req - Express request object
+  * @param {Object} res - Express response object
+  * @access Private
+  */
+ exports.getUserPartner = async (req, res) => {
+   try {
+     console.log('🔍 getUserPartner called, req.user:', req.user);
+     const user = await User.findById(req.user.id);
+     if (!user) {
+       return res.status(404).json({ message: 'User not found' });
+     }
+     
+     // Find partner by userId (not partnerId on user)
+     const partner = await Partner.findOne({ userId: req.user.id })
+       .populate('userId', 'firstName lastName email phone')
+       .populate('location', 'name coordinates');
+       
+     if (!partner) {
+       // Return null instead of 404 - this is a valid case for non-partner users
+       return res.json(null);
+     }
+     
+     res.json(partner);
+   } catch (err) {
+     console.error('Error in getUserPartner:', err);
+     res.status(500).json({ message: 'Server error' });
+   }
 };
 
 /**

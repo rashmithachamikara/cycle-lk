@@ -295,6 +295,7 @@ const BookingPage = () => {
 
       const startDateTime = `${startDate}T${startTime || '09:00'}:00.000Z`;
       const endDateTime = `${endDate}T${endTime || '18:00'}:00.000Z`;
+      const totalPrice = calculateTotalPrice();
 
       const bookingPayload: CreateBookingRequest = {
         bikeId: selectedBike.id,
@@ -303,7 +304,8 @@ const BookingPage = () => {
         deliveryAddress: deliveryAddress || undefined,
         pickupLocation: pickupLocation?.name || undefined,
         dropoffLocation: `${selectedPartner.companyName} - ${selectedPartner.address || selectedPartner.mapLocation?.address || dropoffLocation?.name || 'Address not available'}`,
-        dropoffPartnerId: selectedPartner._id
+        dropoffPartnerId: selectedPartner._id,
+        totalAmount: totalPrice
       };
 
       const response = await bookingService.createBooking(bookingPayload);
