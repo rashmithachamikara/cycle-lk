@@ -10,7 +10,7 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   _id: ObjectId,
   firstName: String,
   lastName: String,
-  email: String, // indexed, unique
+  email: String, // indexed, unique, lowercase
   password: String, // hashed
   phone: String,
   dateOfBirth: Date,
@@ -57,14 +57,19 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   _id: ObjectId,
   userId: ObjectId, // Reference to user who manages this partner account
   companyName: String,
-  category: String, // 'Premium', 'Adventure', 'Beach', etc.
+  category: String,
   description: String,
-  location: String,
-  address: String,
-  coordinates: {
-    latitude: Number,
-    longitude: Number
+  location: ObjectId, // Reference to Location
+  mapLocation: {
+    id: String,
+    name: String,
+    address: String,
+    coordinates: { lat: Number, lng: Number },
+    placeId: String,
+    isMainLocation: Boolean
   },
+  address: String,
+  coordinates: { latitude: Number, longitude: Number },
   contactPerson: String,
   phone: String,
   email: String,
@@ -78,7 +83,7 @@ This document outlines the database structure for the Cycle.LK bike rental platf
     sunday: { open: String, close: String }
   },
   specialties: [String],
-  features: [String], // '24/7 Support', 'Free Delivery', etc.
+  features: [String],
   rating: Number,
   reviews: [{
     userId: ObjectId,
@@ -86,14 +91,22 @@ This document outlines the database structure for the Cycle.LK bike rental platf
     comment: String,
     date: Date
   }],
-  bikeCount: Number, // Updated whenever bikes are added/removed
+  bikeCount: Number,
   yearsActive: Number,
   images: {
-    logo: String,
-    storefront: String,
-    gallery: [String]
+    logo: { url: String, publicId: String },
+    storefront: { url: String, publicId: String },
+    gallery: [{ url: String, publicId: String }]
   },
   verified: Boolean,
+  verificationDocuments: [{
+    documentType: String,
+    documentName: String,
+    url: String,
+    publicId: String,
+    uploadedAt: Date,
+    verified: Boolean
+  }],
   status: String, // 'active', 'inactive', 'pending'
   createdAt: Date,
   updatedAt: Date
@@ -106,13 +119,10 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   _id: ObjectId,
   partnerId: ObjectId, // Reference to partner who owns the bike
   name: String,
-  type: String, // 'city', 'mountain', 'road', 'hybrid', 'electric', etc.
+  type: String, // 'city', 'mountain', 'road', 'hybrid', 'electric', 'touring', 'folding', 'cruiser'
   description: String,
-  location: String,
-  coordinates: {
-    latitude: Number,
-    longitude: Number
-  },
+  currentPartnerId: ObjectId, // Reference to Partner (if bike is not in shop)
+  coordinates: { latitude: Number, longitude: Number },
   pricing: {
     perDay: Number,
     perWeek: Number,
@@ -129,10 +139,11 @@ This document outlines the database structure for the Cycle.LK bike rental platf
     tireSize: String,
     gearSystem: String
   },
-  images: [String], // Array of image URLs
+  images: [{ url: String, publicId: String }],
   availability: {
-    status: Boolean, // true if generally available
-    unavailableDates: [Date] // Dates when bike is not available
+    status: String, // 'available', etc.
+    reason: String,
+    unavailableDates: [Date]
   },
   condition: String, // 'excellent', 'good', 'fair'
   rating: Number,
@@ -153,10 +164,11 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 ```javascript
 {
   _id: ObjectId,
-  bookingNumber: String, // Formatted as 'CL2025XXX'
+  bookingNumber: String,
   userId: ObjectId,
   bikeId: ObjectId,
   partnerId: ObjectId,
+  currentBikePartnerId: ObjectId,
   package: {
     id: String, // 'day', 'week', 'month'
     name: String,
@@ -168,7 +180,7 @@ This document outlines the database structure for the Cycle.LK bike rental platf
     extras: Number,
     discount: Number,
     total: Number,
-    currency: String // 'USD', 'LKR', etc.
+    currency: String
   },
   dates: {
     startDate: Date,
@@ -179,13 +191,41 @@ This document outlines the database structure for the Cycle.LK bike rental platf
     pickup: String,
     dropoff: String
   },
+  dropoffPartnerId: ObjectId,
   status: String, // 'requested', 'confirmed', 'active', 'completed', 'cancelled'
-  paymentStatus: String, // 'pending', 'paid', 'refunded', 'failed'
+  paymentStatus: String, // 'pending', 'processing', 'partial_paid', 'fully_paid', 'refunded', 'failed'
+  payments: {
+    initial: {
+      paymentId: ObjectId,
+      amount: Number,
+      percentage: Number,
+      status: String,
+      transactionId: String,
+      paidAt: Date,
+      stripeSessionId: String
+    },
+    remaining: {
+      paymentId: ObjectId,
+      amount: Number,
+      percentage: Number,
+      status: String,
+      transactionId: String,
+      paidAt: Date,
+      stripeSessionId: String,
+      additionalCharges: [{
+        type: String,
+        description: String,
+        amount: Number
+      }]
+    }
+  },
   paymentInfo: {
     method: String,
     transactionId: String,
     paid: Boolean,
-    paymentDate: Date
+    paymentDate: Date,
+    stripeSessionId: String,
+    stripePaymentIntentId: String
   },
   review: {
     rating: Number,
@@ -205,15 +245,12 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   _id: ObjectId,
   name: String,
   description: String,
-  coordinates: {
-    latitude: Number,
-    longitude: Number
-  },
-  bikeCount: Number, // Updated periodically with aggregation
-  partnerCount: Number, // Updated periodically with aggregation
+  coordinates: { latitude: Number, longitude: Number },
+  bikeCount: Number,
+  partnerCount: Number,
   popular: Boolean,
-  image: String, // URL to location image
-  region: String, // Geographic region
+  image: String,
+  region: String,
   createdAt: Date,
   updatedAt: Date
 }
@@ -225,17 +262,27 @@ This document outlines the database structure for the Cycle.LK bike rental platf
   _id: ObjectId,
   bookingId: ObjectId,
   userId: ObjectId,
+  partnerId: ObjectId,
   amount: Number,
+  totalBookingAmount: Number,
+  paymentPercentage: Number,
   currency: String,
-  method: String, // 'credit_card', 'paypal', etc.
+  method: String, // 'card', 'bank_transfer', 'mobile_payment', 'credit_card', 'paypal', 'cash'
+  paymentType: String, // 'initial', 'remaining', 'additional_charges', 'refund'
+  relatedPaymentId: ObjectId,
   status: String, // 'pending', 'completed', 'failed', 'refunded'
   transactionId: String,
   cardInfo: {
-    type: String, // 'Visa', 'Mastercard', etc.
+    type: String,
     last4: String,
     expiryMonth: Number,
     expiryYear: Number
   },
+  additionalCharges: [{
+    type: String,
+    description: String,
+    amount: Number
+  }],
   refundInfo: {
     refunded: Boolean,
     refundDate: Date,
@@ -251,21 +298,12 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 ```javascript
 {
   _id: ObjectId,
-  userId: {
-    type: ObjectId,
-    ref: 'User'
-  },
-  bikeId: {
-    type: ObjectId,
-    ref: 'Bike'
-  },
-  bookingId: {
-    type: ObjectId,
-    ref: 'Booking'
-  },
+  userId: ObjectId,
+  bikeId: ObjectId,
+  bookingId: ObjectId,
   rating: Number, // 1-5
   comment: String,
-  helpful: Number, // Number of people who found the review helpful
+  helpful: Number,
   images: [String],
   status: String, // 'published', 'pending', 'rejected'
   createdAt: Date,
@@ -278,16 +316,17 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 {
   _id: ObjectId,
   userId: ObjectId,
-  type: String, // 'reminder', 'offer', 'system', etc.
+  type: String, // 'reminder', 'offer', 'system', 'partner', 'payment'
   title: String,
   message: String,
   relatedTo: {
-    type: String, // 'booking', 'bike', 'partner', etc.
+    type: String, // 'booking', 'bike', 'partner', 'user', 'payment'
     id: ObjectId
   },
   read: Boolean,
+  sentVia: [String], // 'app', 'email', 'sms'
   createdAt: Date,
-  sentVia: [String] // 'app', 'email', 'sms'
+  updatedAt: Date
 }
 ```
 
@@ -295,15 +334,15 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 ```javascript
 {
   _id: ObjectId,
-  ticketNumber: String, // Formatted as 'SUPTXXX'
+  ticketNumber: String,
   userId: ObjectId,
   subject: String,
-  category: String, // 'booking', 'payment', 'bikes', etc.
+  category: String, // 'booking', 'payment', 'bikes', 'locations', 'safety', 'account', 'other'
   priority: String, // 'low', 'medium', 'high'
   message: String,
-  attachments: [String], // URLs to uploaded files
+  attachments: [String],
   status: String, // 'open', 'in-progress', 'resolved', 'closed'
-  assignedTo: ObjectId, // Staff member ID
+  assignedTo: ObjectId,
   responses: [{
     responder: {
       id: ObjectId,
@@ -324,12 +363,12 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 {
   _id: ObjectId,
   userId: ObjectId,
-  type: String, // 'Visa', 'Mastercard', 'PayPal', etc.
-  last4: String, // Last 4 digits of card
+  type: String, // 'Visa', 'Mastercard', 'PayPal', 'American Express', 'Other'
+  last4: String,
   expiryMonth: Number,
   expiryYear: Number,
   isDefault: Boolean,
-  tokenized: String, // Secure token from payment processor
+  tokenized: String,
   createdAt: Date,
   updatedAt: Date
 }
@@ -339,10 +378,10 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 ```javascript
 {
   _id: ObjectId,
-  category: String, // 'booking', 'payment', 'locations', etc.
+  category: String, // 'booking', 'payment', 'locations', 'bikes', 'safety', 'account', 'other'
   question: String,
   answer: String,
-  order: Number, // To determine display order
+  order: Number,
   active: Boolean,
   createdAt: Date,
   updatedAt: Date
@@ -351,31 +390,77 @@ This document outlines the database structure for the Cycle.LK bike rental platf
 
 ## Indexing Strategy
 
-For optimal performance, the following indexes should be created:
+For optimal performance, the following indexes should be created (as per Mongoose models):
 
 1. Users collection:
-   - email (unique)
-   - role (for filtering users by role)
+  - email (unique)
+  - role
 
 2. Partners collection:
-   - userId (for quick lookup of partner by user)
-   - location (for location-based queries)
+  - userId
+  - location
+  - status
+  - companyName (text), description (text)
 
 3. Bikes collection:
-   - partnerId (for finding bikes by partner)
-   - location (for location-based searches)
-   - type (for filtering by bike type)
-   - "pricing.perDay" (for price-based filtering)
+  - partnerId
+  - location
+  - type
+  - pricing.perDay
+  - name (text), description (text)
 
 4. Bookings collection:
-   - userId (for finding user's bookings)
-   - bikeId (for finding bookings for a bike)
-   - partnerId (for finding bookings managed by a partner)
-   - "dates.startDate" and "dates.endDate" (for date-based queries)
-   - status (for filtering by booking status)
+  - userId
+  - bikeId
+  - partnerId
+  - dropoffPartnerId
+  - dates.startDate, dates.endDate
+  - status
+  - paymentStatus
+  - payments.initial.status
+  - payments.remaining.status
 
-5. Reviews collection:
-   - entityId, entityType (composite index for finding reviews for specific entities)
+5. Location collection:
+  - popular
+  - region
+  - name (text), description (text)
+
+6. Payment collection:
+  - bookingId
+  - userId
+  - partnerId
+  - status
+  - transactionId
+
+7. Review collection:
+  - (No explicit index in model)
+
+8. Notification collection:
+  - userId
+  - read
+  - type
+  - createdAt (descending)
+
+9. Support collection:
+  - userId
+  - status
+  - priority
+  - category
+
+10. PaymentMethod collection:
+  - userId
+  - isDefault
+
+11. FAQ collection:
+  - category
+  - order
+  - active
+  - question (text), answer (text)
+
+12. FCMToken collection:
+  - userId
+  - token (unique)
+  - isActive
 
 ## Data Relationships
 
@@ -386,4 +471,10 @@ The database design uses references (not embedded documents) for most relationsh
 3. Users → Bookings (one-to-many): A user can have multiple bookings
 4. Bikes → Bookings (one-to-many): A bike can have multiple bookings (at different times)
 5. Users → Reviews (one-to-many): A user can leave multiple reviews
-6. Bikes/Partners → Reviews (one-to-many): Bikes and partners can receive multiple reviews
+6. Bikes → Reviews (one-to-many): Bikes can receive multiple reviews
+7. Partners → Reviews (one-to-many): Partners can receive multiple reviews (via embedded array)
+8. Bookings → Payments (one-to-many): A booking can have multiple payments
+9. Users → PaymentMethods (one-to-many): A user can have multiple payment methods
+10. Users → Notifications (one-to-many): A user can have multiple notifications
+11. Users → Support (one-to-many): A user can have multiple support tickets
+12. Locations → Partners/Bikes (one-to-many): A location can have multiple partners/bikes
