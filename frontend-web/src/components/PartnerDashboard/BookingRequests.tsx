@@ -1,32 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Users, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
-import { bookingService } from '../../services/bookingService';
+import { bookingService,PartnerDashboardBooking } from '../../services/bookingService';
 import { toast } from 'react-hot-toast';
-
-type Booking = {
-  id: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  bikeName: string;
-  bikeId: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  value: string;
-  bookingNumber: string;
-  pickupLocation: string;
-  dropoffLocation: string;
-  packageType: string;
-};
+import { Partner } from '../../services/partnerService';
 
 type BookingRequestsProps = {
-  bookings: Booking[];
+  bookings: PartnerDashboardBooking[];
+  partner: Partner | null;
   onBookingUpdate?: () => void; // Callback to refresh bookings after status change
 };
 
-const BookingRequests = ({ bookings, onBookingUpdate }: BookingRequestsProps) => {
+const BookingRequests = ({ bookings, partner, onBookingUpdate }: BookingRequestsProps) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 
   // Handle booking approval
@@ -79,8 +64,15 @@ const BookingRequests = ({ bookings, onBookingUpdate }: BookingRequestsProps) =>
 
   // Filter only pending/requested bookings for this component
   const pendingBookings = bookings.filter(booking => 
-    booking.status === 'requested' || booking.status === 'pending'
+    booking.status === 'requested'
   );
+  
+  // Bookings for bikes that belong to other partners (not the current partner)
+  const bookingsForBikesAtOthers = bookings.filter(booking => 
+    booking.currentBikePartnerId !== partner?.id
+  );
+
+  console.log('Bookings for bikes at other partners:', bookingsForBikesAtOthers);
 
   // Use the pending bookings or show empty state
   const displayBookings = pendingBookings.length > 0 ? pendingBookings : [
