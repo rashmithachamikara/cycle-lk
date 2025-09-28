@@ -73,6 +73,9 @@ class QueryService {
         case 'account_info':
           return await this.getAccountInfo(entities, context);
         
+        case 'contact_support':
+          return await this.getContactInfo(entities);
+        
         default:
           return { 
             success: false, 
@@ -94,12 +97,72 @@ class QueryService {
    * Search for bikes based on criteria
    */
   async searchBikes(entities) {
-    const query = {};
+    let query = {};
     const options = { limit: 5, sort: { rating: -1 } };
     
-    // Location filter
+    // Location filter - need to search by partner location
     if (entities.location) {
-      query.location = new RegExp(entities.location, 'i');
+      try {
+        // First, find partners that match the location
+        const Partner = require('../models/Partner');
+        const Location = require('../models/Location');
+        
+        // Search in partner's mapLocation.name, mapLocation.address, or referenced Location
+        const locationRegex = new RegExp(entities.location, 'i');
+        
+        console.log('Searching for partners with location:', entities.location);
+        
+        // Find partners with matching locations
+        const matchingPartners = await Partner.find({
+          $or: [
+            { 'mapLocation.name': locationRegex },
+            { 'mapLocation.address': locationRegex },
+            { 'companyName': locationRegex }
+          ],
+          status: 'active'
+        }).select('_id');
+        
+        // Also check referenced Location documents
+        const matchingLocations = await Location.find({
+          $or: [
+            { name: locationRegex },
+            { address: locationRegex }
+          ]
+        }).select('_id');
+        
+        const partnerIds = matchingPartners.map(p => p._id);
+        
+        // Get partners that reference these locations
+        let locationPartnerIds = [];
+        if (matchingLocations.length > 0) {
+          const locationIds = matchingLocations.map(l => l._id);
+          const locationPartners = await Partner.find({ location: { $in: locationIds } }).select('_id');
+          locationPartnerIds = locationPartners.map(p => p._id);
+        }
+        
+        const allPartnerIds = [...partnerIds, ...locationPartnerIds];
+        
+        console.log('Found matching partners:', allPartnerIds.length);
+        
+        if (allPartnerIds.length > 0) {
+          query.partnerId = { $in: allPartnerIds };
+        } else {
+          // No matching partners found for this location
+          return {
+            success: true,
+            message: `I couldn't find any bikes available in ${entities.location}. Let me suggest some popular locations:`,
+            data: [],
+            suggestions: [
+              "Try searching for bikes in Colombo, Kandy, or Galle",
+              "Check out all available locations", 
+              "Browse bikes by type instead"
+            ]
+          };
+        }
+      } catch (error) {
+        console.error('Error searching by location:', error);
+        // Continue without location filter if there's an error
+      }
     }
     
     // Bike type filter
@@ -120,11 +183,20 @@ class QueryService {
       }
     }
     
-    // Availability filter
-    query['availability.status'] = true;
+    // Availability filter - check for available status
+    query['availability.status'] = { $in: ['available', true] };
+    
+    console.log('Final search query:', JSON.stringify(query, null, 2));
     
     const bikes = await Bike.find(query)
-      .populate('partnerId', 'companyName location rating')
+      .populate({
+        path: 'partnerId',
+        select: 'companyName mapLocation location rating status',
+        populate: {
+          path: 'location',
+          select: 'name address coordinates'
+        }
+      })
       .limit(options.limit)
       .sort(options.sort);
     
@@ -779,6 +851,57 @@ class QueryService {
       return {
         success: false,
         message: 'Sorry, I had trouble getting booking information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getContactInfo(entities) {
+    try {
+      const { SUPPORT_INFO } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        data: {
+          contactMethods: [
+            {
+              type: 'Phone Support',
+              value: '+94 77 123 4567',
+              availability: '24/7',
+              description: 'Call us anytime for immediate assistance'
+            },
+            {
+              type: 'Email Support',
+              value: 'support@cycle.lk',
+              availability: 'Response within 2-4 hours',
+              description: 'Send us your questions and we\'ll get back to you quickly'
+            },
+            {
+              type: 'WhatsApp',
+              value: '+94 77 123 4567',
+              availability: '24/7',
+              description: 'Quick messaging support via WhatsApp'
+            },
+            {
+              type: 'Live Chat',
+              value: 'Available right here!',
+              availability: 'You\'re using it now',
+              description: 'Continue chatting with me for instant help'
+            }
+          ],
+          emergencySupport: {
+            phone: '+94 77 911 9999',
+            description: 'Emergency breakdown and assistance - 24/7 availability'
+          },
+          supportInfo: SUPPORT_INFO
+        },
+        suggestions: ['Find bikes', 'Check availability', 'Payment methods', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting contact info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting contact information. Please try again.',
         suggestions: ['Find bikes', 'Check availability', 'Get help']
       };
     }

@@ -115,7 +115,28 @@ class ChatbotService {
     const { intent, entities, confidence } = analysis;
     
     try {
-      // First, try to get data from database if applicable
+      // Check if this is a static intent that has a direct handler
+      const staticIntents = ['contact_support', 'general_greeting', 'payment_methods'];
+      
+      if (staticIntents.includes(intent)) {
+        // For static intents, get the response directly from query service
+        const directResult = await queryService.executeQuery(intent, entities, {
+          userId: session.userId,
+          sessionId: session.sessionId
+        });
+        
+        if (directResult && directResult.success) {
+          console.log('Direct static response generated for:', intent);
+          return {
+            response: directResult.message,
+            intent,
+            confidence,
+            requiresFollowUp: false
+          };
+        }
+      }
+      
+      // For dynamic intents, get data from database if applicable
       let queryResult = null;
       if (this.requiresDatabaseQuery(intent)) {
         queryResult = await queryService.executeQuery(intent, entities, {

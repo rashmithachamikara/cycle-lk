@@ -22,8 +22,8 @@ class IntentService {
       },
       
       'get_bike_details': {
-        keywords: ['details', 'info', 'information', 'specifications', 'features', 'about'],
-        phrases: ['bike details', 'more info', 'tell me about', 'specifications'],
+        keywords: ['details', 'specifications', 'features', 'about', 'describe'],
+        phrases: ['bike details', 'bike info', 'bike information', 'more info about bike', 'tell me about bike', 'bike specifications', 'bike features'],
         entities: ['bikeId', 'bikeName']
       },
       
@@ -115,8 +115,8 @@ class IntentService {
       },
       
       'contact_support': {
-        keywords: ['support', 'contact', 'help desk', 'assistance'],
-        phrases: ['contact support', 'need assistance', 'talk to human'],
+        keywords: ['support', 'contact', 'help desk', 'assistance', 'phone', 'email', 'reach', 'call'],
+        phrases: ['contact support', 'need assistance', 'talk to human', 'contact info', 'contact information', 'phone number', 'email address', 'how to contact', 'reach you', 'get in touch'],
         entities: []
       },
       
@@ -506,6 +506,18 @@ class IntentService {
       if (Array.isArray(entities[key])) {
         // Remove duplicates and empty values
         entities[key] = [...new Set(entities[key].filter(Boolean))];
+        
+        // For bikeType, filter out generic terms that mean "all types"
+        if (key === 'bikeType') {
+          const genericTerms = ['bikes', 'types', 'any type', 'any bike', 'all types', 'any', 'all'];
+          entities[key] = entities[key].filter(type => !genericTerms.includes(type.toLowerCase()));
+          
+          // If all terms were generic, remove the bikeType filter entirely
+          if (entities[key].length === 0) {
+            delete entities[key];
+            return;
+          }
+        }
         
         // Convert single-item arrays to strings for convenience
         if (entities[key].length === 1) {

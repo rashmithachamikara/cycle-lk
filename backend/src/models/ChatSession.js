@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
-    maxlength: 2000
+    maxlength: 5000
   },
   timestamp: {
     type: Date,

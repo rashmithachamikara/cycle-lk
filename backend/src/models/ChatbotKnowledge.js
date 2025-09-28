@@ -15,7 +15,7 @@ const chatbotKnowledgeSchema = new mongoose.Schema({
   answer: {
     type: String,
     required: true,
-    maxlength: 2000
+    maxlength: 5000
   },
   keywords: [{
     type: String,
