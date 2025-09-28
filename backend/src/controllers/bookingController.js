@@ -5,7 +5,7 @@ const firebaseAdmin = require('../config/firebase');
 /**
  * Create a database notification for booking events
  */
-const createBookingNotification = async (booking, targetUserId, eventType) => {
+ const createBookingNotification = async (booking, targetUserId, eventType) => {
   try {
     let notificationData = {
       userId: targetUserId,
@@ -28,6 +28,28 @@ const createBookingNotification = async (booking, targetUserId, eventType) => {
           message: `New booking request for ${booking.bikeId?.name || 'bike'} from ${userName}`
         };
         break;
+
+        case 'NEW_BOOKING_CREATED_FOR_OWNER':
+          const usersName = booking.userId?.firstName && booking.userId?.lastName 
+          const currentpartnerName = booking.currentBikePartnerId && typeof booking.currentBikePartnerId === 'object' && booking.currentBikePartnerId.companyName
+            ? booking.currentBikePartnerId.companyName
+            : 'the partner';
+          notificationData = {
+            ...notificationData,
+            type: 'owner',
+            title: 'New Booking Created',
+            message: `A new booking has been created for your bike ${booking.bikeId?.name || 'bike'} at ${currentpartnerName} by ${usersName}`
+          };
+          break;
+
+       case 'NEW_DROPOFF_BOOKING':
+         notificationData = {
+           ...notificationData,
+           type: 'owner',
+           title: 'New Drop-off Booking Scheduled',
+           message: `A new drop-off booking has been Scheduled for the bike ${booking.bikeId?.name || 'bike'} by ${usersName}.Expect arrival on ${new Date(booking.dates.endDate).toLocaleDateString()}`
+         };
+         break;
 
       case 'BOOKING_ACCEPTED':
         notificationData = {
@@ -398,7 +420,7 @@ exports.createBooking = async (req, res) => {
 
 
           await db.collection('realtimeEvents').add({
-            type: 'BOOKING_CREATED_FOR_OWNER',
+            type: 'NEW_BOOKING_CREATED_FOR_OWNER',
             targetUserId: partner.userId.toString(), // Use partner's userId instead of dropoffPartnerId
             targetUserRole: 'partner',
             data: {
@@ -436,7 +458,9 @@ exports.createBooking = async (req, res) => {
             .populate('bikeId', 'name');
           
           // Create database notification for partner
-          await createBookingNotification(populatedBooking, partner.userId.toString(), 'BOOKING_CREATED');
+          await createBookingNotification(populatedBooking, pickupPartner.userId.toString(), 'BOOKING_CREATED');
+          // Create database notification for bike owner partner
+          await createBookingNotification(populatedBooking, partner.userId.toString(), 'NEW_BOOKING_CREATED_FOR_OWNER');
         } else {
           console.log('Firebase not available - real-time events disabled');
         }

@@ -1,8 +1,10 @@
-const { Payment, Booking, User, Partner } = require('../models');
+// const { Payment, Booking, User, Partner } = require('../models');
 const firebaseAdmin = require('../config/firebase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const DOMAIN = 'http://localhost:5173'; // Replace with your frontend domain
+
+// import createBookingNotification from './bookingController.js';
 
 // Payment configuration
 const PAYMENT_CONFIG = {
@@ -746,8 +748,42 @@ async function handleCheckoutSessionCompleted(session) {
         amount: session.amount_total / 100, 
         transactionId 
       });
-      
-    } else if (paymentType === 'remaining') {
+
+
+      // create a notification for partner
+       if (booking.dropoffPartnerId && firebaseAdmin) {
+        try {
+          const db = firebaseAdmin.firestore();
+          await db.collection('realtimeEvents').add({
+            type: 'NEW_DROPOFF_BOOKING',
+            userId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
+          targetUserId: booking.dropoffPartnerId.userId?.toString() || booking.dropoffPartnerId.userId,
+          userRole: 'partner',
+          data: {
+            bookingId: booking._id.toString(),
+            amount: session.amount_total / 100,
+            transactionId,
+            paymentMethod: 'card',
+            customerName: session.customer_email,
+            timestamp: new Date().toISOString()
+          },
+          processed: false,
+          timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        });
+      } catch (error) {
+        console.error('Error sending real-time notification to partner:', error);
+      }
+    }
+
+    // await createBookingNotification(booking._id, 'partner', 'NEW_DROPOFF_BOOKING', {
+    //   bookingId: booking._id.toString(),
+    //   amount: session.amount_total / 100,
+    //   customerName: session.customer_email
+    // });
+
+  } else if (paymentType === 'remaining') {
       // Handle remaining payment
       const totalBookingAmount = parseFloat(session.metadata.totalBookingAmount);
       const paymentPercentage = parseFloat(session.metadata.paymentPercentage);
@@ -804,11 +840,11 @@ async function handleCheckoutSessionCompleted(session) {
         const db = firebaseAdmin.firestore();
         await db.collection('realtimeEvents').add({
           type: 'PAYMENT_COMPLETED',
-          userId: booking.partnerId.userId,
-          targetUserId: booking.partnerId.userId,
+          userId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
+          targetUserId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
           userRole: 'partner',
           data: {
-            bookingId: booking._id,
+            bookingId: booking._id.toString(),
             amount: session.amount_total / 100,
             transactionId,
             paymentMethod: 'card',
@@ -922,7 +958,7 @@ exports.processRemainingPayment = async (req, res) => {
       });
       
       await payment.save();
-      
+
       // Update booking remaining payment info
       booking.payments.remaining = {
         ...booking.payments.remaining,

@@ -146,7 +146,8 @@ router.get('/me', auth(), partnerController.getCurrentPartner);
  * @access  Public (or Private if you want to restrict)
  */
 router.get('/user/:userId', partnerController.getPartnerByUserId);
-router.get('/partner/earnings', getPartnerEarnings);
-router.get('/partner/earnings/:partnerId', getPartnerEarnings);
+
+// router.get('/partner/earnings', partnerController.getPartnerEarnings);
+// router.get('/partner/earnings/:partnerId', partnerController.getPartnerEarnings);
 
 module.exports = router;

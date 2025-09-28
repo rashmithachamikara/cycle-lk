@@ -8,7 +8,7 @@ export interface NotificationPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
-  type?: 'BOOKING_CREATED' | 'BOOKING_ACCEPTED' | 'BOOKING_REJECTED' | 'BOOKING_COMPLETED' | 'PAYMENT_REQUIRED';
+  type?: 'BOOKING_CREATED' | 'BOOKING_ACCEPTED' | 'BOOKING_REJECTED' | 'BOOKING_COMPLETED' | 'PAYMENT_REQUIRED' | 'NEW_BOOKING_CREATED_FOR_OWNER' | 'NEW_DROPOFF_BOOKING';
 }
 
 export interface FCMNotification {
@@ -17,7 +17,7 @@ export interface FCMNotification {
   body: string;
   timestamp: Date;
   read: boolean;
-  type: 'BOOKING_CREATED' | 'BOOKING_ACCEPTED' | 'BOOKING_REJECTED' | 'BOOKING_COMPLETED' | 'PAYMENT_REQUIRED';
+  type: 'BOOKING_CREATED' | 'BOOKING_ACCEPTED' | 'BOOKING_REJECTED' | 'BOOKING_COMPLETED' | 'PAYMENT_REQUIRED' | 'NEW_BOOKING_CREATED_FOR_OWNER' | 'NEW_DROPOFF_BOOKING';
   data?: Record<string, string>;
 }
 
