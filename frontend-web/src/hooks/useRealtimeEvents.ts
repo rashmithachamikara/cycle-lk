@@ -8,6 +8,8 @@ interface UseRealtimeEventsOptions {
   onBookingRejected?: (event: RealtimeEvent) => void;
   onBookingCompleted?: (event: RealtimeEvent) => void;
   onBookingUpdated?: (event: RealtimeEvent) => void;
+  onNewBookingCreatedForOwner?: (event: RealtimeEvent) => void;
+  onNewDropoffBooking?: (event: RealtimeEvent) => void;
 }
 
 export const useRealtimeEvents = (options: UseRealtimeEventsOptions = {}) => {
@@ -42,6 +44,12 @@ export const useRealtimeEvents = (options: UseRealtimeEventsOptions = {}) => {
           break;
         case EventType.BOOKING_UPDATED:
           currentOptions.onBookingUpdated?.(event);
+          break;
+        case EventType.NEW_BOOKING_CREATED_FOR_OWNER:
+          currentOptions.onNewBookingCreatedForOwner?.(event);
+          break;
+        case EventType.NEW_DROPOFF_BOOKING:
+          currentOptions.onNewDropoffBooking?.(event);
           break;
       }
     });
@@ -108,14 +116,14 @@ export const usePartnerRealtimeEvents = () => {
     onBookingCreated: (event) => {
       console.log('[PartnerRealtime] New booking request received:', event);
       setNewBookingRequests(prev => [event, ...prev]);
-      
-      // Show browser notification if supported
-      // if ('Notification' in window && Notification.permission === 'granted') {
-      //   new Notification('New Booking Request!', {
-      //     body: `New booking request from ${event.data.bookingData?.data.customerName}`,
-      //     icon: '/logo192.png'
-      //   });
-      // }
+    },
+    onNewBookingCreatedForOwner: (event) => {
+      console.log('[PartnerRealtime] New booking created for your bike:', event);
+      setNewBookingRequests(prev => [event, ...prev]);
+    },
+    onNewDropoffBooking: (event) => {
+      console.log('[PartnerRealtime] New drop-off booking scheduled:', event);
+      setNewBookingRequests(prev => [event, ...prev]);
     },
     onBookingCompleted: (event) => {
       console.log('[PartnerRealtime] Booking completed:', event);

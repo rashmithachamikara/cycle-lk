@@ -1,10 +1,8 @@
-// const { Payment, Booking, User, Partner } = require('../models');
+const { Payment, Booking, User, Partner } = require('../models');
 const firebaseAdmin = require('../config/firebase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const DOMAIN = 'http://localhost:5173'; // Replace with your frontend domain
-
-// import createBookingNotification from './bookingController.js';
 
 // Payment configuration
 const PAYMENT_CONFIG = {
@@ -750,38 +748,75 @@ async function handleCheckoutSessionCompleted(session) {
       });
 
 
-      // create a notification for partner
+      // create a notification for dropoff partner
        if (booking.dropoffPartnerId && firebaseAdmin) {
         try {
           const db = firebaseAdmin.firestore();
           await db.collection('realtimeEvents').add({
             type: 'NEW_DROPOFF_BOOKING',
-            userId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
-          targetUserId: booking.dropoffPartnerId.userId?.toString() || booking.dropoffPartnerId.userId,
-          userRole: 'partner',
-          data: {
-            bookingId: booking._id.toString(),
-            amount: session.amount_total / 100,
-            transactionId,
-            paymentMethod: 'card',
-            customerName: session.customer_email,
-            timestamp: new Date().toISOString()
-          },
-          processed: false,
-          timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
-          createdAt: new Date(),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        });
-      } catch (error) {
-        console.error('Error sending real-time notification to partner:', error);
-      }
-    }
+            targetUserId: booking.dropoffPartnerId.userId?.toString() || booking.dropoffPartnerId.userId,
+            targetUserRole: 'partner',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: booking.bikeId.toString(),
+              userId: booking.userId.toString(),
+              bookingData: {
+                id: booking._id.toString(),
+                bookingNumber: booking.bookingNumber,
+                customerName: session.customer_email,
+                bikeName: booking.bikeId?.name || 'Bike',
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                status: booking.status,
+                total: booking.pricing.total,
+                pickupLocation: booking.locations.pickup,
+                dropoffLocation: booking.locations.dropoff,
+                packageType: booking.package.name
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: booking.userId.toString(),
+              sourceUserRole: 'user',
+              paymentAmount: session.amount_total / 100,
+              transactionId,
+              paymentMethod: 'card'
+            }
+          });
+          console.log('Real-time NEW_DROPOFF_BOOKING event sent to dropoff partner');
 
-    // await createBookingNotification(booking._id, 'partner', 'NEW_DROPOFF_BOOKING', {
-    //   bookingId: booking._id.toString(),
-    //   amount: session.amount_total / 100,
-    //   customerName: session.customer_email
-    // });
+          // Create database notification for dropoff partner
+          const populatedBooking = await Booking.findById(booking._id)
+            .populate('userId', 'firstName lastName email phone')
+            .populate('bikeId', 'name');
+          
+          // Create notification directly here to avoid circular dependency
+          const { Notification } = require('../models');
+          const usersName = populatedBooking.userId?.firstName && populatedBooking.userId?.lastName 
+            ? `${populatedBooking.userId.firstName} ${populatedBooking.userId.lastName}`
+            : 'Customer';
+            
+          const notificationData = {
+            userId: booking.dropoffPartnerId.userId.toString(),
+            type: 'owner',
+            title: 'New Drop-off Booking Scheduled',
+            message: `A new drop-off booking has been scheduled for the bike ${populatedBooking.bikeId?.name || 'bike'} by ${usersName}. Expect arrival on ${new Date(populatedBooking.dates.endDate).toLocaleDateString()}`,
+            sentVia: ['app'],
+            relatedTo: {
+              type: 'booking',
+              id: populatedBooking._id.toString()
+            }
+          };
+
+          const notification = new Notification(notificationData);
+          await notification.save();
+          console.log('Database notification created for dropoff partner');
+          
+        } catch (error) {
+          console.error('Error sending NEW_DROPOFF_BOOKING notification:', error);
+        }
+      }
 
   } else if (paymentType === 'remaining') {
       // Handle remaining payment
