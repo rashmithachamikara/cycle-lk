@@ -452,7 +452,7 @@ exports.processInitialPayment = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'lkr',
             product_data: {
               name: `Bike Rental - ${booking.bikeId?.name || 'Bike Booking'}`,
               description: `Initial payment (${paymentAmounts.initialPercentage}%) for booking #${booking.bookingNumber}`,
@@ -899,7 +899,7 @@ exports.processRemainingPayment = async (req, res) => {
         line_items: [
           {
             price_data: {
-              currency: 'usd',
+              currency: 'lkr',
               product_data: {
                 name: `Final Payment - Booking #${booking.bookingNumber}`,
                 description: `Remaining payment (${paymentAmounts.remainingPercentage}%) + additional charges`,
@@ -1078,7 +1078,7 @@ exports.processDropOffCardPayment = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'lkr',
             product_data: {
               name: `Additional Charges - Booking #${booking.bookingNumber || booking._id.toString().slice(-8).toUpperCase()}`,
               description: `Drop-off additional charges for bike rental`,
