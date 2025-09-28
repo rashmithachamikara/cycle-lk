@@ -41,7 +41,8 @@ const updatePartnerEarnings = async (payment) => {
       return { success: false, error: 'Booking not found' };
     }
     
-    const totalAmount = payment.totalBookingAmount || payment.amount;
+    // Use actual payment amount for revenue sharing, not total booking amount
+    const totalAmount = payment.amount;
     
     // Calculate earnings for each partner
     const ownerEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.OWNER_PARTNER_PERCENTAGE * 100) / 100;
