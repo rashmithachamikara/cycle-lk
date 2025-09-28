@@ -30,6 +30,7 @@ import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
+import FirebaseConnectionTest from '../../components/debug/FirebaseConnectionTest';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
@@ -76,18 +77,29 @@ const PartnerDashboardPage = () => {
   };
 
   useEffect(() => {
+    console.log('[PartnerDashboard] User state changed:', {
+      user: user ? {
+        id: user.id,
+        role: user.role,
+        firstName: user.firstName,
+        email: user.email
+      } : null
+    });
+    
     if (user && user.role === 'partner') {
+      console.log('[PartnerDashboard] Initializing for partner user:', user.id);
       fetchBookings();
       
       // Initialize notification integration service
       notificationIntegrationService.initialize(user.id, 'partner')
         .then(() => {
-          console.log('Partner notification integration initialized');
+          console.log('[PartnerDashboard] Partner notification integration initialized successfully');
         })
         .catch((error) => {
-          console.error('Failed to initialize partner notification integration:', error);
+          console.error('[PartnerDashboard] Failed to initialize partner notification integration:', error);
         });
     } else {
+      console.log('[PartnerDashboard] User is not a partner or not logged in');
       // If not a partner, set to empty and stop loading
       setBookings([]);
       setLoading(false);
@@ -95,32 +107,46 @@ const PartnerDashboardPage = () => {
 
     // Cleanup on unmount
     return () => {
+      console.log('[PartnerDashboard] Cleaning up notification integration');
       notificationIntegrationService.cleanup();
     };
   }, [user]);
 
   // Handle real-time new booking requests
   useEffect(() => {
+    console.log('[PartnerDashboard] Real-time events state:', {
+      newBookingRequestsCount: newBookingRequests.length,
+      realtimeConnected,
+      events: newBookingRequests.map(req => ({
+        id: req.id,
+        type: req.type,
+        targetUserId: req.targetUserId,
+        targetUserRole: req.targetUserRole
+      }))
+    });
+    
     if (newBookingRequests.length > 0) {
-      console.log('Processing real-time booking requests:', newBookingRequests);
+      console.log('[PartnerDashboard] Processing real-time booking requests:', newBookingRequests);
       
       // Refresh bookings when we get new requests
       const refreshBookings = async () => {
         try {
+          console.log('[PartnerDashboard] Refreshing bookings due to real-time events');
           const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
           const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
           setBookings(transformedBookings);
           
           // Clear processed requests after refreshing
+          console.log('[PartnerDashboard] Clearing processed requests');
           clearProcessedRequests();
         } catch (err) {
-          console.error('Error refreshing bookings after real-time update:', err);
+          console.error('[PartnerDashboard] Error refreshing bookings after real-time update:', err);
         }
       };
 
       refreshBookings();
     }
-  }, [newBookingRequests, clearProcessedRequests]);
+  }, [newBookingRequests, clearProcessedRequests, realtimeConnected]);
 
   useEffect(() => {
     // Fetch partner profile for approval status
@@ -128,10 +154,18 @@ const PartnerDashboardPage = () => {
       try {
         setPartnerLoading(true);
         if (user && user.role === 'partner') {
+          console.log('[PartnerDashboard] Fetching partner profile for user:', user.id);
           const partnerData = await partnerService.getPartnerByUserId(user.id);
+          console.log('[PartnerDashboard] Partner profile loaded:', {
+            partnerId: partnerData?.id,
+            companyName: partnerData?.companyName,
+            status: partnerData?.status,
+            userId: partnerData?.userId
+          });
           setPartner(partnerData);
         }
-      } catch {
+      } catch (error) {
+        console.error('[PartnerDashboard] Error fetching partner profile:', error);
         setPartner(null);
       } finally {
         setPartnerLoading(false);
@@ -146,11 +180,11 @@ const PartnerDashboardPage = () => {
   const recentBookings = bookings.filter(booking => booking.status === 'completed');
   const paymentRequests = bookings.filter(booking => booking.status === 'confirmed' && booking.paymentStatus === 'pending');
 
-  // Calculate total revenue from completed bookings
-  const totalRevenue = recentBookings.reduce((sum, booking) => {
-    const value = parseFloat(booking.value.replace('LKR', ''));
-    return sum + value;
-  }, 0);
+  // Calculate total revenue from completed bookings (for future use)
+  // const totalRevenue = recentBookings.reduce((sum, booking) => {
+  //   const value = parseFloat(booking.value.replace('LKR', ''));
+  //   return sum + value;
+  // }, 0);
 
   // Approval status check
   if (partnerLoading || loading) {
@@ -192,7 +226,6 @@ const PartnerDashboardPage = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Real-time Connection Status */}
         {!realtimeConnected && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
             <div className="text-yellow-800 text-sm">

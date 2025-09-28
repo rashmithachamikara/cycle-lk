@@ -30,8 +30,8 @@ const firebaseAdmin = require('../config/firebase');
         break;
 
         case 'NEW_BOOKING_CREATED_FOR_OWNER':
-          const usersName = booking.userId?.firstName && booking.userId?.lastName 
-          const currentpartnerName = booking.currentBikePartnerId && typeof booking.currentBikePartnerId === 'object' && booking.currentBikePartnerId.companyName
+          const usersName = booking.userId?.firstName + ' ' + booking.userId?.lastName;
+          const currentpartnerName = booking.currentBikePartnerId.companyName
             ? booking.currentBikePartnerId.companyName
             : 'the partner';
           notificationData = {
@@ -40,6 +40,7 @@ const firebaseAdmin = require('../config/firebase');
             title: 'New Booking Created',
             message: `A new booking has been created for your bike ${booking.bikeId?.name || 'bike'} at ${currentpartnerName} by ${usersName}`
           };
+          console.log('Creating NEW_BOOKING_CREATED_FOR_OWNER notification:', notificationData);
           break;
 
        case 'NEW_DROPOFF_BOOKING':
@@ -96,12 +97,24 @@ const firebaseAdmin = require('../config/firebase');
     }
 
     const notification = new Notification(notificationData);
+    
+    // Validate notification data before saving
+    const validationError = notification.validateSync();
+    if (validationError) {
+      console.error('[Notification] Validation failed:', validationError.message);
+      console.error('[Notification] Invalid data:', notificationData);
+      throw validationError;
+    }
+    
     await notification.save();
     
     console.log(`[Notification] Created ${eventType} notification for user ${targetUserId}`);
     return notification;
   } catch (error) {
     console.error('[Notification] Error creating booking notification:', error);
+    console.error('[Notification] Event type:', eventType);
+    console.error('[Notification] Target user:', targetUserId);
+    console.error('[Notification] Notification data:', notificationData);
     return null;
   }
 };
@@ -455,6 +468,7 @@ exports.createBooking = async (req, res) => {
           // Populate booking with user details before creating notification
           const populatedBooking = await Booking.findById(booking._id)
             .populate('userId', 'firstName lastName email phone')
+            .populate('currentBikePartnerId', 'companyName userId')
             .populate('bikeId', 'name');
           
           // Create database notification for partner

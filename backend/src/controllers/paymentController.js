@@ -686,7 +686,13 @@ async function handleCheckoutSessionCompleted(session) {
     const { bookingId, userId, partnerId, paymentType } = session.metadata;
     
     // Get booking and update payment status
-    const booking = await Booking.findById(bookingId).populate('partnerId currentBikePartnerId');
+    const booking = await Booking.findById(bookingId)
+      .populate('partnerId', 'userId companyName')
+      .populate('currentBikePartnerId', 'userId companyName')
+      .populate('dropoffPartnerId', 'userId companyName')
+      .populate('userId', 'firstName lastName email')
+      .populate('bikeId', 'name');
+    
     if (!booking) {
       console.error('Booking not found for session:', session.id);
       return;
@@ -749,12 +755,24 @@ async function handleCheckoutSessionCompleted(session) {
 
 
       // create a notification for dropoff partner
-       if (booking.dropoffPartnerId && firebaseAdmin) {
+      if (booking.dropoffPartnerId && firebaseAdmin) {
         try {
+          
+          // Validate dropoff partner has userId
+          const dropoffPartnerUserId = booking.dropoffPartnerId.userId;
+          
+          if (!dropoffPartnerUserId) {
+            console.error('❌ Dropoff partner userId is undefined:', {
+              dropoffPartnerId: booking.dropoffPartnerId._id,
+              dropoffPartnerObject: booking.dropoffPartnerId
+            });
+            throw new Error('Dropoff partner userId is required for Firebase event');
+          }
+
           const db = firebaseAdmin.firestore();
           await db.collection('realtimeEvents').add({
             type: 'NEW_DROPOFF_BOOKING',
-            targetUserId: booking.dropoffPartnerId.userId?.toString() || booking.dropoffPartnerId.userId,
+            targetUserId: dropoffPartnerUserId.toString(),
             targetUserRole: 'partner',
             data: {
               bookingId: booking._id.toString(),
@@ -796,9 +814,10 @@ async function handleCheckoutSessionCompleted(session) {
           const usersName = populatedBooking.userId?.firstName && populatedBooking.userId?.lastName 
             ? `${populatedBooking.userId.firstName} ${populatedBooking.userId.lastName}`
             : 'Customer';
-            
+          
+          // Use the same validated dropoffPartnerUserId
           const notificationData = {
-            userId: booking.dropoffPartnerId.userId.toString(),
+            userId: dropoffPartnerUserId.toString(),
             type: 'owner',
             title: 'New Drop-off Booking Scheduled',
             message: `A new drop-off booking has been scheduled for the bike ${populatedBooking.bikeId?.name || 'bike'} by ${usersName}. Expect arrival on ${new Date(populatedBooking.dates.endDate).toLocaleDateString()}`,
@@ -811,11 +830,26 @@ async function handleCheckoutSessionCompleted(session) {
 
           const notification = new Notification(notificationData);
           await notification.save();
-          console.log('Database notification created for dropoff partner');
+          console.log('Database notification created for dropoff partner:', {
+            userId: dropoffPartnerUserId.toString(),
+            bookingId: booking._id.toString()
+          });
           
         } catch (error) {
           console.error('Error sending NEW_DROPOFF_BOOKING notification:', error);
+          console.error('Booking details:', {
+            bookingId: booking._id,
+            dropoffPartnerId: booking.dropoffPartnerId?._id,
+            dropoffPartnerUserId: booking.dropoffPartnerId?.userId,
+            populatedDropoffPartner: booking.dropoffPartnerId
+          });
         }
+      } else {
+        console.log('Skipping NEW_DROPOFF_BOOKING notification:', {
+          hasDropoffPartner: !!booking.dropoffPartnerId,
+          hasFirebase: !!firebaseAdmin,
+          bookingId: booking._id
+        });
       }
 
   } else if (paymentType === 'remaining') {
