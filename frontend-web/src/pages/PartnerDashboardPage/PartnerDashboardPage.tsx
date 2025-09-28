@@ -9,7 +9,6 @@ import {
   Bike, 
   Star, 
   Users,
-  BarChart3,
   TrendingUp,
   Clock,
   CheckCircle,
@@ -30,7 +29,6 @@ import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
-import FirebaseConnectionTest from '../../components/debug/FirebaseConnectionTest';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
