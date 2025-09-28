@@ -88,7 +88,10 @@ const paymentSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
+}
+
+
+);
 
 // Create indexes
 paymentSchema.index({ bookingId: 1 });
