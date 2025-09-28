@@ -35,7 +35,7 @@ const BookingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+ 
 
   // Booking form data
   const [startDate, setStartDate] = useState('');
@@ -303,7 +303,7 @@ const BookingPage = () => {
         // Booking created successfully
         console.log('Booking created:', response);
         setBookingSuccess(true);
-        setCountdown(5); // Reset countdown
+ 
       }
     
       
