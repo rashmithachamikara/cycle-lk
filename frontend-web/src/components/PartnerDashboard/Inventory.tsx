@@ -198,9 +198,9 @@ const { user } = useAuth();
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                       {partnerLoading ? (
                         <span className="text-gray-400">Loading...</span>
-                      ) : partnerDetails && typeof bike.partner === 'object' && bike.partnerId === partnerDetails._id ? (
+                      ) : partnerDetails && typeof bike.partner === 'object' && bike.partner && bike.partnerId === partnerDetails._id ? (
                         <span className="text-green-600 font-medium">Owned by you</span>
-                      ) : typeof bike.partner === 'object' ? (
+                      ) : typeof bike.partner === 'object' && bike.partner ? (
                         bike.partner?.companyName || 'Unknown'
                       ) : (
                         'Unknown'
@@ -209,9 +209,9 @@ const { user } = useAuth();
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                        {partnerLoading ? (
                         <span className="text-gray-400">Loading...</span>
-                      ) : partnerDetails && typeof bike.currentPartnerId === 'object' && bike.currentPartnerId._id === partnerDetails._id ? (
+                      ) : partnerDetails && typeof bike.currentPartnerId === 'object' && bike.currentPartnerId && bike.currentPartnerId._id === partnerDetails._id ? (
                         <span className="text-green-600 font-medium">At your Place</span>
-                      ) : typeof bike.currentPartnerId === 'object' ? (
+                      ) : typeof bike.currentPartnerId === 'object' && bike.currentPartnerId ? (
                         bike.currentPartnerId?.companyName || 'Unknown'
                       ) : (
                         'Unknown'
@@ -219,7 +219,7 @@ const { user } = useAuth();
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" 
                          title={bike.location + 
-                           (typeof bike.currentPartnerId === 'object' && bike.currentPartnerId?.companyName 
+                           (typeof bike.currentPartnerId === 'object' && bike.currentPartnerId && bike.currentPartnerId?.companyName 
                              ? " - " + bike.currentPartnerId.companyName 
                              : "")}>
                       {bike.location}

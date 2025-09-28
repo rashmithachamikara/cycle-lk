@@ -195,7 +195,7 @@ const PaymentSuccessPage = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Total Amount Paid</p>
                     <p className="text-2xl font-bold text-green-600">
-                      ${bookingDetails.pricing?.total ? (bookingDetails.pricing.total * 0.2).toFixed(2) : '0.00'}
+                      LKR {bookingDetails.pricing?.total ? (bookingDetails.pricing.total * 0.2).toFixed(2) : '0.00'}
                     </p>
                     <p className="text-sm text-gray-500">Initial payment (20%)</p>
                   </div>

@@ -148,7 +148,7 @@ const PartnerDashboardPage = () => {
 
   // Calculate total revenue from completed bookings
   const totalRevenue = recentBookings.reduce((sum, booking) => {
-    const value = parseFloat(booking.value.replace('$', ''));
+    const value = parseFloat(booking.value.replace('LKR', ''));
     return sum + value;
   }, 0);
 
@@ -305,17 +305,17 @@ const PartnerDashboardPage = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-xl p-6 shadow-sm">
+              {/* <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">${totalRevenue.toFixed(0)}</div>
+                    <div className="text-2xl font-bold text-gray-900">LKR{totalRevenue.toFixed(0)}</div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             
