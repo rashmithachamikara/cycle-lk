@@ -84,18 +84,6 @@ const BookingPage = () => {
     }
   }, [currentStep, pickupLocation]);
 
-  // Countdown effect for success page
-  useEffect(() => {
-    if (bookingSuccess && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (bookingSuccess && countdown === 0) {
-      navigate('/dashboard');
-    }
-  }, [bookingSuccess, countdown, navigate]);
-
   // Show no bikes available page if no bikes found
   if(availableBikes.length === 0 && currentStep === 2 && !loading) {
     return (
@@ -425,16 +413,12 @@ const BookingPage = () => {
                   setStartDate('');
                   setEndDate('');
                   setDeliveryAddress('');
+                  navigate('/dashboard');
                 }}
                 className="px-8 py-3 text-lg"
               >
                 Book Another Bike
               </Button>
-            </div>
-
-            {/* Countdown */}
-            <div className="text-gray-500 text-sm">
-              <p>Automatically redirecting to dashboard in <span className="font-semibold text-blue-600">{countdown}</span> seconds...</p>
             </div>
           </div>
         </div>
