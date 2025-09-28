@@ -15,6 +15,7 @@ export interface PaymentPendingBooking {
   id: string;
   bikeName: string;
   bikeImage?: string;
+  bikeImages?: string[]; // Support for multiple images array
   partnerName: string;
   startDate: string;
   endDate: string;
@@ -106,13 +107,35 @@ const PaymentsSection: React.FC<PaymentsSectionProps> = ({
               <div className="flex items-start justify-between">
                 <div className="flex space-x-4 flex-1">
                   {/* Bike Image */}
-                  {booking.bikeImage && (
-                    <img
-                      src={booking.bikeImage}
-                      alt={booking.bikeName}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  )}
+                  <div className="flex-shrink-0">
+                    {(() => {
+                      // Determine the image source - prefer bikeImage, then first from bikeImages array
+                      const imageSource = booking.bikeImage || 
+                                         (booking.bikeImages && booking.bikeImages.length > 0 ? booking.bikeImages[0] : null);
+                      
+                      return imageSource ? (
+                        <img
+                          src={imageSource}
+                          alt={booking.bikeName}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm"
+                          onError={(e) => {
+                            // Replace with fallback on error
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null;
+                    })()}
+                    {/* Fallback bike icon - always present but hidden if image loads */}
+                    <div 
+                      className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center border border-blue-200 shadow-sm"
+                      style={{ display: (booking.bikeImage || (booking.bikeImages && booking.bikeImages.length > 0)) ? 'none' : 'flex' }}
+                    >
+                      <Bike className="h-8 w-8 text-blue-400" />
+                    </div>
+                  </div>
                   
                   {/* Booking Details */}
                   <div className="flex-1 min-w-0">
