@@ -410,54 +410,6 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
           )}
         </button>
       </div>
-
-      {/* Navigation Buttons */}
-      <div className={`grid ${!isAuthenticated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 mt-8`}>
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Drop-off Selection
-        </button>
-        
-        {!isAuthenticated && (
-          <button
-            onClick={() => navigate('/login')}
-            className="flex items-center justify-center px-6 py-3 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors duration-200"
-          >
-            <LogIn className="h-4 w-4 mr-2" />
-            Login to Continue
-          </button>
-        )}
-        
-        <button
-          onClick={onConfirmBooking}
-          disabled={isBooking || !isAuthenticated}
-          className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
-            isBooking || !isAuthenticated
-              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isBooking ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Creating Booking...
-            </>
-          ) : !isAuthenticated ? (
-            <>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Login Required to Confirm
-            </>
-          ) : (
-            <>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Confirm Booking
-            </>
-          )}
-        </button>
-      </div>
     </div>
   );
 };
