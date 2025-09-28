@@ -8,8 +8,10 @@ import {
   AlertCircle,
   ExternalLink,
   Calendar,
-  Bike
+  Bike,
+  Check
 } from 'lucide-react';
+import { paymentService } from '../../services/paymentService';
 
 export interface PaymentPendingBooking {
   id: string;
@@ -43,6 +45,30 @@ const PaymentsSection: React.FC<PaymentsSectionProps> = ({
     setProcessingPayment(bookingId);
     try {
       await onPayNow(bookingId);
+    } finally {
+      setProcessingPayment(null);
+    }
+  };
+
+  const handlePayNowDev = async (bookingId: string, amount: number) => {
+    setProcessingPayment(bookingId);
+    try {
+      const response = await paymentService.processInitialPaymentDev({
+        bookingId,
+        amount,
+        paymentMethod: 'card',
+        paymentDetails: {}
+      });
+      
+      if (response.success) {
+        // Refresh the page or trigger a re-fetch of pending payments
+        window.location.reload();
+      } else {
+        alert('Payment failed: ' + response.message);
+      }
+    } catch (error) {
+      console.error('Dev payment error:', error);
+      alert('Payment failed. Please try again.');
     } finally {
       setProcessingPayment(null);
     }
@@ -191,32 +217,45 @@ const PaymentsSection: React.FC<PaymentsSectionProps> = ({
                   
                   <div className="flex flex-col sm:flex-col gap-2">
                     {booking.status === 'confirmed' && (
-                      <button
-                        onClick={() => handlePayNow(booking.id)}
-                        disabled={processingPayment === booking.id}
-                        className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors ${
-                          isPaymentOverdue(booking.dueDate)
-                            ? 'bg-red-600 hover:bg-red-700 text-white'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                        } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
-                      >
-                        {processingPayment === booking.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <DollarSign className="h-4 w-4" />
-                            <span className="hidden sm:inline">
-                              {isPaymentOverdue(booking.dueDate) ? 'Pay Now (Overdue)' : 'Pay Now'}
-                            </span>
-                            <span className="sm:hidden">
-                              {isPaymentOverdue(booking.dueDate) ? 'Pay (Overdue)' : 'Pay Now'}
-                            </span>
-                          </>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handlePayNow(booking.id)}
+                          disabled={processingPayment === booking.id}
+                          className={`flex-1 px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors ${
+                            isPaymentOverdue(booking.dueDate)
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                        >
+                          {processingPayment === booking.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <DollarSign className="h-4 w-4" />
+                              <span className="hidden sm:inline">
+                                {isPaymentOverdue(booking.dueDate) ? 'Pay Now (Overdue)' : 'Pay Now'}
+                              </span>
+                              <span className="sm:hidden">
+                                {isPaymentOverdue(booking.dueDate) ? 'Pay (Overdue)' : 'Pay Now'}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                        
+                        {import.meta.env.VITE_APP_ENVIRONMENT === 'development' && (
+                          <button
+                            onClick={() => handlePayNowDev(booking.id, booking.totalAmount)}
+                            disabled={processingPayment === booking.id}
+                            className="p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                            title="Complete Payment (Dev Mode)"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
                         )}
-                      </button>
+                      </div>
                     )}
 
                     {booking.status === 'requested' && (

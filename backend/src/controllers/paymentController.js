@@ -1197,4 +1197,193 @@ exports.getPartnerEarnings = async (req, res) => {
   }
 };
 
+/**
+ * Process initial payment for a booking (Development/Test Mode - skips Stripe)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.processInitialPaymentDev = async (req, res) => {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'This endpoint is only available in development mode' 
+    });
+  }
+
+  try {
+    const { bookingId, amount, paymentMethod, paymentDetails } = req.body;
+    const userId = req.user.id;
+    
+    // Debug logging
+    console.log('Payment request data (DEV MODE):', {
+      bookingId,
+      amount,
+      paymentMethod,
+      userId
+    });
+    
+    // Validate booking exists and belongs to user
+    const booking = await Booking.findById(bookingId).populate('partnerId currentBikePartnerId');
+    if (!booking) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Booking not found' 
+      });
+    }
+    
+    if (booking.userId.toString() !== userId) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized to pay for this booking' 
+      });
+    }
+    
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Booking must be confirmed before payment' 
+      });
+    }
+    
+    if (booking.paymentStatus === 'paid') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment already completed for this booking' 
+      });
+    }
+    
+    // Validate required fields
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Valid payment amount is required' 
+      });
+    }
+    
+    if (!paymentMethod) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment method is required' 
+      });
+    }
+    
+    if (!booking.partnerId || !booking.partnerId._id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Partner information is missing from booking' 
+      });
+    }
+    
+    // Calculate payment amounts
+    const totalBookingAmount = booking.pricing.total;
+    const paymentAmounts = calculatePaymentAmounts(totalBookingAmount);
+    
+    // Validate that the amount matches expected initial payment
+    if (Math.abs(amount - paymentAmounts.initialAmount) > 0.01) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid initial payment amount. Expected: ${paymentAmounts.initialAmount}, Received: ${amount}` 
+      });
+    }
+    
+    // Generate transaction ID for dev payment
+    const transactionId = `DEV_INITIAL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create initial payment record
+    const payment = new Payment({
+      bookingId,
+      userId,
+      partnerId: booking.partnerId._id,
+      amount,
+      totalBookingAmount,
+      paymentPercentage: paymentAmounts.initialPercentage,
+      paymentType: 'initial',
+      method: paymentMethod,
+      transactionId,
+      status: 'completed',
+      createdAt: new Date()
+    });
+    
+    await payment.save();
+    
+    // Update booking with initial payment info
+    booking.payments.initial = {
+      paymentId: payment._id,
+      status: 'completed',
+      transactionId,
+      paidAt: new Date(),
+      stripeSessionId: null // No Stripe session in dev mode
+    };
+    
+    booking.paymentInfo = {
+      method: paymentMethod,
+      transactionId,
+      paid: true,
+      paymentDate: new Date(),
+      stripePaymentIntentId: null, // No Stripe in dev mode
+      ...paymentDetails
+    };
+    
+    booking.status = 'active';
+    await booking.save();
+    
+    // UPDATE PARTNER EARNINGS
+    await updatePartnerEarnings(payment);
+    
+    console.log('Initial payment completed (DEV MODE) with earnings distribution:', { 
+      bookingId, 
+      amount, 
+      transactionId 
+    });
+    
+    // Send real-time notification to partner
+    if (booking.partnerId && firebaseAdmin) {
+      try {
+        const db = firebaseAdmin.firestore();
+        await db.collection('realtimeEvents').add({
+          type: 'PAYMENT_COMPLETED',
+          userId: booking.partnerId.userId,
+          targetUserId: booking.partnerId.userId,
+          userRole: 'partner',
+          data: {
+            bookingId: booking._id,
+            amount,
+            transactionId,
+            paymentMethod,
+            customerName: req.user.email,
+            timestamp: new Date().toISOString()
+          },
+          processed: false,
+          timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        });
+      } catch (error) {
+        console.error('Error sending real-time notification to partner:', error);
+      }
+    }
+    
+    // Return success response
+    res.json({
+      success: true,
+      transactionId,
+      paymentStatus: 'completed',
+      message: 'Payment completed successfully (Development Mode)',
+      booking: {
+        id: booking._id,
+        status: booking.status,
+        paymentStatus: 'paid'
+      }
+    });
+    
+  } catch (err) {
+    console.error('Error processing initial payment (DEV MODE):', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Payment processing failed' 
+    });
+  }
+};
+
 
