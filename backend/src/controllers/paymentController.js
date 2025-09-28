@@ -9,7 +9,11 @@ const PAYMENT_CONFIG = {
   INITIAL_PAYMENT_PERCENTAGE: 0.2, // 20% initial payment
   REMAINING_PAYMENT_PERCENTAGE: 0.8, // 80% remaining payment
 };
-
+const REVENUE_SHARE_CONFIG = {
+  OWNER_PARTNER_PERCENTAGE: 0.70,    // 70%
+  PICKUP_PARTNER_PERCENTAGE: 0.20,   // 20%
+  PLATFORM_PERCENTAGE: 0.10          // 10%
+};
 /**
  * Calculate payment amounts for a booking
  */
@@ -26,6 +30,91 @@ const calculatePaymentAmounts = (totalAmount) => {
   };
 };
 
+const updatePartnerEarnings = async (payment) => {
+  try {
+    const booking = await Booking.findById(payment.bookingId)
+      .populate('partnerId currentBikePartnerId');
+    
+    if (!booking) {
+      console.error('Booking not found for payment:', payment._id);
+      return;
+    }
+    
+    const totalAmount = payment.totalBookingAmount || payment.amount;
+    
+    // Calculate earnings for each partner
+    const ownerEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.OWNER_PARTNER_PERCENTAGE * 100) / 100;
+    const pickupEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.PICKUP_PARTNER_PERCENTAGE * 100) / 100;
+    
+    console.log('Revenue sharing calculation:', {
+      totalAmount,
+      ownerEarnings,
+      pickupEarnings,
+      ownerPartnerId: booking.partnerId._id,
+      pickupPartnerId: booking.currentBikePartnerId?._id
+    });
+    
+    // Update owner partner earnings (bike owner)
+    if (booking.partnerId) {
+      await Partner.findByIdAndUpdate(
+        booking.partnerId._id,
+        {
+          $inc: {
+            'account.totalEarnings': ownerEarnings,
+            'account.pendingAmount': ownerEarnings,
+            'account.revenueBreakdown.ownerEarnings': ownerEarnings
+          }
+        }
+      );
+      console.log(`Added ${ownerEarnings} to owner partner:`, booking.partnerId._id);
+    }
+    
+    // Update pickup partner earnings (if different from owner)
+    if (booking.currentBikePartnerId && 
+        booking.currentBikePartnerId._id.toString() !== booking.partnerId._id.toString()) {
+      await Partner.findByIdAndUpdate(
+        booking.currentBikePartnerId._id,
+        {
+          $inc: {
+            'account.totalEarnings': pickupEarnings,
+            'account.pendingAmount': pickupEarnings,
+            'account.revenueBreakdown.pickupEarnings': pickupEarnings
+          }
+        }
+      );
+      console.log(`Added ${pickupEarnings} to pickup partner:`, booking.currentBikePartnerId._id);
+    } else if (booking.currentBikePartnerId && 
+               booking.currentBikePartnerId._id.toString() === booking.partnerId._id.toString()) {
+      // Same partner for both - add pickup earnings to same partner
+      await Partner.findByIdAndUpdate(
+        booking.partnerId._id,
+        {
+          $inc: {
+            'account.totalEarnings': pickupEarnings,
+            'account.pendingAmount': pickupEarnings,
+            'account.revenueBreakdown.pickupEarnings': pickupEarnings
+          }
+        }
+      );
+      console.log(`Added additional ${pickupEarnings} pickup earnings to same partner:`, booking.partnerId._id);
+    }
+    
+    // Log platform earnings (for tracking purposes)
+    const platformEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.PLATFORM_PERCENTAGE * 100) / 100;
+    console.log(`Platform earnings: ${platformEarnings}`);
+    
+    return {
+      success: true,
+      ownerEarnings,
+      pickupEarnings,
+      platformEarnings
+    };
+    
+  } catch (error) {
+    console.error('Error updating partner earnings:', error);
+    return { success: false, error: error.message };
+  }
+};
 /**
  * Get payment summary for a booking
  */
@@ -174,6 +263,7 @@ exports.processPayment = async (req, res) => {
     booking.paymentId = payment._id;
     booking.paymentStatus = 'paid';
     await booking.save();
+    await updatePartnerEarnings(payment);
     
     res.status(201).json(payment);
   } catch (err) {
@@ -501,6 +591,8 @@ exports.processInitialPayment = async (req, res) => {
 
     await booking.save();
     
+
+    
     // Return the session URL for frontend redirect
     res.json({
       success: true,
@@ -588,12 +680,13 @@ exports.handleStripeWebhook = async (req, res) => {
 /**
  * Handle successful checkout session completion
  */
+
 async function handleCheckoutSessionCompleted(session) {
   try {
     const { bookingId, userId, partnerId, paymentType } = session.metadata;
     
     // Get booking and update payment status
-    const booking = await Booking.findById(bookingId).populate('partnerId');
+    const booking = await Booking.findById(bookingId).populate('partnerId currentBikePartnerId');
     if (!booking) {
       console.error('Booking not found for session:', session.id);
       return;
@@ -634,7 +727,6 @@ async function handleCheckoutSessionCompleted(session) {
         stripeSessionId: session.id
       };
       
-      // Update legacy payment info for backward compatibility
       booking.paymentInfo = {
         ...booking.paymentInfo,
         transactionId,
@@ -644,9 +736,16 @@ async function handleCheckoutSessionCompleted(session) {
       };
       
       booking.status = 'active';
-      await booking.save(); // paymentStatus will be auto-updated to 'partial_paid' via pre-save middleware
+      await booking.save();
       
-      console.log('Initial payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
+      // UPDATE PARTNER EARNINGS - This is the key addition
+      await updatePartnerEarnings(payment);
+      
+      console.log('Initial payment completed with earnings distribution:', { 
+        bookingId, 
+        amount: session.amount_total / 100, 
+        transactionId 
+      });
       
     } else if (paymentType === 'remaining') {
       // Handle remaining payment
@@ -674,7 +773,7 @@ async function handleCheckoutSessionCompleted(session) {
       });
       
       await payment.save();
-      
+    
       // Update booking with remaining payment info
       booking.payments.remaining = {
         ...booking.payments.remaining,
@@ -687,64 +786,19 @@ async function handleCheckoutSessionCompleted(session) {
       };
       
       booking.status = 'completed';
-      await booking.save(); // paymentStatus will be auto-updated to 'fully_paid' via pre-save middleware
-      
-      console.log('Remaining payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
-      
-    } else if (paymentType === 'dropoff_additional') {
-      // Handle drop-off additional charges payment (legacy support)
-      const additionalCharges = session.metadata.additionalCharges ? 
-        JSON.parse(session.metadata.additionalCharges) : [];
-      
-      // Create payment record for additional charges
-      const payment = new Payment({
-        bookingId,
-        userId,
-        partnerId,
-        amount: session.amount_total / 100,
-        paymentType: 'additional_charges',
-        method: 'card',
-        transactionId,
-        status: 'completed',
-        additionalCharges,
-        createdAt: new Date()
-      });
-      
-      await payment.save();
-      
-      console.log('Additional charges payment completed:', { bookingId, amount: session.amount_total / 100, transactionId });
-      
-    } else {
-      // Handle regular initial booking payment
-      booking.paymentInfo = {
-        ...booking.paymentInfo,
-        transactionId,
-        paid: true,
-        paymentDate: new Date(),
-        stripePaymentIntentId: session.payment_intent
-      };
-      booking.paymentStatus = 'paid';
-      booking.status = 'active';
-      
       await booking.save();
-
-      // Create payment record
-      const payment = new Payment({
-        bookingId,
-        userId,
-        partnerId,
-        amount: session.amount_total / 100, // Convert from cents
-        method: 'card',
-        paymentMethod: 'card',
-        transactionId,
-        status: 'completed',
-        createdAt: new Date()
-      });
       
-      await payment.save();
+      // UPDATE PARTNER EARNINGS FOR REMAINING PAYMENT
+      await updatePartnerEarnings(payment);
+      
+      console.log('Remaining payment completed with earnings distribution:', { 
+        bookingId, 
+        amount: session.amount_total / 100, 
+        transactionId 
+      });
     }
 
-    // Send real-time notification to partner
+       // Send real-time notification to partner
     if (booking.partnerId && firebaseAdmin) {
       try {
         const db = firebaseAdmin.firestore();
@@ -770,13 +824,11 @@ async function handleCheckoutSessionCompleted(session) {
         console.error('Error sending real-time notification to partner:', error);
       }
     }
-
-    console.log('Payment completed successfully for booking:', bookingId);
+    
   } catch (error) {
     console.error('Error handling checkout session completed:', error);
   }
 }
-
 /**
  * Handle expired checkout session
  */
@@ -883,7 +935,7 @@ exports.processRemainingPayment = async (req, res) => {
       
       booking.status = 'completed';
       await booking.save(); // paymentStatus will be auto-updated to 'fully_paid'
-      
+      await updatePartnerEarnings(payment);
       res.json({
         success: true,
         paymentStatus: 'completed',
@@ -1028,6 +1080,8 @@ exports.processDropOffCashPayment = async (req, res) => {
     });
     
     await payment.save();
+
+    await updatePartnerEarnings(payment);
     
     res.json({
       success: true,
@@ -1115,6 +1169,51 @@ exports.processDropOffCardPayment = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Payment processing failed' 
+    });
+  }
+};
+exports.getPartnerEarnings = async (req, res) => {
+  try {
+    const partnerId = req.user.partnerId || req.params.partnerId;
+    
+    if (!partnerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Partner ID is required'
+      });
+    }
+    
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(404).json({
+        success: false,
+        message: 'Partner not found'
+      });
+    }
+    
+    // Get payment history for this partner
+    const payments = await Payment.find({
+      $or: [
+        { partnerId: partnerId },
+        // Also include payments where this partner was the pickup partner
+        // This requires checking booking data
+      ]
+    })
+    .populate('bookingId')
+    .sort({ createdAt: -1 })
+    .limit(50);
+    
+    res.json({
+      success: true,
+      earnings: partner.account,
+      recentPayments: payments
+    });
+    
+  } catch (error) {
+    console.error('Error getting partner earnings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get earnings data'
     });
   }
 };
