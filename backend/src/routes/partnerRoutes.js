@@ -147,7 +147,5 @@ router.get('/me', auth(), partnerController.getCurrentPartner);
  */
 router.get('/user/:userId', partnerController.getPartnerByUserId);
 
-// router.get('/partner/earnings', partnerController.getPartnerEarnings);
-// router.get('/partner/earnings/:partnerId', partnerController.getPartnerEarnings);
 
 module.exports = router;
