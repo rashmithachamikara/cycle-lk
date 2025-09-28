@@ -44,7 +44,7 @@ const bookingSchema = new mongoose.Schema({
     },
     currency: {
       type: String,
-      default: 'USD'
+      default: 'LKR'
     }
   },
   dates: {
