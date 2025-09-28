@@ -400,19 +400,30 @@ exports.getPendingPayments = async (req, res) => {
     .sort({ createdAt: -1 });
 
     // Transform to payment pending format
-    const pendingPayments = confirmedBookings.map(booking => ({
-      id: booking._id,
-      bikeName: booking.bikeId?.name || 'Unknown Bike',
-      bikeImage: booking.bikeId?.images?.[0],
-      partnerName: booking.partnerId?.companyName || 'Unknown Partner',
-      startDate: booking.dates.startDate,
-      endDate: booking.dates.endDate,
-      totalAmount: booking.pricing.total * 0.2,
-      paymentStatus: booking.paymentStatus,
-      status: booking.status,
-      bookingNumber: booking._id.toString().slice(-8).toUpperCase(),
-      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
-    }));
+    const pendingPayments = confirmedBookings.map(booking => {
+      console.log('Processing booking:', {
+        id: booking._id,
+        bikeId: booking.bikeId?._id,
+        bikeName: booking.bikeId?.name,
+        images: booking.bikeId?.images,
+        imageUrl: booking.bikeId?.images?.[0]?.url
+      });
+      
+      return {
+        id: booking._id,
+        bikeName: booking.bikeId?.name || 'Unknown Bike',
+        bikeImage: booking.bikeId?.images?.[0]?.url || null,
+        bikeImages: booking.bikeId?.images?.map(img => img.url) || [],
+        partnerName: booking.partnerId?.companyName || 'Unknown Partner',
+        startDate: booking.dates.startDate,
+        endDate: booking.dates.endDate,
+        totalAmount: booking.pricing.total * 0.2,
+        paymentStatus: booking.paymentStatus,
+        status: booking.status,
+        bookingNumber: booking._id.toString().slice(-8).toUpperCase(),
+        dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+      };
+    });
     console.log('Pending payments for user:', userId, pendingPayments);
 
     res.json({ pendingPayments });
