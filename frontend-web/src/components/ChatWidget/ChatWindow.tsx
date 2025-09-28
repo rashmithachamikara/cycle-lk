@@ -46,7 +46,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       content: "Hi! I'm here to help you with bike rentals, locations, bookings, and more. How can I assist you today?",
       timestamp: new Date(),
       suggestions: [
-        "Find bikes near me",
         "How to rent a bike?",
         "Check availability",
         "What payment methods do you accept?",

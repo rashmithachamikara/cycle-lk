@@ -247,7 +247,6 @@ class ChatbotService {
    */
   getDefaultSuggestions() {
     return [
-      'Find bikes near me',
       'Check availability',
       'View locations',
       'How to book?',

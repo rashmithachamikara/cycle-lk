@@ -187,7 +187,6 @@ const getSuggestions = async (req, res) => {
     // Predefined suggestions by category
     const suggestions = {
       general: [
-        'Find bikes near me',
         'Check bike availability',
         'View popular locations',
         'How to book a bike?',
