@@ -225,7 +225,7 @@ const PaymentsPage = () => {
 
         {/* Additional Information */}
         {pendingPayments.length === 0 && !loading && !error && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="mb-8 bg-white rounded-xl border border-gray-200 p-8 text-center">
             <div className="text-gray-500 mb-4">
               <svg className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

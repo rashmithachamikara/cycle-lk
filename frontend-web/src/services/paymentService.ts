@@ -108,6 +108,13 @@ export const paymentService = {
     return response.data;
   },
 
+  // Process initial payment for booking (Development Mode)
+  processInitialPaymentDev: async (paymentRequest: InitialPaymentRequest): Promise<PaymentResponse> => {
+    debugLog('Processing initial payment (DEV MODE)', paymentRequest);
+    const response = await api.post('/payments/initial-dev', paymentRequest);
+    return response.data;
+  },
+
   // Get pending payments for current user
   getPendingPayments: async (): Promise<PaymentPendingBooking[]> => {
     debugLog('Fetching pending payments');
