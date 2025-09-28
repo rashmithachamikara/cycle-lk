@@ -74,7 +74,7 @@ const { User, Partner } = require('../models'); // <-- Import the Partner model
  */
 exports.auth = (allowedRoles = []) => {
   return async (req, res, next) => {
-    console.log(`Auth middleware: Request received - ${req.method} ${req.originalUrl}`);
+    // console.log(`Auth middleware: Request received - ${req.method} ${req.originalUrl}`);
 
     const token = req.header('x-auth-token');
 

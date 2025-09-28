@@ -521,7 +521,7 @@ exports.processInitialPayment = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'lkr',
             product_data: {
               name: `Bike Rental - ${booking.bikeId?.name || 'Bike Booking'}`,
               description: `Initial payment (${paymentAmounts.initialPercentage}%) for booking #${booking.bookingNumber}`,
@@ -665,7 +665,13 @@ async function handleCheckoutSessionCompleted(session) {
     const { bookingId, userId, partnerId, paymentType } = session.metadata;
     
     // Get booking and update payment status
-    const booking = await Booking.findById(bookingId).populate('partnerId currentBikePartnerId');
+    const booking = await Booking.findById(bookingId)
+      .populate('partnerId', 'userId companyName')
+      .populate('currentBikePartnerId', 'userId companyName')
+      .populate('dropoffPartnerId', 'userId companyName')
+      .populate('userId', 'firstName lastName email')
+      .populate('bikeId', 'name');
+    
     if (!booking) {
       console.error('Booking not found for session:', session.id);
       return;
@@ -725,8 +731,107 @@ async function handleCheckoutSessionCompleted(session) {
         amount: session.amount_total / 100, 
         transactionId 
       });
-      
-    } else if (paymentType === 'remaining') {
+
+
+      // create a notification for dropoff partner
+      if (booking.dropoffPartnerId && firebaseAdmin) {
+        try {
+          
+          // Validate dropoff partner has userId
+          const dropoffPartnerUserId = booking.dropoffPartnerId.userId;
+          
+          if (!dropoffPartnerUserId) {
+            console.error('❌ Dropoff partner userId is undefined:', {
+              dropoffPartnerId: booking.dropoffPartnerId._id,
+              dropoffPartnerObject: booking.dropoffPartnerId
+            });
+            throw new Error('Dropoff partner userId is required for Firebase event');
+          }
+
+          const db = firebaseAdmin.firestore();
+          await db.collection('realtimeEvents').add({
+            type: 'NEW_DROPOFF_BOOKING',
+            targetUserId: dropoffPartnerUserId.toString(),
+            targetUserRole: 'partner',
+            data: {
+              bookingId: booking._id.toString(),
+              bikeId: booking.bikeId.toString(),
+              userId: booking.userId.toString(),
+              bookingData: {
+                id: booking._id.toString(),
+                bookingNumber: booking.bookingNumber,
+                customerName: session.customer_email,
+                bikeName: booking.bikeId?.name || 'Bike',
+                startDate: booking.dates.startDate,
+                endDate: booking.dates.endDate,
+                status: booking.status,
+                total: booking.pricing.total,
+                pickupLocation: booking.locations.pickup,
+                dropoffLocation: booking.locations.dropoff,
+                packageType: booking.package.name
+              }
+            },
+            timestamp: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+            processed: false,
+            metadata: {
+              sourceUserId: booking.userId.toString(),
+              sourceUserRole: 'user',
+              paymentAmount: session.amount_total / 100,
+              transactionId,
+              paymentMethod: 'card'
+            }
+          });
+          console.log('Real-time NEW_DROPOFF_BOOKING event sent to dropoff partner');
+
+          // Create database notification for dropoff partner
+          const populatedBooking = await Booking.findById(booking._id)
+            .populate('userId', 'firstName lastName email phone')
+            .populate('bikeId', 'name');
+          
+          // Create notification directly here to avoid circular dependency
+          const { Notification } = require('../models');
+          const usersName = populatedBooking.userId?.firstName && populatedBooking.userId?.lastName 
+            ? `${populatedBooking.userId.firstName} ${populatedBooking.userId.lastName}`
+            : 'Customer';
+          
+          // Use the same validated dropoffPartnerUserId
+          const notificationData = {
+            userId: dropoffPartnerUserId.toString(),
+            type: 'owner',
+            title: 'New Drop-off Booking Scheduled',
+            message: `A new drop-off booking has been scheduled for the bike ${populatedBooking.bikeId?.name || 'bike'} by ${usersName}. Expect arrival on ${new Date(populatedBooking.dates.endDate).toLocaleDateString()}`,
+            sentVia: ['app'],
+            relatedTo: {
+              type: 'booking',
+              id: populatedBooking._id.toString()
+            }
+          };
+
+          const notification = new Notification(notificationData);
+          await notification.save();
+          console.log('Database notification created for dropoff partner:', {
+            userId: dropoffPartnerUserId.toString(),
+            bookingId: booking._id.toString()
+          });
+          
+        } catch (error) {
+          console.error('Error sending NEW_DROPOFF_BOOKING notification:', error);
+          console.error('Booking details:', {
+            bookingId: booking._id,
+            dropoffPartnerId: booking.dropoffPartnerId?._id,
+            dropoffPartnerUserId: booking.dropoffPartnerId?.userId,
+            populatedDropoffPartner: booking.dropoffPartnerId
+          });
+        }
+      } else {
+        console.log('Skipping NEW_DROPOFF_BOOKING notification:', {
+          hasDropoffPartner: !!booking.dropoffPartnerId,
+          hasFirebase: !!firebaseAdmin,
+          bookingId: booking._id
+        });
+      }
+
+  } else if (paymentType === 'remaining') {
       // Handle remaining payment
       const totalBookingAmount = parseFloat(session.metadata.totalBookingAmount);
       const paymentPercentage = parseFloat(session.metadata.paymentPercentage);
@@ -783,11 +888,11 @@ async function handleCheckoutSessionCompleted(session) {
         const db = firebaseAdmin.firestore();
         await db.collection('realtimeEvents').add({
           type: 'PAYMENT_COMPLETED',
-          userId: booking.partnerId.userId,
-          targetUserId: booking.partnerId.userId,
+          userId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
+          targetUserId: booking.partnerId.userId?.toString() || booking.partnerId.userId,
           userRole: 'partner',
           data: {
-            bookingId: booking._id,
+            bookingId: booking._id.toString(),
             amount: session.amount_total / 100,
             transactionId,
             paymentMethod: 'card',
@@ -901,7 +1006,7 @@ exports.processRemainingPayment = async (req, res) => {
       });
       
       await payment.save();
-      
+
       // Update booking remaining payment info
       booking.payments.remaining = {
         ...booking.payments.remaining,
@@ -930,7 +1035,7 @@ exports.processRemainingPayment = async (req, res) => {
         line_items: [
           {
             price_data: {
-              currency: 'usd',
+              currency: 'lkr',
               product_data: {
                 name: `Final Payment - Booking #${booking.bookingNumber}`,
                 description: `Remaining payment (${paymentAmounts.remainingPercentage}%) + additional charges`,
@@ -1111,7 +1216,7 @@ exports.processDropOffCardPayment = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'lkr',
             product_data: {
               name: `Additional Charges - Booking #${booking.bookingNumber || booking._id.toString().slice(-8).toUpperCase()}`,
               description: `Drop-off additional charges for bike rental`,

@@ -35,7 +35,6 @@ const BookingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(25);
 
   // Booking form data
   const [startDate, setStartDate] = useState('');
@@ -83,18 +82,6 @@ const BookingPage = () => {
       fetchBikes();
     }
   }, [currentStep, pickupLocation]);
-
-  // Countdown effect for success page
-  useEffect(() => {
-    if (bookingSuccess && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (bookingSuccess && countdown === 0) {
-      navigate('/dashboard');
-    }
-  }, [bookingSuccess, countdown, navigate]);
 
   // Show no bikes available page if no bikes found
   if(availableBikes.length === 0 && currentStep === 2 && !loading) {
@@ -315,7 +302,6 @@ const BookingPage = () => {
         // Booking created successfully
         console.log('Booking created:', response);
         setBookingSuccess(true);
-        setCountdown(25); // Reset countdown
       }
     
       
@@ -425,16 +411,12 @@ const BookingPage = () => {
                   setStartDate('');
                   setEndDate('');
                   setDeliveryAddress('');
+                  navigate('/dashboard');
                 }}
                 className="px-8 py-3 text-lg"
               >
                 Book Another Bike
               </Button>
-            </div>
-
-            {/* Countdown */}
-            <div className="text-gray-500 text-sm">
-              <p>Automatically redirecting to dashboard in <span className="font-semibold text-blue-600">{countdown}</span> seconds...</p>
             </div>
           </div>
         </div>
