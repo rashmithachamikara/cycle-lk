@@ -213,18 +213,6 @@ partnerSchema.index({ userId: 1 });
 partnerSchema.index({ location: 1 });
 partnerSchema.index({ status: 1 });
 partnerSchema.index({ companyName: 'text', description: 'text' });
-partnerSchema.methods.addEarnings = function(amount, type = 'owner') {
-  this.account.totalEarnings += amount;
-  this.account.pendingAmount += amount;
-  
-  if (type === 'owner') {
-    this.account.revenueBreakdown.ownerEarnings += amount;
-  } else if (type === 'pickup') {
-    this.account.revenueBreakdown.pickupEarnings += amount;
-  }
-  
-  return this.save();
-};
 module.exports = mongoose.model('Partner', partnerSchema);
 
 

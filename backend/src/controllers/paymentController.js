@@ -1,4 +1,5 @@
 const { Payment, Booking, User, Partner } = require('../models');
+const transactionController = require('./transactionController');
 const firebaseAdmin = require('../config/firebase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -37,77 +38,41 @@ const updatePartnerEarnings = async (payment) => {
     
     if (!booking) {
       console.error('Booking not found for payment:', payment._id);
-      return;
+      return { success: false, error: 'Booking not found' };
     }
     
-    const totalAmount = payment.totalBookingAmount || payment.amount;
+    // Use actual payment amount for revenue sharing, not total booking amount
+    const totalAmount = payment.amount;
     
     // Calculate earnings for each partner
     const ownerEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.OWNER_PARTNER_PERCENTAGE * 100) / 100;
     const pickupEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.PICKUP_PARTNER_PERCENTAGE * 100) / 100;
+    const platformEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.PLATFORM_PERCENTAGE * 100) / 100;
     
     console.log('Revenue sharing calculation:', {
       totalAmount,
       ownerEarnings,
       pickupEarnings,
+      platformEarnings,
       ownerPartnerId: booking.partnerId._id,
       pickupPartnerId: booking.currentBikePartnerId?._id
     });
-    
-    // Update owner partner earnings (bike owner)
-    if (booking.partnerId) {
-      await Partner.findByIdAndUpdate(
-        booking.partnerId._id,
-        {
-          $inc: {
-            'account.totalEarnings': ownerEarnings,
-            'account.pendingAmount': ownerEarnings,
-            'account.revenueBreakdown.ownerEarnings': ownerEarnings
-          }
-        }
-      );
-      console.log(`Added ${ownerEarnings} to owner partner:`, booking.partnerId._id);
-    }
-    
-    // Update pickup partner earnings (if different from owner)
-    if (booking.currentBikePartnerId && 
-        booking.currentBikePartnerId._id.toString() !== booking.partnerId._id.toString()) {
-      await Partner.findByIdAndUpdate(
-        booking.currentBikePartnerId._id,
-        {
-          $inc: {
-            'account.totalEarnings': pickupEarnings,
-            'account.pendingAmount': pickupEarnings,
-            'account.revenueBreakdown.pickupEarnings': pickupEarnings
-          }
-        }
-      );
-      console.log(`Added ${pickupEarnings} to pickup partner:`, booking.currentBikePartnerId._id);
-    } else if (booking.currentBikePartnerId && 
-               booking.currentBikePartnerId._id.toString() === booking.partnerId._id.toString()) {
-      // Same partner for both - add pickup earnings to same partner
-      await Partner.findByIdAndUpdate(
-        booking.partnerId._id,
-        {
-          $inc: {
-            'account.totalEarnings': pickupEarnings,
-            'account.pendingAmount': pickupEarnings,
-            'account.revenueBreakdown.pickupEarnings': pickupEarnings
-          }
-        }
-      );
-      console.log(`Added additional ${pickupEarnings} pickup earnings to same partner:`, booking.partnerId._id);
-    }
-    
-    // Log platform earnings (for tracking purposes)
-    const platformEarnings = Math.round(totalAmount * REVENUE_SHARE_CONFIG.PLATFORM_PERCENTAGE * 100) / 100;
-    console.log(`Platform earnings: ${platformEarnings}`);
+
+    // Use transaction controller to create revenue share transactions
+    const transactions = await transactionController.createRevenueShareTransactions({
+      payment,
+      booking,
+      ownerEarnings,
+      pickupEarnings,
+      platformEarnings
+    });
     
     return {
       success: true,
       ownerEarnings,
       pickupEarnings,
-      platformEarnings
+      platformEarnings,
+      transactions: transactions.map(t => t._id)
     };
     
   } catch (error) {
@@ -115,6 +80,9 @@ const updatePartnerEarnings = async (payment) => {
     return { success: false, error: error.message };
   }
 };
+
+
+
 /**
  * Get payment summary for a booking
  */
@@ -1217,3 +1185,5 @@ exports.getPartnerEarnings = async (req, res) => {
     });
   }
 };
+
+
