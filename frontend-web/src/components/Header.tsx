@@ -526,17 +526,17 @@ const Header = () => {
                 </button>
 
                 {isDashboardOpen && (
-                  <div className="absolute right-[-1rem] w-60 mt-4 bg-white/20 dark:bg-gray-500/50 backdrop-blur-md rounded-lg border border-white/80 dark:border-gray-500/20 shadow-md overflow-hidden z-50">
+                  <div className="absolute right-[-1rem] w-60 mt-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-lg overflow-hidden z-50">
                     {user?.role === 'user' && (
                       <Link
                         to="/dashboard"
-                        className="flex items-center space-x-3 p-4 text-white hover:bg-white/30 dark:hover:bg-gray-500/60 transition-all duration-150"
+                        className="flex items-center space-x-3 p-4 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150"
                         onClick={() => setIsDashboardOpen(false)}
                       >
-                        <User className="h-5 w-5 text-emerald-400" />
+                        <User className="h-5 w-5 text-emerald-600" />
                         <div>
                           <div className="font-medium">User Dashboard</div>
-                          <div className="text-xs text-white/80">Manage your bookings</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">Manage your bookings</div>
                         </div>
                       </Link>
                     )}
@@ -544,13 +544,13 @@ const Header = () => {
                     {user?.role === 'partner' && (
                       <Link
                         to="/partner-dashboard"
-                        className="flex items-center space-x-3 p-4 text-white hover:bg-white/30 dark:hover:bg-gray-500/60 border-t border-white/20 dark:border-gray-500/30 transition-all duration-150"
+                        className="flex items-center space-x-3 p-4 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-600 transition-all duration-150"
                         onClick={() => setIsDashboardOpen(false)}
                       >
-                        <Building className="h-5 w-5 text-blue-400" />
+                        <Building className="h-5 w-5 text-blue-600" />
                         <div>
                           <div className="font-medium">Partner Dashboard</div>
-                          <div className="text-xs text-white/80">Manage your rental business</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">Manage your rental business</div>
                         </div>
                       </Link>
                     )}
@@ -558,26 +558,26 @@ const Header = () => {
                     {user?.role === 'admin' && (
                       <Link
                         to="/admin-dashboard"
-                        className="flex items-center space-x-3 p-4 text-white hover:bg-white/30 dark:hover:bg-gray-500/60 border-t border-white/20 dark:border-gray-500/30 transition-all duration-150"
+                        className="flex items-center space-x-3 p-4 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-600 transition-all duration-150"
                         onClick={() => setIsDashboardOpen(false)}
                       >
-                        <ShieldCheck className="h-5 w-5 text-purple-400" />
+                        <ShieldCheck className="h-5 w-5 text-purple-600" />
                         <div>
                           <div className="font-medium">Admin Dashboard</div>
-                          <div className="text-xs text-white/80">System administration</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">System administration</div>
                         </div>
                       </Link>
                     )}
 
                     <Link
                       to="/profile"
-                      className="flex items-center space-x-3 p-4 text-white hover:bg-white/30 dark:hover:bg-gray-500/60 border-t border-white/20 dark:border-gray-500/30 transition-all duration-150"
+                      className="flex items-center space-x-3 p-4 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-600 transition-all duration-150"
                       onClick={() => setIsDashboardOpen(false)}
                     >
-                      <User className="h-5 w-5 text-gray-300" />
+                      <User className="h-5 w-5 text-gray-600" />
                       <div>
                         <div className="font-medium">Profile</div>
-                        <div className="text-xs text-white/80">View and edit your profile</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">View and edit your profile</div>
                       </div>
                     </Link>
 
@@ -586,12 +586,12 @@ const Header = () => {
                         logout();
                         setIsDashboardOpen(false);
                       }}
-                      className="w-full flex items-center space-x-3 p-4 text-white hover:bg-white/30 dark:hover:bg-gray-500/60 border-t border-white/20 dark:border-gray-500/30 text-left transition-all duration-150"
+                      className="w-full flex items-center space-x-3 p-4 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-600 text-left transition-all duration-150"
                     >
-                      <LogOut className="h-5 w-5 text-red-400" />
+                      <LogOut className="h-5 w-5 text-red-600" />
                       <div>
                         <div className="font-medium">Log out</div>
-                        <div className="text-xs text-white/80">End your current session</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">End your current session</div>
                       </div>
                     </button>
                   </div>
