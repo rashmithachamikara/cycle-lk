@@ -47,6 +47,32 @@ export interface RevenueChart {
   };
 }
 
+// Interface for transaction data
+export interface Transaction {
+  _id: string;
+  type: string;
+  category: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+  paymentId?: {
+    amount: number;
+    paymentType: string;
+    status: string;
+  };
+  bookingId?: {
+    bookingNumber: string;
+  };
+}
+
+// Interface for paginated transactions response
+export interface TransactionsResponse {
+  transactions: Transaction[];
+  totalPages: number;
+  currentPage: number;
+  totalCount: number;
+}
+
 const transactionService = {
   // Get monthly earnings for a partner
   getPartnerMonthlyEarnings: async (partnerId: string, year?: number, month?: number): Promise<MonthlyEarnings> => {
@@ -95,6 +121,32 @@ const transactionService = {
     if (params?.endDate) queryParams.append('endDate', params.endDate);
 
     const response = await api.get(`/transactions/my-revenue-chart?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Get current user's transactions with filtering and pagination (for partners)
+  getMyTransactions: async (params?: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    category?: string;
+    startDate?: string;
+    endDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
+  }): Promise<TransactionsResponse> => {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.type) queryParams.append('type', params.type);
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.minAmount) queryParams.append('minAmount', params.minAmount.toString());
+    if (params?.maxAmount) queryParams.append('maxAmount', params.maxAmount.toString());
+
+    const response = await api.get(`/transactions/my-transactions?${queryParams.toString()}`);
     return response.data;
   },
 };

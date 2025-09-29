@@ -699,6 +699,57 @@ exports.getMyMonthlyRevenueChart = async (req, res) => {
 };
 
 /**
+ * Get current user's transaction history (for partners)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyTransactions = async (req, res) => {
+  try {
+    // Only partners can access their own transactions
+    if (req.user.role !== 'partner') {
+      return res.status(403).json({ message: 'Access denied. Only partners can view their transactions.' });
+    }
+
+    const partnerId = req.user.partnerId;
+    const { page = 1, limit = 20, type, category, startDate, endDate, minAmount, maxAmount } = req.query;
+
+    // Build filter
+    const filter = { partnerId };
+    if (type) filter.type = type;
+    if (category) filter.category = category;
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+    if (minAmount || maxAmount) {
+      filter.amount = {};
+      if (minAmount) filter.amount.$gte = parseFloat(minAmount);
+      if (maxAmount) filter.amount.$lte = parseFloat(maxAmount);
+    }
+
+    const transactions = await Transaction.find(filter)
+      .populate('paymentId', 'amount paymentType status')
+      .populate('bookingId', 'bookingNumber')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const totalCount = await Transaction.countDocuments(filter);
+
+    res.json({
+      transactions,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: parseInt(page),
+      totalCount
+    });
+  } catch (error) {
+    console.error('Error fetching my transactions:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
  * Get current user's revenue chart with flexible period grouping (for partners)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object

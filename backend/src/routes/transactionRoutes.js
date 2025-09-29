@@ -74,6 +74,13 @@ router.get('/my-monthly-chart', auth(), transactionController.getMyMonthlyRevenu
 router.get('/my-revenue-chart', auth(), transactionController.getMyRevenueChart);
 
 /**
+ * @route   GET /api/transactions/my-transactions
+ * @desc    Get current user's transaction history with filtering and pagination (for partners)
+ * @access  Private
+ */
+router.get('/my-transactions', auth(), transactionController.getMyTransactions);
+
+/**
  * @route   GET /api/transactions/:id
  * @desc    Get transaction by ID
  * @access  Private
