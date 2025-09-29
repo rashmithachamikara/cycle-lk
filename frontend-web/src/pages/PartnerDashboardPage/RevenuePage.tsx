@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -14,9 +14,16 @@ const RevenuePage = () => {
   const [revenueChart7Days, setRevenueChart7Days] = useState<RevenueChart | null>(null);
   const [revenueChart30Days, setRevenueChart30Days] = useState<RevenueChart | null>(null);
   const [revenueChart4Weeks, setRevenueChart4Weeks] = useState<RevenueChart | null>(null);
+  const [revenueChartCustom, setRevenueChartCustom] = useState<RevenueChart | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<'7days' | '30days' | '4weeks'>('7days');
+  const [selectedPeriod, setSelectedPeriod] = useState<'7days' | '30days' | '4weeks' | 'custom'>('7days');
+  const [selectedBreakdown, setSelectedBreakdown] = useState<'day' | 'week' | 'month'>('day');
+  const [customBreakdown, setCustomBreakdown] = useState<'day' | 'week' | 'month'>('day');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [lastAppliedStartDate, setLastAppliedStartDate] = useState('');
+  const [lastAppliedEndDate, setLastAppliedEndDate] = useState('');
 
   // Transaction log state
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -47,48 +54,86 @@ const RevenuePage = () => {
     }
   };
 
+  // Refs to avoid dependency issues
+  const customStartDateRef = useRef(customStartDate);
+  const customEndDateRef = useRef(customEndDate);
+  const selectedBreakdownRef = useRef(selectedBreakdown);
+
+  // Update refs when values change
+  useEffect(() => {
+    customStartDateRef.current = customStartDate;
+  }, [customStartDate]);
+
+  useEffect(() => {
+    customEndDateRef.current = customEndDate;
+  }, [customEndDate]);
+
+  useEffect(() => {
+    selectedBreakdownRef.current = selectedBreakdown;
+  }, [selectedBreakdown]);
+
   // Fetch chart data
-  const fetchChartData = useCallback(async (period: '7days' | '30days' | '4weeks' = selectedPeriod) => {
+  const fetchChartData = useCallback(async (period: '7days' | '30days' | '4weeks' | 'custom' = selectedPeriod, breakdown: 'day' | 'week' | 'month' = selectedBreakdown) => {
     try {
       setChartLoading(true);
       if (period === '7days') {
-        const chartData = await transactionService.getMyRevenueChart({ period: 'day', limit: 7 });
+        const chartData = await transactionService.getMyRevenueChart({ period: breakdown, limit: 7 });
         setRevenueChart7Days(chartData);
       } else if (period === '30days') {
-        const chartData = await transactionService.getMyRevenueChart({ period: 'day', limit: 30 });
+        const chartData = await transactionService.getMyRevenueChart({ period: breakdown, limit: 30 });
         setRevenueChart30Days(chartData);
       } else if (period === '4weeks') {
-        const chartData = await transactionService.getMyRevenueChart({ period: 'week', limit: 4 });
+        const chartData = await transactionService.getMyRevenueChart({ period: breakdown, limit: 4 });
         setRevenueChart4Weeks(chartData);
+      } else if (period === 'custom' && customStartDateRef.current && customEndDateRef.current) {
+        const chartData = await transactionService.getMyRevenueChart({
+          period: breakdown,
+          startDate: customStartDateRef.current,
+          endDate: customEndDateRef.current
+        });
+        setRevenueChartCustom(chartData);
       }
     } catch (err) {
       console.error('Error fetching chart data:', err);
     } finally {
       setChartLoading(false);
     }
-  }, [selectedPeriod]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user && user.role === 'partner') {
       fetchEarnings();
-      fetchChartData('7days');
-      fetchChartData('30days');
-      fetchChartData('4weeks');
+      fetchChartData('7days', 'day');
+      fetchChartData('30days', 'day');
+      fetchChartData('4weeks', 'week');
     }
-  }, [user, fetchChartData]);
+  }, [user, fetchChartData]); // Added fetchChartData back to dependencies
+
+  // Initialize custom date range with last 30 days
+  useEffect(() => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    setCustomStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
+    setCustomEndDate(today.toISOString().split('T')[0]);
+  }, []);
 
   // Handle period change
   useEffect(() => {
     if (user && user.role === 'partner') {
       if (selectedPeriod === '7days' && !revenueChart7Days) {
-        fetchChartData('7days');
+        fetchChartData('7days', 'day');
       } else if (selectedPeriod === '30days' && !revenueChart30Days) {
-        fetchChartData('30days');
+        fetchChartData('30days', 'day');
       } else if (selectedPeriod === '4weeks' && !revenueChart4Weeks) {
-        fetchChartData('4weeks');
+        fetchChartData('4weeks', 'week');
       }
+      // Note: Custom range data is only fetched when Apply button is clicked
     }
   }, [selectedPeriod, user, fetchChartData, revenueChart7Days, revenueChart30Days, revenueChart4Weeks]);
+
+
 
   // Fetch transactions
   const fetchTransactions = useCallback(async (page = 1) => {
@@ -125,12 +170,66 @@ const RevenuePage = () => {
     }
   }, [filters]);
 
-  // Load transactions on mount and when filters change
-  useEffect(() => {
-    if (user && user.role === 'partner') {
-      fetchTransactions();
+  // Memoized formatter functions to prevent unnecessary re-renders
+  const tickFormatter = useCallback((dateStr: string) => {
+    const breakdown = selectedPeriod === '7days' ? 'day' :
+                     selectedPeriod === '30days' ? 'day' :
+                     selectedPeriod === '4weeks' ? 'week' :
+                     customBreakdown;
+
+    if (breakdown === 'week') {
+      // For weekly data: "YYYY-WW" format
+      const [, week] = dateStr.split('-');
+      return `W${week}`;
+    } else if (breakdown === 'month') {
+      // For monthly data: "YYYY-MM" format
+      const [, month] = dateStr.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return monthNames[parseInt(month) - 1];
+    } else {
+      // For daily data: "YYYY-MM-DD" format
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
-  }, [user, fetchTransactions]);
+  }, [selectedPeriod, customBreakdown]);
+
+  const labelFormatter = useCallback((dateStr: string) => {
+    const breakdown = selectedPeriod === '7days' ? 'day' :
+                     selectedPeriod === '30days' ? 'day' :
+                     selectedPeriod === '4weeks' ? 'week' :
+                     customBreakdown;
+
+    if (breakdown === 'week') {
+      // For weekly data: "YYYY-WW" format
+      const [year, week] = dateStr.split('-');
+      return `Week ${week}, ${year}`;
+    } else if (breakdown === 'month') {
+      // For monthly data: "YYYY-MM" format
+      const [year, month] = dateStr.split('-');
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      return `${monthNames[parseInt(month) - 1]} ${year}`;
+    } else {
+      // For daily data: "YYYY-MM-DD" format
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+  }, [selectedPeriod, customBreakdown]);
+
+  // Memoize chart data to prevent unnecessary re-renders
+  const chartData = useMemo(() => {
+    return selectedPeriod === '7days' ? revenueChart7Days?.chartData :
+           selectedPeriod === '30days' ? revenueChart30Days?.chartData :
+           selectedPeriod === '4weeks' ? revenueChart4Weeks?.chartData :
+           revenueChartCustom?.chartData;
+  }, [selectedPeriod, revenueChart7Days?.chartData, revenueChart30Days?.chartData, revenueChart4Weeks?.chartData, revenueChartCustom?.chartData]);
+
+  // Memoize chart visibility condition
+  const shouldShowChart = useMemo(() => {
+    return (selectedPeriod === '7days' && revenueChart7Days?.chartData && revenueChart7Days.chartData.length > 0) ||
+           (selectedPeriod === '30days' && revenueChart30Days?.chartData && revenueChart30Days.chartData.length > 0) ||
+           (selectedPeriod === '4weeks' && revenueChart4Weeks?.chartData && revenueChart4Weeks.chartData.length > 0) ||
+           (selectedPeriod === 'custom' && revenueChartCustom?.chartData && revenueChartCustom.chartData.length > 0);
+  }, [selectedPeriod, revenueChart7Days?.chartData, revenueChart30Days?.chartData, revenueChart4Weeks?.chartData, revenueChartCustom?.chartData]);
 
   if (!user || user.role !== 'partner') {
     return (
@@ -242,7 +341,7 @@ const RevenuePage = () => {
 
         {/* Period Selector */}
         <div className="mb-6">
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 mb-4">
             <button
               onClick={() => setSelectedPeriod('7days')}
               className={`px-4 py-2 rounded-lg font-medium ${
@@ -273,7 +372,72 @@ const RevenuePage = () => {
             >
               Last 4 Weeks
             </button>
+            <button
+              onClick={() => setSelectedPeriod('custom')}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                selectedPeriod === 'custom'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Custom Range
+            </button>
           </div>
+
+          {/* Custom Date Range Inputs */}
+          {selectedPeriod === 'custom' && (
+            <div className="flex space-x-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Breakdown Type</label>
+                <select
+                  value={selectedBreakdown}
+                  onChange={(e) => setSelectedBreakdown(e.target.value as 'day' | 'week' | 'month')}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="day">Daily</option>
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                </select>
+              </div>
+              <button
+                onClick={() => {
+                  if (customStartDate && customEndDate) {
+                    setCustomBreakdown(selectedBreakdown);
+                    setLastAppliedStartDate(customStartDate);
+                    setLastAppliedEndDate(customEndDate);
+                    setRevenueChartCustom(null); // Reset to force refetch
+                    fetchChartData('custom', selectedBreakdown);
+                  }
+                }}
+                disabled={selectedBreakdown === customBreakdown && customStartDate === lastAppliedStartDate && customEndDate === lastAppliedEndDate}
+                className={`px-4 py-2 rounded-lg ${
+                  selectedBreakdown === customBreakdown && customStartDate === lastAppliedStartDate && customEndDate === lastAppliedEndDate
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Apply
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Revenue Chart */}
@@ -283,13 +447,20 @@ const RevenuePage = () => {
               Revenue Overview ({
                 selectedPeriod === '7days' ? 'Last 7 Days' :
                 selectedPeriod === '30days' ? 'Last 30 Days' :
-                'Last 4 Weeks'
+                selectedPeriod === '4weeks' ? 'Last 4 Weeks' :
+                selectedPeriod === 'custom' && customStartDate && customEndDate ?
+                  `${new Date(customStartDate).toLocaleDateString()} - ${new Date(customEndDate).toLocaleDateString()}` :
+                  'Custom Range'
               })
             </h3>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-green-600 font-medium flex items-center">
                 <TrendingUp className="h-4 w-4 mr-1" />
-                {selectedPeriod === '7days' ? 'Daily' : selectedPeriod === '30days' ? 'Daily' : 'Weekly'} breakdown
+                {selectedPeriod === '7days' ? 'Daily' :
+                 selectedPeriod === '30days' ? 'Daily' :
+                 selectedPeriod === '4weeks' ? 'Weekly' :
+                 customBreakdown === 'day' ? 'Daily' :
+                 customBreakdown === 'week' ? 'Weekly' : 'Monthly'} breakdown
               </span>
             </div>
           </div>
@@ -299,53 +470,30 @@ const RevenuePage = () => {
               <div className="w-full h-full flex items-center justify-center">
                 <Loader />
               </div>
-            ) : ((selectedPeriod === '7days' && revenueChart7Days?.chartData && revenueChart7Days.chartData.length > 0) ||
-                  (selectedPeriod === '30days' && revenueChart30Days?.chartData && revenueChart30Days.chartData.length > 0) ||
-                  (selectedPeriod === '4weeks' && revenueChart4Weeks?.chartData && revenueChart4Weeks.chartData.length > 0)) ? (
-              <ResponsiveContainer width="100%" height="100%" key={selectedPeriod}>
-                <BarChart data={
-                  selectedPeriod === '7days' ? revenueChart7Days?.chartData :
-                  selectedPeriod === '30days' ? revenueChart30Days?.chartData :
-                  revenueChart4Weeks?.chartData
-                }>
+            ) : shouldShowChart ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(dateStr) => {
-                      if (selectedPeriod === '4weeks') {
-                        // For weekly data: "YYYY-WW" format
-                        const [, week] = dateStr.split('-');
-                        return `W${week}`;
-                      } else {
-                        // For daily data: "YYYY-MM-DD" format
-                        const date = new Date(dateStr);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                      }
-                    }}
+                    tickFormatter={tickFormatter}
                   />
                   <YAxis
                     tickFormatter={(value) => `LKR ${value.toLocaleString()}`}
                   />
                   <Tooltip
                     formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Earnings']}
-                    labelFormatter={(dateStr) => {
-                      if (selectedPeriod === '4weeks') {
-                        // For weekly data: "YYYY-WW" format
-                        const [year, week] = dateStr.split('-');
-                        return `Week ${week}, ${year}`;
-                      } else {
-                        // For daily data: "YYYY-MM-DD" format
-                        const date = new Date(dateStr);
-                        return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-                      }
-                    }}
+                    labelFormatter={labelFormatter}
                   />
                   <Bar dataKey="earnings" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-500">
-                No revenue data available for the selected period
+                {selectedPeriod === 'custom' && (!customStartDate || !customEndDate)
+                  ? 'Please select a date range to view the chart'
+                  : 'No revenue data available for the selected period'
+                }
               </div>
             )}
           </div>
