@@ -92,7 +92,7 @@ const BookingPage = () => {
         {/* Progress Steps */}
         <BookingProgressSteps currentStep={currentStep} steps={steps} />
         
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-20">
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             {/* Icon */}
             <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-orange-100 mb-8">
@@ -342,7 +342,7 @@ const BookingPage = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-20">
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
             {/* Success Icon */}
             <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-8">
