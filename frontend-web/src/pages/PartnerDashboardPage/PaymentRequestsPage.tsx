@@ -59,9 +59,9 @@ const PaymentRequestsPage = () => {
   );
 
   const formatCurrency = (amount: string) => {
-    // Remove $ if present and parse
-    const numericAmount = parseFloat(amount.replace('$', ''));
-    return `$${numericAmount.toFixed(2)}`;
+    // Remove LKR if present and parse
+    const numericAmount = parseFloat(amount.replace('LKR', '').replace(',', ''));
+    return `LKR${numericAmount.toFixed(2)}`;
   };
 
   return (

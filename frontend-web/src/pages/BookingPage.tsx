@@ -35,7 +35,6 @@ const BookingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(5);
 
   // Booking form data
   const [startDate, setStartDate] = useState('');
@@ -83,18 +82,6 @@ const BookingPage = () => {
       fetchBikes();
     }
   }, [currentStep, pickupLocation]);
-
-  // Countdown effect for success page
-  useEffect(() => {
-    if (bookingSuccess && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (bookingSuccess && countdown === 0) {
-      navigate('/dashboard');
-    }
-  }, [bookingSuccess, countdown, navigate]);
 
   // Show no bikes available page if no bikes found
   if(availableBikes.length === 0 && currentStep === 2 && !loading) {
@@ -295,6 +282,7 @@ const BookingPage = () => {
 
       const startDateTime = `${startDate}T${startTime || '09:00'}:00.000Z`;
       const endDateTime = `${endDate}T${endTime || '18:00'}:00.000Z`;
+      const totalPrice = calculateTotalPrice();
 
       const bookingPayload: CreateBookingRequest = {
         bikeId: selectedBike.id,
@@ -303,7 +291,8 @@ const BookingPage = () => {
         deliveryAddress: deliveryAddress || undefined,
         pickupLocation: pickupLocation?.name || undefined,
         dropoffLocation: `${selectedPartner.companyName} - ${selectedPartner.address || selectedPartner.mapLocation?.address || dropoffLocation?.name || 'Address not available'}`,
-        dropoffPartnerId: selectedPartner._id
+        dropoffPartnerId: selectedPartner._id,
+        totalAmount: totalPrice
       };
 
       const response = await bookingService.createBooking(bookingPayload);
@@ -313,7 +302,6 @@ const BookingPage = () => {
         // Booking created successfully
         console.log('Booking created:', response);
         setBookingSuccess(true);
-        setCountdown(5); // Reset countdown
       }
     
       
@@ -423,16 +411,12 @@ const BookingPage = () => {
                   setStartDate('');
                   setEndDate('');
                   setDeliveryAddress('');
+                  navigate('/dashboard');
                 }}
                 className="px-8 py-3 text-lg"
               >
                 Book Another Bike
               </Button>
-            </div>
-
-            {/* Countdown */}
-            <div className="text-gray-500 text-sm">
-              <p>Automatically redirecting to dashboard in <span className="font-semibold text-blue-600">{countdown}</span> seconds...</p>
             </div>
           </div>
         </div>

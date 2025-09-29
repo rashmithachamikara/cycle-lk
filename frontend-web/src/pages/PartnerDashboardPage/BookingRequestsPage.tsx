@@ -12,12 +12,16 @@ import {
 } from '../../services/bookingService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
+import { Partner } from '../../services/partnerService';
+import { authService } from '../../services/authService';
 
 const BookingRequestsPage = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<PartnerDashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [partnerDetails, setPartnerDetails] = useState<Partner | null>(null);
+  const [partnerLoading, setPartnerLoading] = useState(true);
   
   // Real-time events hook for partner
   const { 
@@ -44,6 +48,26 @@ const BookingRequestsPage = () => {
       setLoading(false);
     }
   };
+  
+    useEffect(() => {
+      const fetchPartnerDetails = async () => {
+        try {
+          setPartnerLoading(true);
+          if (user) {
+            const partnerDetails = await authService.getCurrentUserPartner();
+            setPartnerDetails(partnerDetails);
+            console.log('Fetched partner details:', partnerDetails);
+          }
+        } catch (error) {
+          console.error('Error fetching partner details:', error);
+          setPartnerDetails(null);
+        } finally {
+          setPartnerLoading(false);
+        }
+      };
+  
+      fetchPartnerDetails();
+    }, [user]);
 
   useEffect(() => {
     if (user && user.role === 'partner') {
@@ -145,6 +169,7 @@ const BookingRequestsPage = () => {
           
           <div className="p-6">
             <BookingRequests 
+            partner={partnerDetails}
               bookings={requestedBookings} 
               onBookingUpdate={fetchBookings}
             />

@@ -103,6 +103,8 @@ import EditBikePage from './pages/EditBikePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PartnerRegistrationPage from './pages/PartnerRegistrationPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
 import Notifications from './pages/Notifications';
 import InventoryPage from './pages/PartnerDashboardPage/InventoryPage';
 import DropBikePage from './pages/PartnerDashboardPage/DropBikePage';
@@ -166,6 +168,8 @@ function App() {
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="/dashboard" element={<ProtectedRoute element={<DashboardPage />} requiredRoles={["user"]} />} />
       <Route path="/payments" element={<ProtectedRoute element={<PaymentsPage />} requiredRoles={["user"]} />} />
+      <Route path="/payment-success" element={<PaymentSuccessPage />} />
+      <Route path="/payment-cancel" element={<PaymentCancelPage />} />
       <Route path="/booking-details/:id" element={<ProtectedRoute element={<BookingDetailsPage />} requiredRoles={["admin", "partner", "user"]} />} />
       <Route path="/bike/:id" element={<BikeDetailsPage />} />
       <Route path="/locations" element={<LocationsPage />} />

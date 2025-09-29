@@ -50,10 +50,10 @@ const CompletedRentalsPage = () => {
   const recentBookings = bookings.filter(booking => booking.status === 'completed');
 
   // Calculate total revenue from completed bookings
-  const totalRevenue = recentBookings.reduce((sum, booking) => {
-    const value = parseFloat(booking.value.replace('$', ''));
-    return sum + value;
-  }, 0);
+  // const totalRevenue = recentBookings.reduce((sum, booking) => {
+  //   const value = parseFloat(booking.value.replace('LKR', ''));
+  //   return sum + value;
+  // }, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,18 +74,18 @@ const CompletedRentalsPage = () => {
         </div>
 
         {/* Revenue Summary */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white mb-6">
+        {/* <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Total Revenue</h2>
               <p className="text-green-100">From {recentBookings.length} completed rentals</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold">${totalRevenue.toFixed(2)}</div>
+              <div className="text-3xl font-bold">LKR {totalRevenue.toFixed(2)}</div>
               <div className="text-green-100">This month</div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Error Display */}
         {error && (

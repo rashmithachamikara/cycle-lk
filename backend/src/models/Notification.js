@@ -8,7 +8,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['reminder', 'offer', 'system', 'partner', 'payment'],
+    enum: ['reminder', 'offer', 'system', 'partner', 'payment', 'owner'],
     required: true
   },
   title: {
@@ -43,6 +43,33 @@ const notificationSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Static method to validate notification type
+notificationSchema.statics.isValidType = function(type) {
+  return ['reminder', 'offer', 'system', 'partner', 'payment', 'owner'].includes(type);
+};
+
+// Static method to get all valid types
+notificationSchema.statics.getValidTypes = function() {
+  return ['reminder', 'offer', 'system', 'partner', 'payment', 'owner'];
+};
+
+// Pre-save middleware for additional validation
+notificationSchema.pre('save', function(next) {
+  // Validate notification type
+  if (!this.constructor.isValidType(this.type)) {
+    const error = new Error(`Invalid notification type: ${this.type}. Valid types are: ${this.constructor.getValidTypes().join(', ')}`);
+    return next(error);
+  }
+  
+  // Ensure required fields are present
+  if (!this.title || !this.message) {
+    const error = new Error('Title and message are required for notifications');
+    return next(error);
+  }
+  
+  next();
 });
 
 // Create indexes

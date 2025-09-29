@@ -18,6 +18,7 @@ const InventoryPage = () => {
             setIsLoading(true);
             setError(null);
             const bikeList = await bikeService.getMyBikes();
+            console.log('Fetched bikes:', bikeList);
             setBikes(bikeList);
         } catch (err) {
             setError('Failed to fetch bikes. Please try again.');

@@ -147,4 +147,5 @@ router.get('/me', auth(), partnerController.getCurrentPartner);
  */
 router.get('/user/:userId', partnerController.getPartnerByUserId);
 
+
 module.exports = router;

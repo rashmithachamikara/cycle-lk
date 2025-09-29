@@ -91,9 +91,14 @@ exports.getMyBikes = async (req, res) => {
     console.log(`User role: ${req.user.role}, User's Partner ID: ${req.user.partnerId}`);
 
     const partnerId = req.user.partnerId;
-    const bikes = await Bike.find({ partnerId: req.user.partnerId })
+    const bikes = await Bike.find({$or: [{ partnerId: req.user.partnerId }, { currentPartnerId: req.user.partnerId }] })
       .populate({
         path: 'currentPartnerId',
+        select: 'companyName email phone location',
+        populate: { path: 'location', select: 'name' }
+      })
+      .populate({
+        path: 'partnerId',
         select: 'companyName email phone location',
         populate: { path: 'location', select: 'name' }
       });

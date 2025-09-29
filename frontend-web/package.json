@@ -10,13 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@flaticon/flaticon-uicons": "^3.3.1",
     "@googlemaps/js-api-loader": "^1.16.10",
+    "@stripe/react-stripe-js": "^4.0.1",
+    "@stripe/stripe-js": "^7.9.0",
     "axios": "^1.9.0",
     "firebase": "^12.1.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.26.1"
   },
   "devDependencies": {

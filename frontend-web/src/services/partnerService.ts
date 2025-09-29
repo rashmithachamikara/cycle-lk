@@ -436,7 +436,6 @@ export const partnerService = {
       // Regular JSON data
       response = await api.post('/partners', partnerData);
     }
-
     return transformPartner(response.data);
   },
 

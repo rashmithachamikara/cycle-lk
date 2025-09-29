@@ -7,7 +7,11 @@ const app = express();
 // Import models
 const models = require('./models');
 
-// Middleware
+// Middleware - Special handling for Stripe webhook
+// Stripe webhook needs raw body, so we handle it before express.json()
+app.use('/api/payments/webhook', express.raw({type: 'application/json'}));
+
+// Regular JSON parsing for all other routes
 app.use(express.json());
 app.use(cors());
 
@@ -24,6 +28,7 @@ const partnerRoutes = require('./routes/partnerRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -39,6 +44,7 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/transactions', transactionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);

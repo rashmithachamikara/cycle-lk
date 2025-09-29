@@ -4,6 +4,13 @@ const paymentController = require('../controllers/paymentController');
 const { auth, admin } = require('../middleware/auth');
 
 /**
+ * @route   POST /api/payments/webhook
+ * @desc    Handle Stripe webhook events
+ * @access  Public (webhook)
+ */
+router.post('/webhook', paymentController.handleStripeWebhook);
+
+/**
  * @route   GET /api/payments
  * @desc    Get all payments with optional filtering
  * @access  Private
@@ -25,11 +32,53 @@ router.get('/stats', auth(), paymentController.getPaymentStats);
 router.get('/pending', auth(['user']), paymentController.getPendingPayments);
 
 /**
+ * @route   GET /api/payments/verify-session/:sessionId
+ * @desc    Verify Stripe session status
+ * @access  Private
+ */
+router.get('/verify-session/:sessionId', auth(), paymentController.verifyStripeSession);
+
+/**
  * @route   POST /api/payments/initial
  * @desc    Process initial payment for a booking
  * @access  Private (User only)
  */
 router.post('/initial', auth(['user']), paymentController.processInitialPayment);
+
+/**
+ * @route   POST /api/payments/initial-dev
+ * @desc    Process initial payment for a booking (Development/Test Mode)
+ * @access  Private (User only)
+ */
+router.post('/initial-dev', auth(['user']), paymentController.processInitialPaymentDev);
+
+/**
+ * @route   POST /api/payments/remaining
+ * @desc    Process remaining payment for a booking
+ * @access  Private (User and Partner)
+ */
+router.post('/remaining', auth(['user', 'partner']), paymentController.processRemainingPayment);
+
+/**
+ * @route   GET /api/payments/summary/:bookingId
+ * @desc    Get payment summary for a booking
+ * @access  Private
+ */
+router.get('/summary/:bookingId', auth(), paymentController.getBookingPaymentSummary);
+
+/**
+ * @route   POST /api/payments/dropoff-cash
+ * @desc    Process drop-off cash payment
+ * @access  Private (Partner only)
+ */
+router.post('/dropoff-cash', auth(['partner']), paymentController.processDropOffCashPayment);
+
+/**
+ * @route   POST /api/payments/dropoff-card
+ * @desc    Process drop-off card payment via Stripe
+ * @access  Private (Partner only)
+ */
+router.post('/dropoff-card', auth(['partner']), paymentController.processDropOffCardPayment);
 
 /**
  * @route   GET /api/payments/:id
