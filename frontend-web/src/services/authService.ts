@@ -60,6 +60,19 @@ export const authService = {
     const userData = JSON.parse(user);
     const response = await api.get(`/users/${userData.id}`);
     return response.data;
+  },
+  // Get current user's partner details (if any)
+  getCurrentUserPartner: async () => {
+    const user = localStorage.getItem('user');
+    if (!user) return null;
+    
+    try {
+      const response = await api.get(`/users/partner`);
+      return response.data; // Will be null if user has no partner profile
+    } catch (error) {
+      console.error('Error fetching user partner:', error);
+      return null; // Return null if there's an error
+    }
   }
 };
 

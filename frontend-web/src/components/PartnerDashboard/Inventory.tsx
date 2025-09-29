@@ -2,8 +2,10 @@
 import { Link } from 'react-router-dom';
 import { Search, PlusCircle, X, AlertTriangle, RefreshCw, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Bike } from '../../services/bikeService';
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/authService';
+import { Partner } from '../../services/partnerService';
 interface InventoryProps {
   showDeleteModal: boolean;
   setShowDeleteModal: (show: boolean) => void;
@@ -31,6 +33,8 @@ const Inventory = ({
 }: InventoryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [partnerDetails, setPartnerDetails] = useState<Partner | null>(null);
+  const [partnerLoading, setPartnerLoading] = useState(true);
 
   // Filter bikes based on search term
   const filteredBikes = Bikes.filter(bike =>
@@ -79,6 +83,28 @@ const Inventory = ({
     }
   };
 
+const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchPartnerDetails = async () => {
+      try {
+        setPartnerLoading(true);
+        if (user) {
+          const partnerDetails = await authService.getCurrentUserPartner();
+          setPartnerDetails(partnerDetails);
+          console.log('Fetched partner details:', partnerDetails);
+        }
+      } catch (error) {
+        console.error('Error fetching partner details:', error);
+        setPartnerDetails(null);
+      } finally {
+        setPartnerLoading(false);
+      }
+    };
+
+    fetchPartnerDetails();
+  }, [user]);
+
   return (
     <>
       <div>
@@ -122,7 +148,10 @@ const Inventory = ({
                   Bike Details
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
+                  Owner
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Currently At
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Location
@@ -167,11 +196,30 @@ const Inventory = ({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
-                      {bike.type}
+                      {partnerLoading ? (
+                        <span className="text-gray-400">Loading...</span>
+                      ) : partnerDetails && typeof bike.partner === 'object' && bike.partner && bike.partnerId === partnerDetails._id ? (
+                        <span className="text-green-600 font-medium">Owned by you</span>
+                      ) : typeof bike.partner === 'object' && bike.partner ? (
+                        bike.partner?.companyName || 'Unknown'
+                      ) : (
+                        'Unknown'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                       {partnerLoading ? (
+                        <span className="text-gray-400">Loading...</span>
+                      ) : partnerDetails && typeof bike.currentPartnerId === 'object' && bike.currentPartnerId && bike.currentPartnerId._id === partnerDetails._id ? (
+                        <span className="text-green-600 font-medium">At your Place</span>
+                      ) : typeof bike.currentPartnerId === 'object' && bike.currentPartnerId ? (
+                        bike.currentPartnerId?.companyName || 'Unknown'
+                      ) : (
+                        'Unknown'
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm capitalize" 
                          title={bike.location + 
-                           (typeof bike.currentPartnerId === 'object' && bike.currentPartnerId?.companyName 
+                           (typeof bike.currentPartnerId === 'object' && bike.currentPartnerId && bike.currentPartnerId?.companyName 
                              ? " - " + bike.currentPartnerId.companyName 
                              : "")}>
                       {bike.location}

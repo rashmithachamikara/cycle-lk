@@ -20,6 +20,14 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  totalBookingAmount: {
+    type: Number,
+    // Total amount for the entire booking
+  },
+  paymentPercentage: {
+    type: Number,
+    // Percentage of total amount (e.g., 20 for initial, 80 for remaining)
+  },
   currency: {
     type: String,
     default: 'USD'
@@ -27,6 +35,17 @@ const paymentSchema = new mongoose.Schema({
   method: {
     type: String,
     enum: ['card', 'bank_transfer', 'mobile_payment', 'credit_card', 'paypal', 'cash']
+  },
+  paymentType: {
+    type: String,
+    enum: ['initial', 'remaining', 'additional_charges', 'refund'],
+    required: true,
+    default: 'initial'
+  },
+  relatedPaymentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment',
+    // Links remaining payment to initial payment
   },
   status: {
     type: String,
@@ -42,6 +61,14 @@ const paymentSchema = new mongoose.Schema({
     expiryMonth: Number,
     expiryYear: Number
   },
+  additionalCharges: [{
+    type: {
+      type: String,
+      enum: ['damage', 'cleaning', 'late_return', 'fuel', 'other']
+    },
+    description: String,
+    amount: Number
+  }],
   refundInfo: {
     refunded: {
       type: Boolean,
@@ -61,7 +88,10 @@ const paymentSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
+}
+
+
+);
 
 // Create indexes
 paymentSchema.index({ bookingId: 1 });

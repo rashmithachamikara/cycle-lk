@@ -140,7 +140,7 @@ const PaymentCancelPage = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Payment Amount</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      ${(bookingDetails.pricing.total * 0.2).toFixed(2)}
+                      LKR {(bookingDetails.pricing.total * 0.2).toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-500">Initial payment (20%)</p>
                   </div>
