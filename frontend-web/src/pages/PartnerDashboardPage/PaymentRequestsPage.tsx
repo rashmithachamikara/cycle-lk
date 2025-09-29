@@ -61,7 +61,7 @@ const PaymentRequestsPage = () => {
   const formatCurrency = (amount: string) => {
     // Remove LKR if present and parse
     const numericAmount = parseFloat(amount.replace('LKR', '').replace(',', ''));
-    return `LKR${numericAmount.toFixed(2)}`;
+    return `LKR ${numericAmount.toFixed(2)}`;
   };
 
   return (
@@ -166,7 +166,7 @@ const PaymentRequestsPage = () => {
                       <div className="text-2xl font-bold text-yellow-600">
                         {formatCurrency(
                           paymentPendingBookings
-                            .reduce((sum, booking) => sum + parseFloat(booking.value.replace('$', '')), 0)
+                            .reduce((sum, booking) => sum + parseFloat(booking.value.replace('LKR', '')), 0)
                             .toString()
                         )}
                       </div>
