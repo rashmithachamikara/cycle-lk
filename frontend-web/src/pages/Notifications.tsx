@@ -15,13 +15,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/apiUtils';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
-import { Loader } from '../ui';
 import Footer from '../components/Footer';
 
 interface DatabaseNotification {
   _id: string;
   userId: string;
-  type: 'reminder' | 'offer' | 'system' | 'partner' | 'payment';
+  type: 'reminder' | 'offer' | 'system' | 'partner' | 'payment' | 'owner';
   title: string;
   message: string;
   relatedTo?: {
@@ -40,7 +39,7 @@ const NotificationsPage: React.FC = () => {
   const [filteredNotifications, setFilteredNotifications] = useState<DatabaseNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment' | 'owner'>('all');
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = useCallback(async () => {
@@ -165,6 +164,8 @@ const NotificationsPage: React.FC = () => {
         return <User className="h-5 w-5 text-purple-500" />;
       case 'payment':
         return <CreditCard className="h-5 w-5 text-orange-500" />;
+      case 'owner':
+        return <User className="h-5 w-5 text-emerald-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
@@ -176,13 +177,22 @@ const NotificationsPage: React.FC = () => {
     switch (notification.relatedTo.type) {
       case 'booking':
         if(user?.role === 'partner') {
-          return `/partner-dashboard/booking-requests`;
+          // Route to booking requests for new bookings, or booking details for specific bookings
+          if (notification.type === 'owner' && notification.title.toLowerCase().includes('drop-off')) {
+            return `/partner-dashboard/drop-off-bike`;
+          }
+          return `/partner-dashboard/booking-requests}`;
         } else if(user?.role === 'user') {
           return `/dashboard`;
         }
-     break;
+        break;
       case 'payment':
-        return '/payments';
+        if(user?.role === 'partner') {
+          return `/partner-dashboard/paymentRequests`;
+        } else {
+          return `/payments`;
+        }
+        break;
       case 'bike':
         return `/bike/${notification.relatedTo.id}`;
       default:
@@ -207,7 +217,7 @@ const NotificationsPage: React.FC = () => {
       <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
                     <div className="animate-pulse">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
@@ -236,7 +246,7 @@ const NotificationsPage: React.FC = () => {
     <>
       <Header />
       <div className="min-h-screen  pb-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  mt-28">
           {/* Header */}
           <div className="flex items-center justify-between my-8">
             <div>
@@ -277,7 +287,7 @@ const NotificationsPage: React.FC = () => {
 
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as 'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment')}
+                onChange={(e) => setTypeFilter(e.target.value as 'all' | 'reminder' | 'offer' | 'system' | 'partner' | 'payment' | 'owner')}
                 className="px-3 py-1 border border-gray-300 rounded-md text-sm"
               >
                 <option value="all">All Types</option>
@@ -286,6 +296,7 @@ const NotificationsPage: React.FC = () => {
                 <option value="system">System</option>
                 <option value="partner">Partner</option>
                 <option value="payment">Payment</option>
+                <option value="owner">Bike Owner</option>
               </select>
             </div>
           </div>
@@ -337,6 +348,7 @@ const NotificationsPage: React.FC = () => {
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               notification.type === 'payment' ? 'bg-orange-100 text-orange-800' :
                               notification.type === 'partner' ? 'bg-purple-100 text-purple-800' :
+                              notification.type === 'owner' ? 'bg-emerald-100 text-emerald-800' :
                               notification.type === 'offer' ? 'bg-green-100 text-green-800' :
                               notification.type === 'reminder' ? 'bg-blue-100 text-blue-800' :
                               'bg-gray-100 text-gray-800'

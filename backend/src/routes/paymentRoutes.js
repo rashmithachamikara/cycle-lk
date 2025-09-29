@@ -46,6 +46,13 @@ router.get('/verify-session/:sessionId', auth(), paymentController.verifyStripeS
 router.post('/initial', auth(['user']), paymentController.processInitialPayment);
 
 /**
+ * @route   POST /api/payments/initial-dev
+ * @desc    Process initial payment for a booking (Development/Test Mode)
+ * @access  Private (User only)
+ */
+router.post('/initial-dev', auth(['user']), paymentController.processInitialPaymentDev);
+
+/**
  * @route   POST /api/payments/remaining
  * @desc    Process remaining payment for a booking
  * @access  Private (User and Partner)

@@ -38,7 +38,7 @@ const Notifications = () => {
       const response = await api.get('/notifications', {
         params: {
           userId: user.id,
-          limit: 5 // Only get recent 5 for sidebar
+          limit: 4 // Only get recent 5 for sidebar
         }
       });
       

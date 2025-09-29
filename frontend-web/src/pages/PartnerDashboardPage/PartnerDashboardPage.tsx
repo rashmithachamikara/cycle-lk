@@ -9,14 +9,14 @@ import {
   Bike, 
   Star, 
   Users,
-  BarChart3,
   TrendingUp,
   Clock,
   CheckCircle,
   FileText,
   ArrowRight,
   CreditCard,
-  Rows4  
+  Rows4,  
+  BarChart3
 } from 'lucide-react';
 import { Loader } from '../../ui';
 
@@ -76,18 +76,29 @@ const PartnerDashboardPage = () => {
   };
 
   useEffect(() => {
+    console.log('[PartnerDashboard] User state changed:', {
+      user: user ? {
+        id: user.id,
+        role: user.role,
+        firstName: user.firstName,
+        email: user.email
+      } : null
+    });
+    
     if (user && user.role === 'partner') {
+      console.log('[PartnerDashboard] Initializing for partner user:', user.id);
       fetchBookings();
       
       // Initialize notification integration service
       notificationIntegrationService.initialize(user.id, 'partner')
         .then(() => {
-          console.log('Partner notification integration initialized');
+          console.log('[PartnerDashboard] Partner notification integration initialized successfully');
         })
         .catch((error) => {
-          console.error('Failed to initialize partner notification integration:', error);
+          console.error('[PartnerDashboard] Failed to initialize partner notification integration:', error);
         });
     } else {
+      console.log('[PartnerDashboard] User is not a partner or not logged in');
       // If not a partner, set to empty and stop loading
       setBookings([]);
       setLoading(false);
@@ -95,32 +106,46 @@ const PartnerDashboardPage = () => {
 
     // Cleanup on unmount
     return () => {
+      console.log('[PartnerDashboard] Cleaning up notification integration');
       notificationIntegrationService.cleanup();
     };
   }, [user]);
 
   // Handle real-time new booking requests
   useEffect(() => {
+    console.log('[PartnerDashboard] Real-time events state:', {
+      newBookingRequestsCount: newBookingRequests.length,
+      realtimeConnected,
+      events: newBookingRequests.map(req => ({
+        id: req.id,
+        type: req.type,
+        targetUserId: req.targetUserId,
+        targetUserRole: req.targetUserRole
+      }))
+    });
+    
     if (newBookingRequests.length > 0) {
-      console.log('Processing real-time booking requests:', newBookingRequests);
+      console.log('[PartnerDashboard] Processing real-time booking requests:', newBookingRequests);
       
       // Refresh bookings when we get new requests
       const refreshBookings = async () => {
         try {
+          console.log('[PartnerDashboard] Refreshing bookings due to real-time events');
           const backendBookings: BackendBooking[] = await bookingService.getMyBookings();
           const transformedBookings = backendBookings.map(transformBookingForPartnerDashboard);
           setBookings(transformedBookings);
           
           // Clear processed requests after refreshing
+          console.log('[PartnerDashboard] Clearing processed requests');
           clearProcessedRequests();
         } catch (err) {
-          console.error('Error refreshing bookings after real-time update:', err);
+          console.error('[PartnerDashboard] Error refreshing bookings after real-time update:', err);
         }
       };
 
       refreshBookings();
     }
-  }, [newBookingRequests, clearProcessedRequests]);
+  }, [newBookingRequests, clearProcessedRequests, realtimeConnected]);
 
   useEffect(() => {
     // Fetch partner profile for approval status
@@ -128,10 +153,18 @@ const PartnerDashboardPage = () => {
       try {
         setPartnerLoading(true);
         if (user && user.role === 'partner') {
+          console.log('[PartnerDashboard] Fetching partner profile for user:', user.id);
           const partnerData = await partnerService.getPartnerByUserId(user.id);
+          console.log('[PartnerDashboard] Partner profile loaded:', {
+            partnerId: partnerData?.id,
+            companyName: partnerData?.companyName,
+            status: partnerData?.status,
+            userId: partnerData?.userId
+          });
           setPartner(partnerData);
         }
-      } catch {
+      } catch (error) {
+        console.error('[PartnerDashboard] Error fetching partner profile:', error);
         setPartner(null);
       } finally {
         setPartnerLoading(false);
@@ -146,11 +179,11 @@ const PartnerDashboardPage = () => {
   const recentBookings = bookings.filter(booking => booking.status === 'completed');
   const paymentRequests = bookings.filter(booking => booking.status === 'confirmed' && booking.paymentStatus === 'pending');
 
-  // Calculate total revenue from completed bookings
-  const totalRevenue = recentBookings.reduce((sum, booking) => {
-    const value = parseFloat(booking.value.replace('$', ''));
-    return sum + value;
-  }, 0);
+  // Calculate total revenue from completed bookings (for future use)
+  // const totalRevenue = recentBookings.reduce((sum, booking) => {
+  //   const value = parseFloat(booking.value.replace('LKR', ''));
+  //   return sum + value;
+  // }, 0);
 
   // Approval status check
   if (partnerLoading || loading) {
@@ -169,7 +202,7 @@ const PartnerDashboardPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-xl mx-auto px-4 py-24 text-center">
+        <div className="max-w-xl mx-auto mt-20 px-4 py-24 text-center">
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
             <Clock className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Waiting for Approval</h2>
@@ -191,8 +224,7 @@ const PartnerDashboardPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Real-time Connection Status */}
+      <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
         {!realtimeConnected && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
             <div className="text-yellow-800 text-sm">
@@ -268,7 +300,7 @@ const PartnerDashboardPage = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Quick Stats */}
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -295,23 +327,11 @@ const PartnerDashboardPage = () => {
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Star className="h-6 w-6 text-yellow-600" />
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">4.7</div>
-                    <div className="text-sm text-gray-600">Avg Rating</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-center">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">${totalRevenue.toFixed(0)}</div>
+                    <div className="text-2xl font-bold text-gray-900">LKR 12,450</div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
@@ -416,7 +436,7 @@ const PartnerDashboardPage = () => {
             </div>
 
             {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 mt-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
                 <div className="flex items-center space-x-2">
@@ -469,10 +489,10 @@ const PartnerDashboardPage = () => {
             <Notifications />
 
             {/* Upcoming Events */}
-            <UpcomingEvents />
+            {/* <UpcomingEvents /> */}
 
             {/* Analytics Summary */}
-            <MonthlySnapshot />
+            {/* <MonthlySnapshot /> */}
           </div>
         </div>
       </div>

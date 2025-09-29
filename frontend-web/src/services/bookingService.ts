@@ -10,6 +10,51 @@ export interface BookingFilterParams {
   endDate?: string;
 }
 
+// Interface for additional charges
+export interface AdditionalCharge {
+  type: 'damage' | 'cleaning' | 'late_return' | 'fuel' | 'other';
+  description: string;
+  amount: number;
+}
+
+// Interface for payment information
+export interface PaymentInfo {
+  paymentId?: string;
+  amount?: number;
+  percentage?: number;
+  status: 'pending' | 'completed' | 'failed';
+  transactionId?: string;
+  paidAt?: string;
+  stripeSessionId?: string;
+  additionalCharges?: AdditionalCharge[];
+}
+
+// Interface for booking payments
+export interface BookingPayments {
+  initial: PaymentInfo;
+  remaining: PaymentInfo;
+}
+
+// Interface for legacy payment info
+export interface LegacyPaymentInfo {
+  method?: string;
+  transactionId?: string;
+  paid: boolean;
+  paymentDate?: string;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
+}
+
+// Interface for payment summary (virtual field)
+export interface PaymentSummary {
+  initialPaid: boolean;
+  remainingPaid: boolean;
+  isFullyPaid: boolean;
+  totalPaid: number;
+  totalAdditionalCharges: number;
+  nextPaymentDue: 'initial' | 'remaining' | null;
+}
+
 // Interface for booking data from backend (matches Booking model)
 export interface BackendBooking {
   _id: string;
@@ -36,6 +81,13 @@ export interface BackendBooking {
     location: string;
   };
   partnerId: {
+    _id: string;
+    companyName: string;
+    email: string;
+    phone: string;
+    location: string;
+  };
+  currentBikePartnerId?: {
     _id: string;
     companyName: string;
     email: string;
@@ -72,13 +124,10 @@ export interface BackendBooking {
     location: string;
   };
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
-  paymentInfo?: {
-    method?: string;
-    transactionId?: string;
-    paid: boolean;
-    paymentDate?: string;
-  };
+  paymentStatus: 'pending' | 'processing' | 'partial_paid' | 'fully_paid' | 'refunded' | 'failed';
+  payments: BookingPayments;
+  paymentInfo?: LegacyPaymentInfo;
+  paymentSummary?: PaymentSummary;
   review?: {
     rating?: number;
     comment?: string;
@@ -93,7 +142,7 @@ export interface BackendBooking {
 // Interface for partner dashboard booking display
 export interface PartnerDashboardBooking {
   id: string;
-  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
+  paymentStatus: 'pending' | 'processing' | 'partial_paid' | 'fully_paid' | 'refunded' | 'failed';
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -109,16 +158,25 @@ export interface PartnerDashboardBooking {
   dropoffLocation: string;
   dropoffPartner?: string;
   dropoffPartnerId?: string;
+  currentBikePartnerId?: string;
+  currentBikePartnerName?: string;
   dropoffPartnerPhone?: string;
   packageType: string;
   rating?: number;
+  paymentSummary?: {
+    initialPaid: boolean;
+    remainingPaid: boolean;
+    isFullyPaid: boolean;
+    totalPaid: number;
+    nextPaymentDue: 'initial' | 'remaining' | null;
+  };
 }
 
 export interface UserDashboardBooking {
   id: string;
   bikeName: string;
   bikeImages: string[];
-  paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
+  paymentStatus: 'pending' | 'processing' | 'partial_paid' | 'fully_paid' | 'refunded' | 'failed';
   startDate: string;
   endDate: string;
   status: 'requested' | 'confirmed' | 'active' | 'completed' | 'cancelled';
@@ -134,6 +192,13 @@ export interface UserDashboardBooking {
   partner?: string; // Partner name
   partnerPhone?: string; // Partner phone
   review?: string; // User review text
+  paymentSummary?: {
+    initialPaid: boolean;
+    remainingPaid: boolean;
+    isFullyPaid: boolean;
+    totalPaid: number;
+    nextPaymentDue: 'initial' | 'remaining' | null;
+  };
 }
 
 // Interface for new booking data
@@ -169,7 +234,7 @@ export interface CreateBookingRequest{
 export const transformBookingForPartnerDashboard = (booking: BackendBooking): PartnerDashboardBooking => {
   return {
     id: booking._id,
-    paymentStatus: booking.paymentStatus || 'Unknown',
+    paymentStatus: booking.paymentStatus || 'pending',
     customerName: booking.userId ? `${booking.userId.firstName} ${booking.userId.lastName}` : 'Unknown Customer',
     customerPhone: booking.userId?.phone || '',
     customerEmail: booking.userId?.email || '',
@@ -178,8 +243,8 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     bikeImages: booking.bikeId?.images || [],
     startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
     endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
-    status: booking.status || 'unknown',
-    value: booking.pricing?.total ? `$${booking.pricing.total}` : '$0',
+    status: booking.status || 'requested',
+    value: booking.pricing?.total ? `LKR ${booking.pricing.total}` : 'LKR 0',
     bookingNumber: booking.bookingNumber || '',
     pickupLocation: booking.locations?.pickup || '',
     dropoffLocation: booking.locations?.dropoff || '',
@@ -187,9 +252,22 @@ export const transformBookingForPartnerDashboard = (booking: BackendBooking): Pa
     dropoffPartnerId: typeof booking.dropoffPartnerId === 'string' 
       ? booking.dropoffPartnerId 
       : booking.dropoffPartnerId?._id || '',
+    currentBikePartnerId: typeof booking.currentBikePartnerId === 'string'
+      ? booking.currentBikePartnerId
+      : booking.currentBikePartnerId?._id || '',
+    currentBikePartnerName: booking.currentBikePartnerId?.companyName || '',
     dropoffPartnerPhone: booking.dropoffPartnerId?.phone || '',
     packageType: booking.package?.name || '',
-    rating: booking.review?.rating
+    rating: booking.review?.rating,
+    paymentSummary: booking.paymentSummary || {
+      initialPaid: booking.payments?.initial?.status === 'completed',
+      remainingPaid: booking.payments?.remaining?.status === 'completed',
+      isFullyPaid: booking.payments?.initial?.status === 'completed' && booking.payments?.remaining?.status === 'completed',
+      totalPaid: (booking.payments?.initial?.status === 'completed' ? booking.payments?.initial?.amount || 0 : 0) +
+                 (booking.payments?.remaining?.status === 'completed' ? booking.payments?.remaining?.amount || 0 : 0),
+      nextPaymentDue: booking.payments?.initial?.status !== 'completed' ? 'initial' : 
+                      (booking.payments?.remaining?.status !== 'completed' ? 'remaining' : null)
+    }
   };
 };
 
@@ -201,22 +279,35 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       id: booking._id || '',
       bikeImages: booking.bikeId?.images || [],
       bikeName: booking.bikeId?.name || 'Unknown Bike',
-      paymentStatus: booking.paymentStatus || 'Unknown',
+      paymentStatus: booking.paymentStatus || 'pending',
       startDate: booking.dates?.startDate ? new Date(booking.dates.startDate).toLocaleDateString() : '',
       endDate: booking.dates?.endDate ? new Date(booking.dates.endDate).toLocaleDateString() : '',
       status: booking.status || 'requested',
-      value: booking.pricing?.total ? `$${booking.pricing.total}` : '$0',
+      value: booking.pricing?.total ? `LKR ${booking.pricing.total}` : 'LKR 0',
       bookingNumber: booking.bookingNumber || '',
       pickupLocation: booking.locations?.pickup || '',
       dropoffLocation: booking.locations?.dropoff || '',
       dropoffPartner: booking.dropoffPartnerId?.companyName || 'Unknown Partner',
       dropoffPartnerPhone: booking.dropoffPartnerId?.phone || '',
+      currentBikePartnerId: typeof booking.currentBikePartnerId === 'string'
+        ? booking.currentBikePartnerId
+        : booking.currentBikePartnerId?._id || '',
+      currentBikePartnerName: booking.currentBikePartnerId?.companyName || '',
       packageType: booking.package?.name || '',
       rating: booking.review?.rating,
       location: booking.locations?.pickup || '', // For backward compatibility
       partner: booking.partnerId?.companyName || 'Unknown Partner',
       partnerPhone: booking.partnerId?.phone || '',
-      review: booking.review?.comment || ''
+      review: booking.review?.comment || '',
+      paymentSummary: booking.paymentSummary || {
+        initialPaid: booking.payments?.initial?.status === 'completed',
+        remainingPaid: booking.payments?.remaining?.status === 'completed',
+        isFullyPaid: booking.payments?.initial?.status === 'completed' && booking.payments?.remaining?.status === 'completed',
+        totalPaid: (booking.payments?.initial?.status === 'completed' ? booking.payments?.initial?.amount || 0 : 0) +
+                   (booking.payments?.remaining?.status === 'completed' ? booking.payments?.remaining?.amount || 0 : 0),
+        nextPaymentDue: booking.payments?.initial?.status !== 'completed' ? 'initial' : 
+                        (booking.payments?.remaining?.status !== 'completed' ? 'remaining' : null)
+      }
     };
     
     console.log('Transform function output:', transformed);
@@ -228,13 +319,13 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
     // Return a safe fallback object
     return {
       id: booking._id || 'unknown',
-      paymentStatus: booking.paymentStatus || 'Unknown',
+      paymentStatus: booking.paymentStatus || 'pending',
       bikeName: 'Unknown Bike',
       bikeImages: [],
       startDate: '',
       endDate: '',
       status: 'requested' as const,
-      value: '$0',
+      value: 'LKR 0',
       bookingNumber: '',
       pickupLocation: '',
       dropoffLocation: '',
@@ -244,7 +335,14 @@ export const transformBookingForUserDashboard = (booking: BackendBooking): UserD
       location: '',
       partner: 'Unknown Partner',
       partnerPhone: '',
-      review: ''
+      review: '',
+      paymentSummary: {
+        initialPaid: false,
+        remainingPaid: false,
+        isFullyPaid: false,
+        totalPaid: 0,
+        nextPaymentDue: 'initial'
+      }
     };
   }
 };

@@ -129,9 +129,15 @@ class NotificationIntegrationService {
         }
         break;
 
-      case EventType.NEW_DROPOFF:
+      case EventType.NEW_BOOKING_CREATED_FOR_OWNER:
         if (this.userRole === 'partner') {
-          toast.success('A new drop-off has been scheduled!');
+          toast.success('A New booking has been created for your Bike!');
+        } 
+        break;
+
+      case EventType.NEW_DROPOFF_BOOKING:
+        if (this.userRole === 'partner') {
+          toast.success('A new drop-off booking has been scheduled for you!');
         }
         break;
 

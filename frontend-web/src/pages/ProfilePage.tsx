@@ -1,10 +1,9 @@
-// //frontend-web/src/pages/ProfilePage.tsx
+//frontend-web/src/pages/ProfilePage.tsx
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { 
   User, 
-  Calendar, 
   CreditCard,
   Bell,
   Shield,
@@ -68,7 +67,15 @@ const ProfilePage = () => {
     fetchUserProfile();
   }, [user]);
 
-  const [notifications, setNotifications] = useState({
+  interface NotificationSettings {
+    bookingUpdates: boolean;
+    promotions: boolean;
+    partnerNews: boolean;
+    smsNotifications: boolean;
+    emailDigest: boolean;
+  }
+
+  const [notifications, setNotifications] = useState<NotificationSettings>({
     bookingUpdates: true,
     promotions: false,
     partnerNews: true,
@@ -119,7 +126,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handleNotificationChange = (key: string) => {
+  const handleNotificationChange = (key: keyof NotificationSettings) => {
     setNotifications(prev => ({
       ...prev,
       [key]: !prev[key]
@@ -130,7 +137,7 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
@@ -430,33 +437,33 @@ const ProfilePage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-8">Notification Preferences</h2>
 
                 <div className="space-y-6">
-                  {[
+                  {([
                     {
-                      key: 'bookingUpdates',
+                      key: 'bookingUpdates' as keyof NotificationSettings,
                       title: 'Booking Updates',
                       description: 'Get notified about booking confirmations, changes, and reminders'
                     },
                     {
-                      key: 'promotions',
+                      key: 'promotions' as keyof NotificationSettings,
                       title: 'Promotions & Offers',
                       description: 'Receive special offers and promotional deals'
                     },
                     {
-                      key: 'partnerNews',
+                      key: 'partnerNews' as keyof NotificationSettings,
                       title: 'Partner News',
                       description: 'Updates from our partner bike rental shops'
                     },
                     {
-                      key: 'smsNotifications',
+                      key: 'smsNotifications' as keyof NotificationSettings,
                       title: 'SMS Notifications',
                       description: 'Receive important updates via SMS'
                     },
                     {
-                      key: 'emailDigest',
+                      key: 'emailDigest' as keyof NotificationSettings,
                       title: 'Weekly Email Digest',
                       description: 'Weekly summary of your activity and recommendations'
                     }
-                  ].map((item) => (
+                  ] as const).map((item) => (
                     <div key={item.key} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
                       <div>
                         <h3 className="font-semibold text-gray-900">{item.title}</h3>
@@ -465,14 +472,14 @@ const ProfilePage = () => {
                       <button
                         onClick={() => handleNotificationChange(item.key)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          notifications[item.key as keyof typeof notifications]
+                          notifications[item.key]
                             ? 'bg-emerald-500'
                             : 'bg-gray-200'
                         }`}
                       >
                         <span
                           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            notifications[item.key as keyof typeof notifications]
+                            notifications[item.key]
                               ? 'translate-x-6'
                               : 'translate-x-1'
                           }`}
@@ -1250,4 +1257,3 @@ export default ProfilePage;
 // };
 
 // export default ProfilePage;
-
