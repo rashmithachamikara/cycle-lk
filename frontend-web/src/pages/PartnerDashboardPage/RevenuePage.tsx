@@ -170,6 +170,13 @@ const RevenuePage = () => {
     }
   }, [filters]);
 
+  // Load initial transactions when component mounts
+  useEffect(() => {
+    if (user && user.role === 'partner') {
+      fetchTransactions(1);
+    }
+  }, [user, fetchTransactions]);
+
   // Memoized formatter functions to prevent unnecessary re-renders
   const tickFormatter = useCallback((dateStr: string) => {
     const breakdown = selectedPeriod === '7days' ? 'day' :
