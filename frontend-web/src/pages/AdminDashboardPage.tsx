@@ -9,6 +9,7 @@ import SupportTab from '../components/AdminDashboard/SupportTab';
 import ReportsTab from '../components/AdminDashboard/ReportsTab';
 import SettingsTab from '../components/AdminDashboard/SettingsTab';
 import { partnerService, Partner } from '../services/partnerService';
+import transactionService, { MonthlyTotalRevenue } from '../services/transactionService';
 import { 
   Settings,
   BarChart3,
@@ -26,6 +27,10 @@ const AdminDashboardPage = () => {
   const [isLoadingPartners, setIsLoadingPartners] = useState(true);
   const [partnersError, setPartnersError] = useState<string | null>(null);
   const [approvingPartners, setApprovingPartners] = useState<Set<string>>(new Set());
+  
+  // Monthly total revenue state
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyTotalRevenue | null>(null);
+  const [isLoadingRevenue, setIsLoadingRevenue] = useState(true);
 
   // Mock data
   const users = [
@@ -112,6 +117,49 @@ const AdminDashboardPage = () => {
     fetchPartners();
   }, []);
 
+  // Fetch monthly total revenue data
+  useEffect(() => {
+    const fetchMonthlyRevenue = async () => {
+      try {
+        setIsLoadingRevenue(true);
+        
+        // Get current month and year
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // JS months are 0-based, but API expects 1-based
+        
+        const revenueData = await transactionService.getMonthlyTotalRevenue({
+          year: currentYear,
+          month: currentMonth
+        });
+        setMonthlyRevenue(revenueData);
+      } catch (error) {
+        console.error('Error fetching monthly total revenue:', error);
+        // Set fallback revenue data if fetch fails
+        setMonthlyRevenue({
+          totalRevenue: 0,
+          transactionCount: 0,
+          ownerEarnings: 0,
+          pickupEarnings: 0,
+          platformFees: 0,
+          bonusPayments: 0,
+          referralCommissions: 0,
+          period: {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            startDate: '',
+            endDate: ''
+          },
+          recentTransactions: []
+        });
+      } finally {
+        setIsLoadingRevenue(false);
+      }
+    };
+
+    fetchMonthlyRevenue();
+  }, []);
+
   // Handle tab switching from URL parameters
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -134,8 +182,9 @@ const AdminDashboardPage = () => {
     totalUsers: 1245,
     totalPartners: partners.length,
     totalBikes: partners.reduce((sum, partner) => sum + (partner.bikeCount || 0), 0),
-    totalRevenue: 142350,
-    pendingApprovals: pendingPartners.length
+    totalRevenue: monthlyRevenue?.totalRevenue || 0,
+    pendingApprovals: pendingPartners.length,
+    isLoadingRevenue
   };
 
   // Handle partner approval

@@ -18,6 +18,7 @@ interface OverviewTabProps {
     totalBikes: number;
     totalRevenue: number;
     pendingApprovals: number;
+    isLoadingRevenue?: boolean;
   };
   onTabChange: (tabId: string) => void;
 }
@@ -69,8 +70,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ systemStats, onTabChange }) =
               <CreditCard className="h-6 w-6 text-amber-600" />
             </div>
             <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">${(systemStats.totalRevenue/1000).toFixed(1)}k</div>
-              <div className="text-sm text-gray-600">Total Revenue</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {systemStats.isLoadingRevenue ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+                ) : (
+                  `LKR ${systemStats.totalRevenue.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-sm text-gray-600">Monthly Total Revenue</div>
             </div>
           </div>
         </div>

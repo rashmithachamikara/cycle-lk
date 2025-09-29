@@ -39,6 +39,13 @@ router.get('/balance/:partnerId', auth(), transactionController.calculatePartner
 router.get('/platform/revenue', auth(), admin, transactionController.getPlatformRevenue);
 
 /**
+ * @route   GET /api/transactions/monthly/total-revenue
+ * @desc    Get total monthly revenue from all earnings transactions
+ * @access  Private/Admin
+ */
+router.get('/monthly/total-revenue', auth(), admin, transactionController.getMonthlyTotalRevenue);
+
+/**
  * @route   GET /api/transactions/monthly-earnings/:partnerId
  * @desc    Get monthly earnings for a partner
  * @access  Private

@@ -39,6 +39,29 @@ export interface TransactionsResponse {
   totalCount: number;
 }
 
+export interface PlatformRevenue {
+  totalRevenue: number;
+  transactionCount: number;
+  recentTransactions: Transaction[];
+}
+
+export interface MonthlyTotalRevenue {
+  totalRevenue: number;
+  transactionCount: number;
+  ownerEarnings: number;
+  pickupEarnings: number;
+  platformFees: number;
+  bonusPayments: number;
+  referralCommissions: number;
+  period: {
+    year: number;
+    month: number;
+    startDate: string;
+    endDate: string;
+  };
+  recentTransactions: Transaction[];
+}
+
 class TransactionService {
   // Get monthly earnings summary for a partner
   async getMyMonthlyEarnings(): Promise<MonthlyEarnings> {
@@ -107,6 +130,44 @@ class TransactionService {
       return response.data;
     } catch (error) {
       console.error('Error fetching transactions:', error);
+      throw error;
+    }
+  }
+
+  // Get platform revenue (admin only)
+  async getPlatformRevenue(params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<PlatformRevenue> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params?.startDate) queryParams.append('startDate', params.startDate);
+      if (params?.endDate) queryParams.append('endDate', params.endDate);
+
+      const response = await apiUtils.get(`/transactions/platform/revenue?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching platform revenue:', error);
+      throw error;
+    }
+  }
+
+  // Get monthly total revenue from all earnings (admin only)
+  async getMonthlyTotalRevenue(params?: {
+    year?: number;
+    month?: number;
+  }): Promise<MonthlyTotalRevenue> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params?.year) queryParams.append('year', params.year.toString());
+      if (params?.month) queryParams.append('month', params.month.toString());
+
+      const response = await apiUtils.get(`/transactions/monthly/total-revenue?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching monthly total revenue:', error);
       throw error;
     }
   }

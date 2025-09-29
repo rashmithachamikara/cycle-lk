@@ -288,6 +288,107 @@ exports.getPlatformRevenue = async (req, res) => {
 };
 
 /**
+ * Get total monthly revenue from all earnings transactions
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMonthlyTotalRevenue = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    
+    // Default to current month if not specified
+    const now = new Date();
+    const targetYear = year ? parseInt(year) : now.getFullYear();
+    const targetMonth = month ? parseInt(month) - 1 : now.getMonth(); // JS months are 0-based
+    
+    const startDate = new Date(targetYear, targetMonth, 1);
+    const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999); // Last day of month
+    
+    const aggregationResult = await Transaction.aggregate([
+      {
+        $match: {
+          category: 'earning', // Only earnings transactions
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount' },
+          transactionCount: { $sum: 1 },
+          ownerEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'owner_earnings'] }, '$amount', 0]
+            }
+          },
+          pickupEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'pickup_earnings'] }, '$amount', 0]
+            }
+          },
+          platformFees: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'platform_fee'] }, '$amount', 0]
+            }
+          },
+          bonusPayments: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'bonus_payment'] }, '$amount', 0]
+            }
+          },
+          referralCommissions: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'referral_commission'] }, '$amount', 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const revenue = aggregationResult[0] || {
+      totalRevenue: 0,
+      transactionCount: 0,
+      ownerEarnings: 0,
+      pickupEarnings: 0,
+      platformFees: 0,
+      bonusPayments: 0,
+      referralCommissions: 0
+    };
+
+    // Get recent transactions for details
+    const recentTransactions = await Transaction.find({
+      category: 'earning',
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    })
+      .populate('partnerId', 'companyName')
+      .populate('paymentId', 'amount paymentType')
+      .populate('bookingId', 'bookingNumber')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json({
+      ...revenue,
+      period: {
+        year: targetYear,
+        month: targetMonth + 1,
+        startDate,
+        endDate
+      },
+      recentTransactions
+    });
+  } catch (error) {
+    console.error('Error fetching monthly total revenue:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
  * Create manual transaction (for withdrawals, penalties, etc.)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
