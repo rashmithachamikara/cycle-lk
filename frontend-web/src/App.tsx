@@ -21,7 +21,8 @@ import {
   BookingRequestsPage,
   CompletedRentalsPage,
   PaymentRequestsPage,
-  BikeLocations
+  BikeLocations,
+  RevenuePage
 } from './pages/PartnerDashboardPage';
 import BookingRequestDetailPage from './pages/BookingRequestDetailPage';
 import CurrentRentalDetailPage from './pages/CurrentRentalDetailPage';
@@ -119,6 +120,7 @@ function App() {
       <Route path="/partner-dashboard/paymentRequests" element={<ProtectedRoute element={<PaymentRequestsPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/inventory" element={<ProtectedRoute element={<InventoryPage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/bike-locations" element={<ProtectedRoute element={<BikeLocations />} requiredRole="partner" />} />
+      <Route path="/partner-dashboard/revenue" element={<ProtectedRoute element={<RevenuePage />} requiredRole="partner" />} />
       <Route path="/partner-dashboard/drop-off-bike" element={<ProtectedRoute element={<DropBikePage />} requiredRole="partner" />} />
       
       {/* Partner detail pages */}

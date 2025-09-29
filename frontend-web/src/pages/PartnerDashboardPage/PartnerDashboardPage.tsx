@@ -29,7 +29,7 @@ import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
-import transactionService, { MonthlyEarnings, Last7DaysRevenueChart } from '../../services/transactionService';
+import transactionService, { MonthlyEarnings, RevenueChart } from '../../services/transactionService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PartnerDashboardPage = () => {
@@ -41,7 +41,7 @@ const PartnerDashboardPage = () => {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [partnerLoading, setPartnerLoading] = useState(true);
   const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarnings | null>(null);
-  const [revenueChart, setRevenueChart] = useState<Last7DaysRevenueChart | null>(null);
+  const [revenueChart, setRevenueChart] = useState<RevenueChart | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
   
@@ -70,7 +70,7 @@ const PartnerDashboardPage = () => {
   const fetchChartData = async () => {
     try {
       setChartLoading(true);
-      const chartData = await transactionService.getMyLast7DaysRevenueChart();
+      const chartData = await transactionService.getMyRevenueChart({ period: 'day', limit: 7 });
       setRevenueChart(chartData);
     } catch (err) {
       console.error('Error fetching chart data:', err);
@@ -542,6 +542,12 @@ const PartnerDashboardPage = () => {
                   className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:border-blue-500 transition-colors font-medium text-center block"
                 >
                   My Bike Locations
+                </Link>
+                <Link
+                  to="/partner-dashboard/revenue"
+                  className="w-full border border-purple-300 text-purple-700 py-3 px-4 rounded-lg hover:border-purple-500 transition-colors font-medium text-center block"
+                >
+                  Revenue
                 </Link>
               </div>
             </div>

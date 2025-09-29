@@ -699,11 +699,11 @@ exports.getMyMonthlyRevenueChart = async (req, res) => {
 };
 
 /**
- * Get current user's last 7 days revenue chart (for partners)
+ * Get current user's revenue chart with flexible period grouping (for partners)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getMyLast7DaysRevenueChart = async (req, res) => {
+exports.getMyRevenueChart = async (req, res) => {
   try {
     // Only partners can access their own chart data
     if (req.user.role !== 'partner') {
@@ -711,29 +711,78 @@ exports.getMyLast7DaysRevenueChart = async (req, res) => {
     }
 
     const partnerId = req.user.partnerId;
+    const { period = 'day', limit = 7, startDate, endDate } = req.query;
 
-    // Get last 7 days
-    const now = new Date();
-    const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0); // 7 days ago
+    // Validate period
+    const validPeriods = ['day', 'week', 'month'];
+    if (!validPeriods.includes(period)) {
+      return res.status(400).json({ message: 'Invalid period. Must be one of: day, week, month' });
+    }
 
-    const dailyRevenue = await Transaction.aggregate([
+    // Validate limit
+    const limitNum = parseInt(limit);
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 365) {
+      return res.status(400).json({ message: 'Invalid limit. Must be a number between 1 and 365' });
+    }
+
+    let startDateObj, endDateObj;
+
+    if (startDate && endDate) {
+      // Custom date range
+      startDateObj = new Date(startDate);
+      endDateObj = new Date(endDate);
+      if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+        return res.status(400).json({ message: 'Invalid date format. Use ISO date strings (YYYY-MM-DD)' });
+      }
+    } else {
+      // Default to last N periods from today
+      const now = new Date();
+      endDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      if (period === 'day') {
+        startDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (limitNum - 1), 0, 0, 0, 0);
+      } else if (period === 'week') {
+        // Start from the beginning of the week that contains the date limitNum weeks ago
+        const weeksAgo = new Date(now);
+        weeksAgo.setDate(now.getDate() - (limitNum * 7) + 1); // +1 to include current week
+        startDateObj = new Date(weeksAgo.getFullYear(), weeksAgo.getMonth(), weeksAgo.getDate(), 0, 0, 0, 0);
+      } else if (period === 'month') {
+        // Start from the beginning of the month limitNum months ago
+        startDateObj = new Date(now.getFullYear(), now.getMonth() - (limitNum - 1), 1, 0, 0, 0, 0);
+      }
+    }
+
+    // Build aggregation pipeline based on period
+    let groupByFormat, dateIncrement;
+
+    if (period === 'day') {
+      groupByFormat = '%Y-%m-%d';
+      dateIncrement = 1; // 1 day
+    } else if (period === 'week') {
+      groupByFormat = '%Y-%U'; // Year-week format (Sunday as start of week)
+      dateIncrement = 7; // 7 days
+    } else if (period === 'month') {
+      groupByFormat = '%Y-%m';
+      dateIncrement = 30; // Approximate month
+    }
+
+    const revenueData = await Transaction.aggregate([
       {
         $match: {
           partnerId: partnerId,
           category: 'earning',
           createdAt: {
-            $gte: startDate,
-            $lte: endDate
+            $gte: startDateObj,
+            $lte: endDateObj
           }
         }
       },
       {
         $group: {
           _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+            $dateToString: { format: groupByFormat, date: '$createdAt' }
           },
-          dailyEarnings: { $sum: '$amount' },
+          earnings: { $sum: '$amount' },
           transactionCount: { $sum: 1 }
         }
       },
@@ -742,29 +791,52 @@ exports.getMyLast7DaysRevenueChart = async (req, res) => {
       }
     ]);
 
-    // Fill in missing days with zero earnings for the last 7 days
+    // Generate all periods in the range and fill missing ones with zero
     const chartData = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-      const dayData = dailyRevenue.find(d => d._id === dateStr);
+    const currentDate = new Date(startDateObj);
+
+    while (currentDate <= endDateObj) {
+      let periodKey;
+
+      if (period === 'day') {
+        periodKey = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      } else if (period === 'week') {
+        const year = currentDate.getFullYear();
+        const weekNum = Math.ceil(((currentDate - new Date(year, 0, 1)) / 86400000 + 1) / 7);
+        periodKey = `${year}-${String(weekNum).padStart(2, '0')}`;
+      } else if (period === 'month') {
+        periodKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      }
+
+      const periodData = revenueData.find(d => d._id === periodKey);
 
       chartData.push({
-        date: dateStr,
-        earnings: dayData ? dayData.dailyEarnings : 0,
-        transactions: dayData ? dayData.transactionCount : 0
+        date: periodKey,
+        earnings: periodData ? periodData.earnings : 0,
+        transactions: periodData ? periodData.transactionCount : 0
       });
+
+      // Increment date based on period
+      if (period === 'day') {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (period === 'week') {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (period === 'month') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
     }
 
     res.json({
       chartData,
       period: {
-        startDate,
-        endDate
+        type: period,
+        limit: limitNum,
+        startDate: startDateObj,
+        endDate: endDateObj
       }
     });
   } catch (error) {
-    console.error('Error fetching my last 7 days revenue chart:', error);
+    console.error('Error fetching my revenue chart:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

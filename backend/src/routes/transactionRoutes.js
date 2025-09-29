@@ -67,11 +67,11 @@ router.get('/my-monthly-earnings', auth(), transactionController.getMyMonthlyEar
 router.get('/my-monthly-chart', auth(), transactionController.getMyMonthlyRevenueChart);
 
 /**
- * @route   GET /api/transactions/my-last-7-days-chart
- * @desc    Get current user's last 7 days revenue chart (for partners)
+ * @route   GET /api/transactions/my-revenue-chart
+ * @desc    Get current user's revenue chart with flexible period grouping (for partners)
  * @access  Private
  */
-router.get('/my-last-7-days-chart', auth(), transactionController.getMyLast7DaysRevenueChart);
+router.get('/my-revenue-chart', auth(), transactionController.getMyRevenueChart);
 
 /**
  * @route   GET /api/transactions/:id

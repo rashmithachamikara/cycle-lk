@@ -36,10 +36,12 @@ export interface MonthlyRevenueChart {
   };
 }
 
-// Interface for last 7 days revenue chart
-export interface Last7DaysRevenueChart {
+// Interface for flexible revenue chart
+export interface RevenueChart {
   chartData: ChartDataPoint[];
   period: {
+    type: 'day' | 'week' | 'month';
+    limit: number;
     startDate: string;
     endDate: string;
   };
@@ -78,9 +80,21 @@ const transactionService = {
     return response.data;
   },
 
-  // Get current user's last 7 days revenue chart (for partners)
-  getMyLast7DaysRevenueChart: async (): Promise<Last7DaysRevenueChart> => {
-    const response = await api.get('/transactions/my-last-7-days-chart');
+  // Get current user's revenue chart with flexible period grouping (for partners)
+  getMyRevenueChart: async (params?: {
+    period?: 'day' | 'week' | 'month';
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<RevenueChart> => {
+    const queryParams = new URLSearchParams();
+
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+
+    const response = await api.get(`/transactions/my-revenue-chart?${queryParams.toString()}`);
     return response.data;
   },
 };
