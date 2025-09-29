@@ -76,6 +76,18 @@ class QueryService {
         case 'contact_support':
           return await this.getContactInfo(entities);
         
+        case 'bike_types':
+        case 'available_bikes':
+          return await this.getBikeTypesInfo(entities);
+        
+        case 'platform_info':
+        case 'about_platform':
+          return await this.getPlatformInfo(entities);
+        
+        case 'service_areas':
+        case 'coverage_areas':
+          return await this.getServiceAreasInfo(entities);
+        
         default:
           return { 
             success: false, 
@@ -759,15 +771,16 @@ class QueryService {
       
       return {
         success: true,
+        type: 'system_info',
+        intent: 'payment_methods',
         data: {
-          acceptedPayments: PAYMENT_METHODS,
-          additionalInfo: [
-            'All major credit and debit cards accepted',
-            'Secure payment processing',
-            'Cash payments available at partner locations',
-            'Digital wallet options supported',
-            'Payment confirmation sent via SMS/email'
-          ]
+          paymentMethods: PAYMENT_METHODS,
+          quickInfo: {
+            mainMethods: ["Credit/Debit Cards", "Bank Transfer", "Cash at Partner Locations"],
+            currencies: ["LKR", "USD", "EUR", "GBP"],
+            security: "256-bit SSL encryption",
+            refundPolicy: "Full refund 24+ hours before pickup"
+          }
         },
         suggestions: ['Book a bike', 'Find locations', 'Check availability', 'Safety features']
       };
@@ -787,20 +800,15 @@ class QueryService {
       
       return {
         success: true,
+        type: 'system_info',
+        intent: 'safety_info',
         data: {
           safetyFeatures: SAFETY_FEATURES,
-          safetyTips: [
-            'Always wear provided helmets',
-            'Check bike condition before riding',
-            'Follow traffic rules and regulations',
-            'Use designated bike lanes where available',
-            'Carry emergency contact information',
-            'Report any bike issues immediately'
-          ],
-          emergencySupport: {
-            phone: '+94 77 123 4567',
-            available: '24/7',
-            services: ['Breakdown assistance', 'Emergency pickup', 'Route guidance']
+          emergencyContact: "+94 77 911 9999",
+          quickSummary: {
+            equipment: SAFETY_FEATURES.equipment.slice(0, 6),
+            measures: SAFETY_FEATURES.measures.slice(0, 5),
+            guidelines: SAFETY_FEATURES.guidelines.slice(0, 5)
           }
         },
         suggestions: ['Book a bike', 'Payment methods', 'Find locations', 'Booking help']
@@ -821,28 +829,14 @@ class QueryService {
       
       return {
         success: true,
+        type: 'system_info',
+        intent: 'booking_process',
         data: {
-          steps: BOOKING_PROCESS,
-          quickProcess: [
-            '1. Search for bikes in your preferred location',
-            '2. Select bike type and rental duration',
-            '3. Choose pickup/drop-off locations',
-            '4. Provide required documents (ID, license)',
-            '5. Make payment using preferred method',
-            '6. Receive booking confirmation and bike details'
-          ],
-          requirements: [
-            'Valid government ID',
-            'Driving license (for motorized bikes)',
-            'Contact number',
-            'Emergency contact details'
-          ],
-          policies: [
-            'Minimum age: 18 years',
-            'Security deposit required',
-            'Late return fees apply',
-            'Damage assessment charges may apply'
-          ]
+          bookingProcess: BOOKING_PROCESS,
+          quickSummary: "Search → Select → Documents → Payment → Confirmation → Enjoy!",
+          stepCount: BOOKING_PROCESS.steps.length,
+          requirements: BOOKING_PROCESS.requirements,
+          tips: BOOKING_PROCESS.tips
         },
         suggestions: ['Find bikes', 'Payment methods', 'Safety features', 'Check availability']
       };
@@ -858,42 +852,27 @@ class QueryService {
 
   async getContactInfo(entities) {
     try {
-      const { SUPPORT_INFO } = require('../config/systemInfo').SYSTEM_INFO;
+      const { SUPPORT_INFO, PLATFORM_NAME } = require('../config/systemInfo').SYSTEM_INFO;
       
       return {
         success: true,
+        type: 'system_info',
+        intent: 'contact_support',
         data: {
-          contactMethods: [
-            {
-              type: 'Phone Support',
-              value: '+94 77 123 4567',
-              availability: '24/7',
-              description: 'Call us anytime for immediate assistance'
-            },
-            {
-              type: 'Email Support',
-              value: 'support@cycle.lk',
-              availability: 'Response within 2-4 hours',
-              description: 'Send us your questions and we\'ll get back to you quickly'
-            },
-            {
-              type: 'WhatsApp',
-              value: '+94 77 123 4567',
-              availability: '24/7',
-              description: 'Quick messaging support via WhatsApp'
-            },
-            {
-              type: 'Live Chat',
-              value: 'Available right here!',
-              availability: 'You\'re using it now',
-              description: 'Continue chatting with me for instant help'
-            }
-          ],
-          emergencySupport: {
-            phone: '+94 77 911 9999',
-            description: 'Emergency breakdown and assistance - 24/7 availability'
+          platformName: PLATFORM_NAME,
+          supportInfo: SUPPORT_INFO,
+          contactDetails: {
+            phone: "+94 77 123 4567",
+            email: "support@cycle.lk", 
+            whatsapp: "+94 77 123 4567",
+            emergency: "+94 77 911 9999"
           },
-          supportInfo: SUPPORT_INFO
+          emailCategories: {
+            general: "support@cycle.lk",
+            bookings: "bookings@cycle.lk",
+            partnerships: "partners@cycle.lk",
+            feedback: "feedback@cycle.lk"
+          }
         },
         suggestions: ['Find bikes', 'Check availability', 'Payment methods', 'Safety features']
       };
@@ -902,6 +881,111 @@ class QueryService {
       return {
         success: false,
         message: 'Sorry, I had trouble getting contact information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getBikeTypesInfo(entities) {
+    try {
+      const { BIKE_TYPES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        type: 'system_info',
+        intent: 'bike_types',
+        data: {
+          bikeTypes: BIKE_TYPES,
+          totalTypes: BIKE_TYPES.length,
+          categories: BIKE_TYPES.map(bike => ({
+            name: bike.name,
+            description: bike.description,
+            suitableFor: bike.suitableFor
+          }))
+        },
+        suggestions: ['Find bikes', 'Check availability', 'Search by location', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting bike types info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting bike type information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getPlatformInfo(entities) {
+    try {
+      const { PLATFORM_NAME, PLATFORM_DESCRIPTION, MAJOR_CITIES, PLATFORM_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      return {
+        success: true,
+        type: 'system_info',
+        intent: 'platform_info',
+        data: {
+          platformName: PLATFORM_NAME,
+          description: PLATFORM_DESCRIPTION,
+          cities: MAJOR_CITIES,
+          cityCount: MAJOR_CITIES.length,
+          features: PLATFORM_FEATURES,
+          featureCount: PLATFORM_FEATURES.length
+        },
+        suggestions: ['Find bikes', 'Bike types', 'Service areas', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting platform info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting platform information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getServiceAreasInfo(entities) {
+    try {
+      const { SERVICE_AREAS, MAJOR_CITIES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      const requestedCity = entities.location || entities.city;
+      let specificCityInfo = null;
+      
+      if (requestedCity) {
+        const cityKey = Object.keys(SERVICE_AREAS).find(city => 
+          city.toLowerCase().includes(requestedCity.toLowerCase())
+        );
+        
+        if (cityKey && SERVICE_AREAS[cityKey]) {
+          specificCityInfo = {
+            name: cityKey,
+            ...SERVICE_AREAS[cityKey]
+          };
+        }
+      }
+      
+      return {
+        success: true,
+        type: 'system_info',
+        intent: 'service_areas',
+        data: {
+          serviceAreas: SERVICE_AREAS,
+          majorCities: MAJOR_CITIES,
+          totalCities: MAJOR_CITIES.length,
+          requestedCity: requestedCity,
+          specificCityInfo: specificCityInfo,
+          allCityData: Object.entries(SERVICE_AREAS).map(([city, info]) => ({
+            name: city,
+            specialty: info.specialty,
+            highlights: info.highlights
+          }))
+        },
+        suggestions: ['Find bikes', 'Bike types', 'Check availability', 'Platform info']
+      };
+    } catch (error) {
+      console.error('Error getting service areas info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting service area information. Please try again.',
         suggestions: ['Find bikes', 'Check availability', 'Get help']
       };
     }
