@@ -202,7 +202,7 @@ const PartnerDashboardPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-xl mx-auto px-4 py-24 text-center">
+        <div className="max-w-xl mx-auto mt-20 px-4 py-24 text-center">
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
             <Clock className="h-10 w-10 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Waiting for Approval</h2>
@@ -224,7 +224,7 @@ const PartnerDashboardPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
         {!realtimeConnected && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
             <div className="text-yellow-800 text-sm">
