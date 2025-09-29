@@ -61,14 +61,14 @@ const PaymentRequestsPage = () => {
   const formatCurrency = (amount: string) => {
     // Remove LKR if present and parse
     const numericAmount = parseFloat(amount.replace('LKR', '').replace(',', ''));
-    return `LKR${numericAmount.toFixed(2)}`;
+    return `LKR ${numericAmount.toFixed(2)}`;
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
         {/* Real-time Connection Status */}
         {!realtimeConnected && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
@@ -166,7 +166,7 @@ const PaymentRequestsPage = () => {
                       <div className="text-2xl font-bold text-yellow-600">
                         {formatCurrency(
                           paymentPendingBookings
-                            .reduce((sum, booking) => sum + parseFloat(booking.value.replace('$', '')), 0)
+                            .reduce((sum, booking) => sum + parseFloat(booking.value.replace('LKR', '')), 0)
                             .toString()
                         )}
                       </div>

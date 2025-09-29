@@ -867,36 +867,34 @@ const PartnerDashboardPage = () => {
 
 
             {/* Management Overview Cards */}
-            <div className="bg-white rounded-2xl shadow-sm">
-              {/* <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Management Overview</h3>
-                <p className="text-gray-600 mt-1">Quick access to your rental management</p>
-              </div> */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="p-8 border-b border-gray-100">
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Management Overview</h3>
+                <p className="text-gray-500 text-sm">Streamlined access to your rental operations</p>
+              </div>
 
-              <div className="p-6">
-                <div className="grid md:grid-cols-4 gap-4">
-
-
+              <div className="p-8">
+                <div className="grid md:grid-cols-4 gap-6">
                   {/* Booking Requests Button */}
                   <Link
                     to="/partner-dashboard/booking-requests"
-                    className="group bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-xl p-6 transition-all duration-200 border border-orange-200 hover:border-orange-300"
+                    className="group bg-white hover:bg-gray-50 rounded-2xl p-6 transition-all duration-300 border border-gray-200 hover:border-orange-300 hover:shadow-lg"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
-                        <FileText className="h-6 w-6 text-white" />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center group-hover:bg-orange-600 transition-colors shadow-sm">
+                        <FileText className="h-5 w-5 text-white" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-orange-500 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">Booking Requests</h4>
-                    <p className="text-gray-600 text-sm mb-3">Review pending requests</p>
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-orange-600">{requestedBookings.length}</span>
-                      <span className="text-orange-600 text-sm ml-2">pending requests</span>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">Review pending requests</p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-gray-900">{requestedBookings.length}</span>
+                      <span className="text-gray-500 text-sm">pending</span>
                     </div>
                     {newBookingRequests.length > 0 && (
-                      <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        {newBookingRequests.length} new!
+                      <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                        {newBookingRequests.length} new
                       </div>
                     )}
                   </Link>
@@ -904,57 +902,57 @@ const PartnerDashboardPage = () => {
                   {/* Initial Payment Pending Requests Button */}
                   <Link
                     to="/partner-dashboard/paymentRequests"
-                    className="group bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-xl p-6 transition-all duration-200 border border-yellow-200 hover:border-yellow-300"
+                    className="group bg-white hover:bg-gray-50 rounded-2xl p-6 transition-all duration-300 border border-gray-200 hover:border-yellow-300 hover:shadow-lg"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center group-hover:bg-yellow-600 transition-colors">
-                        <CreditCard className="h-6 w-6 text-white" />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center group-hover:bg-yellow-600 transition-colors shadow-sm">
+                        <CreditCard className="h-5 w-5 text-white" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-yellow-600 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-yellow-500 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">Payment Requests</h4>
-                    <p className="text-gray-600 text-sm mb-3">Review pending Initial payments</p>
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-yellow-600">{paymentRequests.length}</span>
-                      <span className="text-yellow-600 text-sm ml-2">pending payments</span>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">Review pending payments</p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-gray-900">{paymentRequests.length}</span>
+                      <span className="text-gray-500 text-sm">pending</span>
                     </div>
                   </Link>
 
                   {/* Current Rentals Button */}
                   <Link
                     to="/partner-dashboard/current-rentals"
-                    className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 transition-all duration-200 border border-blue-200 hover:border-blue-300"
+                    className="group bg-white hover:bg-gray-50 rounded-2xl p-6 transition-all duration-300 border border-gray-200 hover:border-blue-300 hover:shadow-lg"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                        <Clock className="h-6 w-6 text-white" />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors shadow-sm">
+                        <Clock className="h-5 w-5 text-white" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">Current Rentals</h4>
-                    <p className="text-gray-600 text-sm mb-3">Manage active bicycle rentals</p>
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-blue-600">{currentBookings.length}</span>
-                      <span className="text-blue-600 text-sm ml-2">active rentals</span>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">Active bicycle rentals</p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-gray-900">{currentBookings.length}</span>
+                      <span className="text-gray-500 text-sm">active</span>
                     </div>
                   </Link>
 
                   {/* Completed Rentals Button */}
                   <Link
                     to="/partner-dashboard/completed-rentals"
-                    className="group bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl p-6 transition-all duration-200 border border-green-200 hover:border-green-300"
+                    className="group bg-white hover:bg-gray-50 rounded-2xl p-6 transition-all duration-300 border border-gray-200 hover:border-green-300 hover:shadow-lg"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center group-hover:bg-green-600 transition-colors">
-                        <CheckCircle className="h-6 w-6 text-white" />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center group-hover:bg-green-600 transition-colors shadow-sm">
+                        <CheckCircle className="h-5 w-5 text-white" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-green-600 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-green-500 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">Completed Rentals</h4>
-                    <p className="text-gray-600 text-sm mb-3">View rental history & earnings</p>
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-green-600">{recentBookings.length}</span>
-                      <span className="text-green-600 text-sm ml-2">completed</span>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">Rental history & earnings</p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-gray-900">{recentBookings.length}</span>
+                      <span className="text-gray-500 text-sm">completed</span>
                     </div>
                   </Link>
                 </div>
