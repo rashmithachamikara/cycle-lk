@@ -13,8 +13,7 @@ import {
   LocationSelectionStep,
   RentalPeriodStep,
   DropoffSelectionStep,
-  FinalConfirmationStep,
-  LoadingSpinner
+  FinalConfirmationStep
 } from '../components/BookingPage';
 import { Button } from '../ui';
 
@@ -330,7 +329,7 @@ const BookingPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <LoadingSpinner />
+      <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         <Footer />
       </div>
     );

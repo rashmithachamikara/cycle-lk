@@ -151,7 +151,7 @@ const LocationPage: React.FC = () => {
         <Header />
         <div className="flex justify-center items-center py-20 mt-20">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+            <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="mt-4 text-gray-600">Loading location details...</p>
           </div>
         </div>

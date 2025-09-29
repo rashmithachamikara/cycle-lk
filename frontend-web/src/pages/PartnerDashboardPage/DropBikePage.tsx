@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Camera, CheckCircle, CreditCard, FileText, Bike as BikeIcon, ArrowLeft, Clock } from 'lucide-react';
 import Header from "../../components/Header";
-import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
 import { bikeService } from "../../services/bikeService";
@@ -327,7 +326,7 @@ const DropBikePage = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center h-96 mt-20">
-          <Loader />
+          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         </div>
       </div>
     );

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Breadcrumb, BackButton } from '../ui';
-import { Loader } from '../ui';
 import { AlertTriangle } from 'lucide-react';
 import { bookingService, UserDashboardBooking, transformBookingForUserDashboard } from '../services/bookingService';
 import {
@@ -64,7 +63,7 @@ const BookingDetailsPage = () => {
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-20">
-            <Loader />
+            <div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full mb-4"></div>
             <span className="ml-3 text-gray-600">Loading booking details...</span>
           </div>
         </div>

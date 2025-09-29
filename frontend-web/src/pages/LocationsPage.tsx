@@ -13,7 +13,6 @@ import { SearchAndFilters, BikeGrid } from '../ui';
 // Import components
 import {
   LocationCard,
-  LoadingState,
   ErrorState,
   EmptyState,
   HeroSection
@@ -172,7 +171,7 @@ const LocationsPage = () => {
           </div>
           
           {locationsLoading ? (
-            <LoadingState message="Loading locations..." />
+           <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           ) : error ? (
             <ErrorState 
               error={error}
@@ -264,7 +263,7 @@ const LocationsPage = () => {
         {/* Bike Listings */}
         <section>
           {loading ? (
-            <LoadingState message="Loading bikes..." />
+            <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           ) : error ? (
             <ErrorState 
               error={error}
