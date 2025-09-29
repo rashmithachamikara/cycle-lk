@@ -10,6 +10,9 @@ const Support = require('./Support');
 const PaymentMethod = require('./PaymentMethod');
 const FAQ = require('./FAQ');
 const FCMToken = require('./FCMToken');
+const Transaction = require('./Transaction');
+const ChatSession = require('./ChatSession');
+const ChatbotKnowledge = require('./ChatbotKnowledge');
 
 module.exports = {
   User,
@@ -23,5 +26,8 @@ module.exports = {
   Support,
   PaymentMethod,
   FAQ,
-  FCMToken
+  FCMToken,
+  Transaction,
+  ChatSession,
+  ChatbotKnowledge
 };

@@ -12,6 +12,28 @@ const partnerSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  account: {
+    bankName: String,
+    accountNumber: String,
+    accountHolderName: String,
+    totalEarnings: { 
+      type: Number, 
+      default: 0 
+    },
+    totalPaid: { 
+      type: Number, 
+      default: 0 
+    },
+    pendingAmount: { 
+      type: Number, 
+      default: 0 
+    },
+    // Add revenue breakdown
+    revenueBreakdown: {
+      ownerEarnings: { type: Number, default: 0 },
+      pickupEarnings: { type: Number, default: 0 }
+    }
+  },
   category: {
     type: String,
     trim: true
@@ -183,14 +205,14 @@ const partnerSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
+},
+);
 
 // Create indexes
 partnerSchema.index({ userId: 1 });
 partnerSchema.index({ location: 1 });
 partnerSchema.index({ status: 1 });
 partnerSchema.index({ companyName: 'text', description: 'text' });
-
 module.exports = mongoose.model('Partner', partnerSchema);
 
 

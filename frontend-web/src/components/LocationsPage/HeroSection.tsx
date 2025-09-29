@@ -2,7 +2,7 @@ import React from 'react';
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="bg-gradient-to-r from-[#FF7F50]/80 to-[#FF6B9D] text-white py-16">
+    <section className="bg-gradient-to-r from-[#FF7F50]/80 to-[#FF6B9D] text-white pt-[126px] pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Explore Our Locations</h1>

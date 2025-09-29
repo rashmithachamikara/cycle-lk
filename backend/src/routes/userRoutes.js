@@ -11,6 +11,16 @@ const upload = require('../middleware/upload');
  * @access  Private/Admin
  */
 router.get('/', auth(), admin, userController.getAllUsers);
+/**
+ * @route   GET /api/users/partner
+ * @desc    Get the partner details of the authenticated user (if any)
+ * @access  Private
+ */
+router.get('/partner', (req, res, next) => {
+  console.log('🔍 Route /users/partner accessed');
+  console.log('Headers:', req.headers);
+  next();
+}, auth(), userController.getUserPartner);
 
 /**
  * @route   GET /api/users/:id

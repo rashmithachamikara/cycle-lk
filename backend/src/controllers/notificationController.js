@@ -58,6 +58,7 @@ exports.getUserNotifications = asyncHandler(async (req, res) => {
   }
   
   const notifications = await query;
+  console.log(`[Notifications] Fetched ${notifications.length} notifications for user ${userId}`);
   res.json(notifications);
 });
 

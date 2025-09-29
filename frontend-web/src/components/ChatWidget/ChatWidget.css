@@ -1,0 +1,319 @@
+/* Chat Widget Container */
+.chat-widget {
+  position: fixed;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Positioning */
+.chat-widget--bottom-right {
+  bottom: 24px;
+  right: 24px;
+}
+
+.chat-widget--bottom-left {
+  bottom: 24px;
+  left: 24px;
+}
+
+.chat-widget--top-right {
+  top: 24px;
+  right: 24px;
+}
+
+.chat-widget--top-left {
+  top: 24px;
+  left: 24px;
+}
+
+/* Chat Window */
+.chat-widget__window {
+  position: absolute;
+  width: 380px;
+  height: 600px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 120px);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+/* Position chat window based on widget position */
+.chat-widget--bottom-right .chat-widget__window {
+  bottom: 80px;
+  right: 0;
+}
+
+.chat-widget--bottom-left .chat-widget__window {
+  bottom: 80px;
+  left: 0;
+}
+
+.chat-widget--top-right .chat-widget__window {
+  top: 80px;
+  right: 0;
+}
+
+.chat-widget--top-left .chat-widget__window {
+  top: 80px;
+  left: 0;
+}
+
+/* Chat Toggle Button */
+.chat-widget__toggle {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.chat-widget__toggle:hover {
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px);
+}
+
+.chat-widget__toggle:active {
+  transform: translateY(0);
+}
+
+.chat-widget__toggle--has-notification {
+  animation: gentle-bounce 2s ease-in-out infinite;
+}
+
+/* Button Icon */
+.chat-widget__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+/* Notification Badge */
+.chat-widget__badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 12px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 6px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Pulse Effect */
+.chat-widget__pulse {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.2);
+  z-index: -1;
+}
+
+/* Welcome Message */
+.chat-widget__welcome {
+  position: absolute;
+  max-width: 280px;
+  margin-bottom: 16px;
+  z-index: 1001;
+}
+
+.chat-widget--bottom-right .chat-widget__welcome {
+  bottom: 80px;
+  right: 20px;
+}
+
+.chat-widget--bottom-left .chat-widget__welcome {
+  bottom: 80px;
+  left: 20px;
+}
+
+.chat-widget--top-right .chat-widget__welcome {
+  top: 80px;
+  right: 20px;
+}
+
+.chat-widget--top-left .chat-widget__welcome {
+  top: 80px;
+  left: 20px;
+}
+
+.chat-widget__welcome-content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #374151;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.chat-widget__welcome-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.chat-widget--bottom-right .chat-widget__welcome-arrow,
+.chat-widget--bottom-left .chat-widget__welcome-arrow {
+  bottom: -8px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+}
+
+.chat-widget--bottom-right .chat-widget__welcome-arrow {
+  right: 24px;
+}
+
+.chat-widget--bottom-left .chat-widget__welcome-arrow {
+  left: 24px;
+}
+
+.chat-widget--top-right .chat-widget__welcome-arrow,
+.chat-widget--top-left .chat-widget__welcome-arrow {
+  top: -8px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+
+.chat-widget--top-right .chat-widget__welcome-arrow {
+  right: 24px;
+}
+
+.chat-widget--top-left .chat-widget__welcome-arrow {
+  left: 24px;
+}
+
+/* Dark Theme */
+.chat-widget--dark .chat-widget__window {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.chat-widget--dark .chat-widget__welcome-content {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+.chat-widget--dark .chat-widget__welcome-arrow {
+  border-top-color: #1f2937;
+  border-bottom-color: #1f2937;
+}
+
+/* Animations */
+@keyframes gentle-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .chat-widget__window {
+    width: calc(100vw - 32px);
+    height: calc(100vh - 120px);
+    border-radius: 12px;
+  }
+  
+  .chat-widget--bottom-right .chat-widget__window,
+  .chat-widget--bottom-left .chat-widget__window {
+    bottom: 80px;
+    left: 16px;
+    right: 16px;
+  }
+  
+  .chat-widget--top-right .chat-widget__window,
+  .chat-widget--top-left .chat-widget__window {
+    top: 80px;
+    left: 16px;
+    right: 16px;
+  }
+  
+  .chat-widget__toggle {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .chat-widget__welcome {
+    max-width: calc(100vw - 80px);
+  }
+}
+
+@media (max-width: 320px) {
+  .chat-widget__window {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 100px);
+  }
+  
+  .chat-widget--bottom-right .chat-widget__window,
+  .chat-widget--bottom-left .chat-widget__window {
+    bottom: 70px;
+    left: 8px;
+    right: 8px;
+  }
+  
+  .chat-widget--top-right .chat-widget__window,
+  .chat-widget--top-left .chat-widget__window {
+    top: 70px;
+    left: 8px;
+    right: 8px;
+  }
+  
+  .chat-widget__toggle {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Accessibility */
+.chat-widget__toggle:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-widget__toggle {
+    animation: none;
+  }
+  
+  .chat-widget__toggle--has-notification {
+    animation: none;
+  }
+  
+  .chat-widget__pulse {
+    animation: none;
+  }
+}

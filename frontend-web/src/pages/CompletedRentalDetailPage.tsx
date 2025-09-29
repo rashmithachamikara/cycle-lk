@@ -259,7 +259,7 @@ const CompletedRentalDetailPage: React.FC = () => {
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    ${rental.totalAmount}
+                    LKR{rental.totalAmount}
                   </div>
                   <p className="text-sm font-medium text-gray-700 mt-1">Revenue Earned</p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -459,7 +459,7 @@ const CompletedRentalDetailPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Rate per day</span>
-                  <span className="font-medium">${rental.pricePerDay}</span>
+                  <span className="font-medium">LKR {rental.pricePerDay}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Actual duration</span>
@@ -476,7 +476,7 @@ const CompletedRentalDetailPage: React.FC = () => {
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total Revenue</span>
-                    <span className="text-green-600">${rental.totalAmount}</span>
+                    <span className="text-green-600">LKR {rental.totalAmount}</span>
                   </div>
                 </div>
               </div>
