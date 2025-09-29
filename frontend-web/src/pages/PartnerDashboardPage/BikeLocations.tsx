@@ -158,7 +158,7 @@ const BikeLocations = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <Loader />
+        <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         </div>
       </div>
     );

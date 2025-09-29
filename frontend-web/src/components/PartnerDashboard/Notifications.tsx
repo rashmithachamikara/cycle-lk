@@ -126,7 +126,7 @@ const Notifications = () => {
       <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="animate-spin h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-6 text-gray-500">

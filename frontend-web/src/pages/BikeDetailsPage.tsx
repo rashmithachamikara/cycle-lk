@@ -84,7 +84,7 @@ const BikeDetailsPage = () => {
 
   // Show loading state
   if (loading) {
-    return <LoadingState />;
+   <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
   }
 
   // Show error state
