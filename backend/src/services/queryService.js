@@ -76,6 +76,18 @@ class QueryService {
         case 'contact_support':
           return await this.getContactInfo(entities);
         
+        case 'bike_types':
+        case 'available_bikes':
+          return await this.getBikeTypesInfo(entities);
+        
+        case 'platform_info':
+        case 'about_platform':
+          return await this.getPlatformInfo(entities);
+        
+        case 'service_areas':
+        case 'coverage_areas':
+          return await this.getServiceAreasInfo(entities);
+        
         default:
           return { 
             success: false, 
@@ -757,17 +769,46 @@ class QueryService {
     try {
       const { PAYMENT_METHODS } = require('../config/systemInfo').SYSTEM_INFO;
       
+      // Format the payment methods information
+      let message = "We accept the following payment methods:\n\n";
+      
+      // Add accepted payment methods
+      message += "💳 **Accepted Payments:**\n";
+      PAYMENT_METHODS.accepted.forEach(method => {
+        message += `• ${method}\n`;
+      });
+      
+      // Add supported currencies
+      message += "\n💰 **Supported Currencies:**\n";
+      PAYMENT_METHODS.currencies.forEach(currency => {
+        message += `• ${currency}\n`;
+      });
+      
+      // Add key policies
+      message += "\n📋 **Important Policies:**\n";
+      const keyPolicies = [
+        "Security deposit required for all rentals",
+        "Full payment due at booking confirmation", 
+        "Full refund if cancelled 24+ hours before pickup",
+        "All transactions secured with 256-bit SSL encryption"
+      ];
+      keyPolicies.forEach(policy => {
+        message += `• ${policy}\n`;
+      });
+      
+      message += "\nNeed help with booking? I'm here to assist you! 😊";
+      
       return {
         success: true,
+        message: message,
         data: {
-          acceptedPayments: PAYMENT_METHODS,
-          additionalInfo: [
-            'All major credit and debit cards accepted',
-            'Secure payment processing',
-            'Cash payments available at partner locations',
-            'Digital wallet options supported',
-            'Payment confirmation sent via SMS/email'
-          ]
+          paymentMethods: PAYMENT_METHODS,
+          quickInfo: {
+            mainMethods: ["Credit/Debit Cards", "Bank Transfer", "Cash at Partner Locations"],
+            currencies: ["LKR", "USD", "EUR", "GBP"],
+            security: "256-bit SSL encryption",
+            refundPolicy: "Full refund 24+ hours before pickup"
+          }
         },
         suggestions: ['Book a bike', 'Find locations', 'Check availability', 'Safety features']
       };
@@ -785,23 +826,35 @@ class QueryService {
     try {
       const { SAFETY_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
       
+      let message = "🛡️ **Your Safety is Our Priority!**\n\n";
+      
+      // Add safety equipment
+      message += "🎒 **Safety Equipment Provided:**\n";
+      SAFETY_FEATURES.equipment.slice(0, 6).forEach(item => {
+        message += `• ${item}\n`;
+      });
+      
+      // Add safety measures
+      message += "\n🔒 **Safety Measures:**\n";
+      SAFETY_FEATURES.measures.slice(0, 5).forEach(measure => {
+        message += `• ${measure}\n`;
+      });
+      
+      // Add key guidelines
+      message += "\n⚠️ **Important Safety Guidelines:**\n";
+      SAFETY_FEATURES.guidelines.slice(0, 5).forEach(guideline => {
+        message += `• ${guideline}\n`;
+      });
+      
+      message += "\n🆘 **24/7 Emergency Support:** +94 77 911 9999\n";
+      message += "\nRide safe and enjoy your adventure! 🚴‍♂️";
+      
       return {
         success: true,
+        message: message,
         data: {
           safetyFeatures: SAFETY_FEATURES,
-          safetyTips: [
-            'Always wear provided helmets',
-            'Check bike condition before riding',
-            'Follow traffic rules and regulations',
-            'Use designated bike lanes where available',
-            'Carry emergency contact information',
-            'Report any bike issues immediately'
-          ],
-          emergencySupport: {
-            phone: '+94 77 123 4567',
-            available: '24/7',
-            services: ['Breakdown assistance', 'Emergency pickup', 'Route guidance']
-          }
+          emergencyContact: "+94 77 911 9999"
         },
         suggestions: ['Book a bike', 'Payment methods', 'Find locations', 'Booking help']
       };
@@ -819,30 +872,34 @@ class QueryService {
     try {
       const { BOOKING_PROCESS } = require('../config/systemInfo').SYSTEM_INFO;
       
+      let message = "📋 **How to Book Your Bike - Easy Steps!**\n\n";
+      
+      // Add main booking steps
+      message += "🔢 **Booking Steps:**\n";
+      BOOKING_PROCESS.steps.slice(0, 8).forEach(step => {
+        message += `${step}\n`;
+      });
+      
+      // Add requirements
+      message += "\n📄 **What You'll Need:**\n";
+      BOOKING_PROCESS.requirements.forEach(req => {
+        message += `• ${req}\n`;
+      });
+      
+      // Add helpful tips
+      message += "\n💡 **Helpful Tips:**\n";
+      BOOKING_PROCESS.tips.slice(0, 4).forEach(tip => {
+        message += `• ${tip}\n`;
+      });
+      
+      message += "\n✨ Ready to start your bike adventure? Let me help you find the perfect bike!";
+      
       return {
         success: true,
+        message: message,
         data: {
-          steps: BOOKING_PROCESS,
-          quickProcess: [
-            '1. Search for bikes in your preferred location',
-            '2. Select bike type and rental duration',
-            '3. Choose pickup/drop-off locations',
-            '4. Provide required documents (ID, license)',
-            '5. Make payment using preferred method',
-            '6. Receive booking confirmation and bike details'
-          ],
-          requirements: [
-            'Valid government ID',
-            'Driving license (for motorized bikes)',
-            'Contact number',
-            'Emergency contact details'
-          ],
-          policies: [
-            'Minimum age: 18 years',
-            'Security deposit required',
-            'Late return fees apply',
-            'Damage assessment charges may apply'
-          ]
+          bookingProcess: BOOKING_PROCESS,
+          quickSummary: "Search → Select → Documents → Payment → Confirmation → Enjoy!"
         },
         suggestions: ['Find bikes', 'Payment methods', 'Safety features', 'Check availability']
       };
@@ -858,42 +915,42 @@ class QueryService {
 
   async getContactInfo(entities) {
     try {
-      const { SUPPORT_INFO } = require('../config/systemInfo').SYSTEM_INFO;
+      const { SUPPORT_INFO, PLATFORM_NAME } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      let message = `📞 **Get in Touch with ${PLATFORM_NAME}**\n\n`;
+      
+      message += "💬 **Contact Methods:**\n";
+      message += "• **Phone Support:** +94 77 123 4567 (24/7)\n";
+      message += "• **Email:** support@cycle.lk (2-4 hour response)\n";
+      message += "• **WhatsApp:** +94 77 123 4567 (24/7)\n";
+      message += "• **Live Chat:** You're using it right now! 😊\n\n";
+      
+      message += "🚨 **Emergency Support:**\n";
+      message += "• **Breakdown/Emergency:** +94 77 911 9999 (24/7)\n";
+      message += "• Available for bike breakdowns, accidents, and urgent assistance\n\n";
+      
+      message += "📧 **Email Support Categories:**\n";
+      message += "• General inquiries: support@cycle.lk\n";
+      message += "• Booking issues: bookings@cycle.lk\n";
+      message += "• Partnership inquiries: partners@cycle.lk\n";
+      message += "• Feedback: feedback@cycle.lk\n\n";
+      
+      message += `⏰ **Support Availability:** ${SUPPORT_INFO.available}\n`;
+      message += `📋 **Available Channels:** ${SUPPORT_INFO.channels.join(', ')}\n\n`;
+      
+      message += "How can I help you today? I'm here to assist with any questions! 🤝";
       
       return {
         success: true,
+        message: message,
         data: {
-          contactMethods: [
-            {
-              type: 'Phone Support',
-              value: '+94 77 123 4567',
-              availability: '24/7',
-              description: 'Call us anytime for immediate assistance'
-            },
-            {
-              type: 'Email Support',
-              value: 'support@cycle.lk',
-              availability: 'Response within 2-4 hours',
-              description: 'Send us your questions and we\'ll get back to you quickly'
-            },
-            {
-              type: 'WhatsApp',
-              value: '+94 77 123 4567',
-              availability: '24/7',
-              description: 'Quick messaging support via WhatsApp'
-            },
-            {
-              type: 'Live Chat',
-              value: 'Available right here!',
-              availability: 'You\'re using it now',
-              description: 'Continue chatting with me for instant help'
-            }
-          ],
-          emergencySupport: {
-            phone: '+94 77 911 9999',
-            description: 'Emergency breakdown and assistance - 24/7 availability'
-          },
-          supportInfo: SUPPORT_INFO
+          supportInfo: SUPPORT_INFO,
+          contactDetails: {
+            phone: "+94 77 123 4567",
+            email: "support@cycle.lk", 
+            whatsapp: "+94 77 123 4567",
+            emergency: "+94 77 911 9999"
+          }
         },
         suggestions: ['Find bikes', 'Check availability', 'Payment methods', 'Safety features']
       };
@@ -902,6 +959,135 @@ class QueryService {
       return {
         success: false,
         message: 'Sorry, I had trouble getting contact information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getBikeTypesInfo(entities) {
+    try {
+      const { BIKE_TYPES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      let message = "🚴‍♂️ **Available Bike Types at Cycle.LK**\n\n";
+      
+      BIKE_TYPES.forEach((bike, index) => {
+        message += `${index + 1}. **${bike.name}**\n`;
+        message += `   ${bike.description}\n`;
+        message += `   Perfect for: ${bike.suitableFor.join(', ')}\n\n`;
+      });
+      
+      message += "Which type of bike adventure are you planning? Let me help you find the perfect match! 🎯";
+      
+      return {
+        success: true,
+        message: message,
+        data: {
+          bikeTypes: BIKE_TYPES,
+          totalTypes: BIKE_TYPES.length
+        },
+        suggestions: ['Find bikes', 'Check availability', 'Search by location', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting bike types info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting bike type information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getPlatformInfo(entities) {
+    try {
+      const { PLATFORM_NAME, PLATFORM_DESCRIPTION, MAJOR_CITIES, PLATFORM_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      let message = `🌟 **Welcome to ${PLATFORM_NAME}!**\n\n`;
+      message += `${PLATFORM_DESCRIPTION}\n\n`;
+      
+      message += "🏙️ **Service Coverage:**\n";
+      message += `We operate in ${MAJOR_CITIES.length} major cities: ${MAJOR_CITIES.join(', ')}\n\n`;
+      
+      message += "✨ **Platform Features:**\n";
+      PLATFORM_FEATURES.slice(0, 6).forEach(feature => {
+        message += `• ${feature}\n`;
+      });
+      
+      message += "\n🎯 Ready to explore Sri Lanka on two wheels? Let's find you the perfect bike!";
+      
+      return {
+        success: true,
+        message: message,
+        data: {
+          platformName: PLATFORM_NAME,
+          description: PLATFORM_DESCRIPTION,
+          cities: MAJOR_CITIES,
+          features: PLATFORM_FEATURES
+        },
+        suggestions: ['Find bikes', 'Bike types', 'Service areas', 'Safety features']
+      };
+    } catch (error) {
+      console.error('Error getting platform info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting platform information. Please try again.',
+        suggestions: ['Find bikes', 'Check availability', 'Get help']
+      };
+    }
+  }
+
+  async getServiceAreasInfo(entities) {
+    try {
+      const { SERVICE_AREAS, MAJOR_CITIES } = require('../config/systemInfo').SYSTEM_INFO;
+      
+      let message = "🗺️ **Our Service Areas in Sri Lanka**\n\n";
+      
+      // If user specified a particular city, show details for that city
+      const requestedCity = entities.location || entities.city;
+      if (requestedCity) {
+        const cityKey = Object.keys(SERVICE_AREAS).find(city => 
+          city.toLowerCase().includes(requestedCity.toLowerCase())
+        );
+        
+        if (cityKey && SERVICE_AREAS[cityKey]) {
+          const cityInfo = SERVICE_AREAS[cityKey];
+          message += `📍 **${cityKey}**\n`;
+          message += `🎯 **Specialty:** ${cityInfo.specialty}\n\n`;
+          message += "🏛️ **Popular Highlights:**\n";
+          cityInfo.highlights.forEach(highlight => {
+            message += `• ${highlight}\n`;
+          });
+          message += `\nReady to explore ${cityKey}? Let me help you find bikes in this area! 🚴‍♂️`;
+        } else {
+          message += `I don't have specific information about ${requestedCity}. Here are our main service areas:\n\n`;
+          message += `🏙️ **Available Cities:** ${MAJOR_CITIES.join(', ')}\n\n`;
+          message += "Which city would you like to explore? I can provide detailed information about any of these locations! 😊";
+        }
+      } else {
+        // Show all service areas
+        Object.entries(SERVICE_AREAS).forEach(([city, info]) => {
+          message += `📍 **${city}**\n`;
+          message += `   ${info.specialty}\n`;
+          message += `   Highlights: ${info.highlights.slice(0, 2).join(', ')}\n\n`;
+        });
+        
+        message += "Which destination catches your interest? I can provide more detailed information about any of these amazing locations! 🌟";
+      }
+      
+      return {
+        success: true,
+        message: message,
+        data: {
+          serviceAreas: SERVICE_AREAS,
+          majorCities: MAJOR_CITIES,
+          requestedCity: requestedCity
+        },
+        suggestions: ['Find bikes', 'Bike types', 'Check availability', 'Platform info']
+      };
+    } catch (error) {
+      console.error('Error getting service areas info:', error);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble getting service area information. Please try again.',
         suggestions: ['Find bikes', 'Check availability', 'Get help']
       };
     }
