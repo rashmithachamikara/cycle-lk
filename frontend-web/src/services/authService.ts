@@ -1,4 +1,5 @@
 //frontend-web/src/services/authService.ts
+import axios from 'axios';
 import api from '../utils/apiUtils';
 
 // User registration data interface
@@ -98,6 +99,8 @@ export const userService = {
     const response = await api.get(`/users/${userId}`);
     return response.data;
   },
+
+  
   
   // Submit ID document for verification
   submitIdDocument: async (userId: string, documentData: IdDocumentData) => {
@@ -144,6 +147,37 @@ export const userService = {
   }
 };
 
+
+// Add this to your authService.ts
+
+export const veriffService = {
+  createSession: async (userId: string) => {
+    try {
+      console.log('Calling backend to create session for user:', userId);
+      
+      // Use api utility which handles auth token automatically
+      const response = await api.post(`/users/${userId}/verification/veriff/session`);
+      
+      console.log('Backend returned session data:', response.data);
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in createSession:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Check verification status via Decision API
+  checkStatus: async (userId: string) => {
+    try {
+      const response = await api.get(`/users/${userId}/verification/check`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in checkStatus:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+};
 // Helper function to set auth token
 export const setAuthToken = (token: string | null) => {
   if (token) {
