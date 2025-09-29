@@ -130,7 +130,7 @@ const HomePage = () => {
         {/* ============================================= */}
         {/* Hero Section */}
         {/* ============================================= */}
-        <section className="relative h-[100vh] min-h-[700px] overflow-hidden translate-y-[-65px]">
+        <section className="relative h-[110vh] min-h-[700px] overflow-hidden translate-y-[-65px]">
           <video 
             autoPlay 
             loop 
