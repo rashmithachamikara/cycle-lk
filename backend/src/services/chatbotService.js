@@ -70,7 +70,7 @@ class ChatbotService {
       // Add bot response to session
       const botMessageId = session.addMessage({
         type: 'bot',
-        content: response.message,
+        content: response.message || "I'm sorry, I encountered an issue generating a response.",
         intent: analysis.intent,
         entities: response.entities || {}
       });
@@ -91,7 +91,7 @@ class ChatbotService {
         sessionId: session.sessionId,
         messageId: botMessageId,
         response: {
-          message: response.message,
+          message: response.message || "I'm sorry, I encountered an issue generating a response.",
           intent: analysis.intent,
           confidence: analysis.confidence,
           suggestions: response.suggestions || analysis.suggestions,
@@ -115,35 +115,14 @@ class ChatbotService {
     const { intent, entities, confidence } = analysis;
     
     try {
-      // Check if this is a static intent that has a direct handler
-      const staticIntents = ['contact_support', 'general_greeting', 'payment_methods'];
-      
-      if (staticIntents.includes(intent)) {
-        // For static intents, get the response directly from query service
-        const directResult = await queryService.executeQuery(intent, entities, {
-          userId: session.userId,
-          sessionId: session.sessionId
-        });
-        
-        if (directResult && directResult.success) {
-          console.log('Direct static response generated for:', intent);
-          return {
-            response: directResult.message,
-            intent,
-            confidence,
-            requiresFollowUp: false
-          };
-        }
-      }
-      
-      // For dynamic intents, get data from database if applicable
+      // Get data from database/system info for all intents that need it
       let queryResult = null;
-      if (this.requiresDatabaseQuery(intent)) {
+      if (this.requiresDatabaseQuery(intent) || this.requiresSystemInfo(intent)) {
         queryResult = await queryService.executeQuery(intent, entities, {
           userId: session.userId,
           sessionId: session.sessionId
         });
-        console.log('Query result:', JSON.stringify(queryResult, null, 2));
+        console.log('Query result for LLM processing:', JSON.stringify(queryResult, null, 2));
       }
       
       // Check knowledge base for quick answers
@@ -364,6 +343,19 @@ class ChatbotService {
     ];
     
     return databaseIntents.includes(intent);
+  }
+
+  /**
+   * Check if intent requires system info data
+   */
+  requiresSystemInfo(intent) {
+    const systemInfoIntents = [
+      'payment_methods', 'safety_info', 'booking_process', 'contact_support',
+      'bike_types', 'available_bikes', 'platform_info', 'about_platform',
+      'service_areas', 'coverage_areas', 'general_greeting', 'faq', 'help'
+    ];
+    
+    return systemInfoIntents.includes(intent);
   }
 
   /**

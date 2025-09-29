@@ -117,7 +117,7 @@ const PaymentRequestsPage = () => {
         {loading && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="h-6 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+              <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
               <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
             </div>
             {[...Array(3)].map((_, index) => (

@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { PlatformRevenueChart } from '../../services/transactionService';
 import {
   Users,
   Building,
   Bike,
   CreditCard,
-  TrendingUp,
   ChevronRight,
   UserCheck,
   MessageSquare,
-  Shield
+  Shield,
+  Filter
 } from 'lucide-react';
 
 interface OverviewTabProps {
@@ -18,11 +21,49 @@ interface OverviewTabProps {
     totalBikes: number;
     totalRevenue: number;
     pendingApprovals: number;
+    isLoadingRevenue?: boolean;
+    revenueChartData?: PlatformRevenueChart | null;
+    isLoadingChart?: boolean;
+    monthlyRevenueBreakdown?: {
+      platformFees: number;
+      ownerEarnings: number;
+      pickupEarnings: number;
+    } | null;
   };
   onTabChange: (tabId: string) => void;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ systemStats, onTabChange }) => {
+  const [selectedRevenueFilter, setSelectedRevenueFilter] = useState<'all' | 'platform_fee' | 'owner_earnings' | 'pickup_earnings' | 'partner_earnings'>('all');
+
+  // Format chart data for display
+  const formatChartData = () => {
+    if (!systemStats.revenueChartData?.chartData) return [];
+    
+    return systemStats.revenueChartData.chartData.map(item => {
+      let earnings = item.earnings;
+      
+      // Filter based on selected revenue type
+      if (selectedRevenueFilter === 'platform_fee') {
+        earnings = item.platformFees;
+      } else if (selectedRevenueFilter === 'owner_earnings') {
+        earnings = item.ownerEarnings;
+      } else if (selectedRevenueFilter === 'pickup_earnings') {
+        earnings = item.pickupEarnings;
+      } else if (selectedRevenueFilter === 'partner_earnings') {
+        earnings = item.ownerEarnings + item.pickupEarnings;
+      }
+      
+      return {
+        ...item,
+        displayEarnings: earnings,
+        date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      };
+    });
+  };
+
+  const chartData = formatChartData();
+
   return (
     <div className="space-y-8">
       {/* Quick Stats */}
@@ -69,8 +110,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ systemStats, onTabChange }) =
               <CreditCard className="h-6 w-6 text-amber-600" />
             </div>
             <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">LKR{(systemStats.totalRevenue/1000).toFixed(1)}k</div>
-              <div className="text-sm text-gray-600">Total Revenue</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {systemStats.isLoadingRevenue ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
+                ) : (
+                  `LKR ${systemStats.totalRevenue.toLocaleString()}`
+                )}
+              </div>
+              <div className="text-sm text-gray-600">Monthly Total Revenue</div>
             </div>
           </div>
         </div>
@@ -81,59 +128,116 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ systemStats, onTabChange }) =
         {/* Revenue Chart */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Revenue Overview (Last 7 Days)</h3>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-green-600 font-medium flex items-center">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                +15.3% from last month
-              </span>
+              <select
+                value={selectedRevenueFilter}
+                onChange={(e) => setSelectedRevenueFilter(e.target.value as 'all' | 'platform_fee' | 'owner_earnings' | 'pickup_earnings' | 'partner_earnings')}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="all">All Revenue</option>
+                <option value="platform_fee">Platform Fees</option>
+                <option value="owner_earnings">Owner Earnings</option>
+                <option value="pickup_earnings">Pickup Earnings</option>
+                <option value="partner_earnings">Partner Earnings</option>
+              </select>
+              <Filter className="h-4 w-4 text-gray-500" />
             </div>
           </div>
           
-          <div className="h-60 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
-            {[35, 42, 50, 45, 65, 75, 68].map((height, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div 
-                  className="w-8 bg-gradient-to-t from-purple-500 to-indigo-600 rounded-t-md" 
-                  style={{ height: `${height}%` }}
-                ></div>
-                <div className="text-xs text-gray-600 mt-2">
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'][index]}
-                </div>
+          <div className="h-60">
+            {systemStats.isLoadingChart ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="animate-pulse bg-gray-200 h-full w-full rounded-lg"></div>
               </div>
-            ))}
+            ) : chartData && chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `LKR ${value.toLocaleString()}`}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Revenue']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Bar 
+                    dataKey="displayEarnings" 
+                    fill="#3b82f6" 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                No revenue data available for the last 7 days
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Distribution Chart */}
+        {/* Revenue Division */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Booking Distribution</h3>
-            <button className="text-xs text-gray-500 hover:text-purple-600">
-              More Details
-            </button>
+            <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue Division</h3>
+            <span className="text-xs text-gray-500">Current Month Breakdown</span>
           </div>
           
-          <div className="flex items-center justify-center h-60">
-            <div className="w-48 h-48 rounded-full border-8 border-indigo-500 relative flex items-center justify-center">
-              <div className="w-36 h-36 rounded-full border-8 border-blue-500 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full border-8 border-purple-500 flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600"></div>
+          <div className="h-60 flex flex-col justify-center space-y-4">
+            {systemStats.isLoadingRevenue ? (
+              <div className="space-y-4">
+                <div className="animate-pulse bg-gray-200 h-16 rounded-lg"></div>
+                <div className="animate-pulse bg-gray-200 h-16 rounded-lg"></div>
+                <div className="animate-pulse bg-gray-200 h-16 rounded-lg"></div>
+              </div>
+            ) : systemStats.monthlyRevenueBreakdown ? (
+              <>
+                {/* Platform Fees */}
+                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-100">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-purple-500 rounded-full mr-3"></div>
+                    <span className="font-medium text-gray-900">Platform Fees</span>
+                  </div>
+                  <span className="text-lg font-bold text-purple-600">
+                    LKR {systemStats.monthlyRevenueBreakdown.platformFees.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Owner Earnings */}
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                    <span className="font-medium text-gray-900">Owner Earnings</span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">
+                    LKR {systemStats.monthlyRevenueBreakdown.ownerEarnings.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Pickup Earnings */}
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                    <span className="font-medium text-gray-900">Pickup Earnings</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">
+                    LKR {systemStats.monthlyRevenueBreakdown.pickupEarnings.toLocaleString()}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg mb-2">No Revenue Data</div>
+                  <div className="text-sm">No earnings recorded for current month</div>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 text-xs bg-white px-2 py-1 rounded-full shadow-sm">
-                Colombo: 45%
-              </div>
-              <div className="absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-full shadow-sm">
-                Kandy: 25%
-              </div>
-              <div className="absolute bottom-0 left-0 text-xs bg-white px-2 py-1 rounded-full shadow-sm">
-                Galle: 18%
-              </div>
-              <div className="absolute top-0 left-0 text-xs bg-white px-2 py-1 rounded-full shadow-sm">
-                Others: 12%
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
