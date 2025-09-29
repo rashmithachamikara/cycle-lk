@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Environment variables configuration
 export const ENV_CONFIG = {
-  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:50001/api',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000'),
   JWT_SECRET_KEY: import.meta.env.VITE_JWT_SECRET_KEY || 'default_secret',
   TOKEN_EXPIRY: import.meta.env.VITE_TOKEN_EXPIRY || '24h',

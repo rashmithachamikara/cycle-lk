@@ -3,7 +3,8 @@ const { User, Partner } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/db');
-
+const axios = require('axios');
+const crypto = require('crypto');
 /**
  * Get all users
  * @param {Object} req - Express request object
@@ -250,6 +251,186 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+exports.createVeriffSession = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const response = await axios.post(
+      'https://stationapi.veriff.com/v1/sessions',
+      {
+        verification: {
+          vendorData: user._id.toString(),
+          person: {
+            firstName: user.firstName,
+            lastName: user.lastName
+          },
+          callback: `https://nonaccrued-adenological-junie.ngrok-free.dev/api/users/verification/veriff/webhook`,
+        }
+      },
+      { 
+        headers: { 
+          'X-AUTH-CLIENT': process.env.VERIFF_API_KEY,
+          'Content-Type': 'application/json'
+        } 
+      }
+    );
+
+    const sessionData = response.data.verification;
+    
+    user.verificationStatus.idDocument = {
+      ...user.verificationStatus.idDocument,
+      status: 'pending',
+      veriffSessionId: sessionData.id,
+      submittedAt: new Date()
+    };
+    
+    console.log('Created Veriff session:', sessionData.id);
+    await user.save();
+
+    // Return the session URL that frontend needs
+    res.json({ 
+      sessionId: sessionData.id,
+      url: sessionData.url // This is what the frontend needs
+    });
+  } catch (err) {
+    console.error('Error creating Veriff session:', err.response?.data || err.message);
+    res.status(500).json({ 
+      message: 'Error creating Veriff session',
+      error: err.response?.data || err.message 
+    });
+  }
+};
+
+exports.veriffWebhook = async (req, res) => {
+  try {
+    console.log('Received webhook:', JSON.stringify(req.body, null, 2));
+    
+    const { verification } = req.body;
+    const userId = verification.vendorData;
+    
+    if (!userId) {
+      console.error('No vendorData in webhook');
+      return res.status(400).json({ message: 'Missing vendorData' });
+    }
+    
+    console.log('Processing webhook for user:', userId, 'Status:', verification.status);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error('User not found:', userId);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 3. UPDATE USER STATUS
+    const isApproved = verification.status === 'approved';
+    
+    user.verificationStatus.idDocument = {
+      ...user.verificationStatus.idDocument,
+      veriffStatus: verification.status,
+      status: isApproved ? 'approved' : 'rejected',
+      isVerified: isApproved,
+      verifiedAt: new Date(),
+      veriffSessionId: verification.id
+    };
+
+    await user.save();
+
+    console.log(`✅ Updated verification for ${user.email}: ${verification.status}`);
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('Webhook error:', err);
+    res.status(500).send('Server error');
+  }
+};
+
+exports.getVerificationStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    res.json({
+      idDocument: user.verificationStatus.idDocument
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching status' });
+  }
+};
+exports.checkVerificationStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const sessionId = user.verificationStatus?.idDocument?.veriffSessionId;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'No verification session found' });
+    }
+
+    console.log('Checking Veriff decision for session:', sessionId);
+
+    // Veriff API credentials
+    const API_KEY = process.env.VERIFF_API_KEY || '9660b80b-798a-47b1-bb28-a4cb0bc3b98d';
+    const API_SECRET = process.env.VERIFF_API_SECRET;
+
+    // Generate HMAC signature - payload is just the session ID
+    const signature = crypto
+      .createHmac('sha256', API_SECRET)
+      .update(sessionId)
+      .digest('hex');
+
+    console.log('Generated signature for sessionId:', sessionId);
+
+    const response = await axios.get(
+      `https://stationapi.veriff.com/v1/sessions/${sessionId}/decision`,
+      {
+        headers: {
+          'X-AUTH-CLIENT': API_KEY,
+          'X-HMAC-SIGNATURE': signature,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log('Veriff decision response:', response.data);
+
+    const verification = response.data.verification;
+    const isApproved = verification.status === 'approved';
+
+    user.verificationStatus.idDocument = {
+      ...user.verificationStatus.idDocument,
+      veriffStatus: verification.status,
+      status: isApproved ? 'approved' : verification.status,
+      isVerified: isApproved,
+      verifiedAt: new Date(),
+    };
+
+    await user.save();
+
+    res.json({
+      status: verification.status,
+      isVerified: isApproved,
+    });
+
+  } catch (err) {
+    console.error('Error checking verification:', err.response?.data || err.message);
+    
+    // If decision not ready yet, return pending
+    if (err.response?.status === 404) {
+      return res.status(200).json({
+        status: 'pending',
+        isVerified: false,
+        message: 'Verification still processing'
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Error checking verification status',
+      error: err.message 
+    });
+  }
+};
 /**
  * Delete user
  * @param {Object} req - Express request object
