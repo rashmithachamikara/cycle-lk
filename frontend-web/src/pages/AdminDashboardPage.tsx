@@ -217,7 +217,7 @@ const AdminDashboardPage = () => {
 
   // Update system stats to use real data
   const systemStats = {
-    totalUsers: 1245,
+    totalUsers: 12,
     totalPartners: partners.length,
     totalBikes: partners.reduce((sum, partner) => sum + (partner.bikeCount || 0), 0),
     totalRevenue: monthlyRevenue?.totalRevenue || 0,
