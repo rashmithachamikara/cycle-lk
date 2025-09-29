@@ -11,7 +11,7 @@ import {
 } from '../components/PartnersPage';
 
 import { Partner, partnerService } from '../services/partnerService';
-import { Loader, ErrorDisplay } from '../ui';
+import { ErrorDisplay } from '../ui';
 
 const PartnersPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');

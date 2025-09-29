@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Camera, CheckCircle, CreditCard, FileText, Bike as BikeIcon, ArrowLeft, Clock } from 'lucide-react';
 import Header from "../../components/Header";
-import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
 import { bikeService } from "../../services/bikeService";

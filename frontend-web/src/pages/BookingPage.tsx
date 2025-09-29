@@ -13,8 +13,7 @@ import {
   LocationSelectionStep,
   RentalPeriodStep,
   DropoffSelectionStep,
-  FinalConfirmationStep,
-  LoadingSpinner
+  FinalConfirmationStep
 } from '../components/BookingPage';
 import { Button } from '../ui';
 

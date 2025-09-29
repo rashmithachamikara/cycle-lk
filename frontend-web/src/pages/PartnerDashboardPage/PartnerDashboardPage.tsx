@@ -7,7 +7,6 @@ import UpcomingEvents from '../../components/PartnerDashboard/UpcomingEvents';
 import MonthlySnapshot from '../../components/PartnerDashboard/MonthlySnapshot';
 import { 
   Bike, 
-  Star, 
   Users,
   TrendingUp,
   Clock,

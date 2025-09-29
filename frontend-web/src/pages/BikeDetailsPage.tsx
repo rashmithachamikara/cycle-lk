@@ -12,7 +12,6 @@ import {
   FeaturesSection,
   SpecificationsSection,
   ReviewsSection,
-  LoadingState,
   ErrorState,
   Breadcrumb,
   BackButton

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { MapPin, Bike as BikeIcon, Search, RefreshCw, Eye, AlertCircle, Clock, CheckCircle, Map, List, Navigation } from 'lucide-react';
 import { Bike, bikeService } from "../../services/bikeService";
 import Header from "../../components/Header";
-import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 
 interface BikeLocation {

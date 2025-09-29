@@ -13,7 +13,6 @@ import { SearchAndFilters, BikeGrid } from '../ui';
 // Import components
 import {
   LocationCard,
-  LoadingState,
   ErrorState,
   EmptyState,
   HeroSection
