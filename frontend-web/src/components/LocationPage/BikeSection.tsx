@@ -22,7 +22,12 @@ const BikeSection: React.FC<BikeSectionProps> = ({
   onClearFilters
 }) => {
   if (loading) {
-    return <Loader message="Loading bikes..." />;
+    return (
+      <div className="flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <span className="ml-3 text-gray-600">Loading bikes...</span>
+      </div>
+    );
   }
 
   if (error) {

@@ -316,7 +316,7 @@ const DashboardPage = () => {
         {/* Booking Cards */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                                             <div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full mx-auto mb-4"></div>
           </div>
         ) : error ? (
           <div className="text-center py-12">
@@ -400,7 +400,8 @@ const DashboardPage = () => {
           {loading ? (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                 <div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                {/* <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div> */}
               </div>
             </div>
           ) : error ? (
