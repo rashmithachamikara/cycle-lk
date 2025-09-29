@@ -26,5 +26,8 @@ module.exports = {
   Support,
   PaymentMethod,
   FAQ,
-  FCMToken
+  FCMToken,
+  Transaction,
+  ChatSession,
+  ChatbotKnowledge
 };
