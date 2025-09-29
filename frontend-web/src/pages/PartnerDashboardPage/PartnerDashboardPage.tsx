@@ -15,7 +15,8 @@ import {
   FileText,
   ArrowRight,
   CreditCard,
-  Rows4  
+  Rows4,  
+  BarChart3
 } from 'lucide-react';
 import { Loader } from '../../ui';
 
@@ -299,7 +300,7 @@ const PartnerDashboardPage = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Quick Stats */}
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -326,27 +327,15 @@ const PartnerDashboardPage = () => {
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Star className="h-6 w-6 text-yellow-600" />
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">4.7</div>
-                    <div className="text-sm text-gray-600">Avg Rating</div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* <div className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-center">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">LKR{totalRevenue.toFixed(0)}</div>
+                    <div className="text-2xl font-bold text-gray-900">LKR 12,000</div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
-              </div> */}
+              </div>
             </div>
 
             
@@ -447,7 +436,7 @@ const PartnerDashboardPage = () => {
             </div>
 
             {/* Revenue Chart */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 mt-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
                 <div className="flex items-center space-x-2">
@@ -500,10 +489,10 @@ const PartnerDashboardPage = () => {
             <Notifications />
 
             {/* Upcoming Events */}
-            <UpcomingEvents />
+            {/* <UpcomingEvents /> */}
 
             {/* Analytics Summary */}
-            <MonthlySnapshot />
+            {/* <MonthlySnapshot /> */}
           </div>
         </div>
       </div>
