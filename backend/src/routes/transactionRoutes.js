@@ -46,6 +46,13 @@ router.get('/platform/revenue', auth(), admin, transactionController.getPlatform
 router.get('/monthly/total-revenue', auth(), admin, transactionController.getMonthlyTotalRevenue);
 
 /**
+ * @route   GET /api/transactions/platform/revenue-chart
+ * @desc    Get platform revenue chart with flexible period grouping and filtering
+ * @access  Private/Admin
+ */
+router.get('/platform/revenue-chart', auth(), admin, transactionController.getPlatformRevenueChart);
+
+/**
  * @route   GET /api/transactions/monthly-earnings/:partnerId
  * @desc    Get monthly earnings for a partner
  * @access  Private

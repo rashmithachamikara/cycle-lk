@@ -62,6 +62,26 @@ export interface MonthlyTotalRevenue {
   recentTransactions: Transaction[];
 }
 
+export interface PlatformRevenueChart {
+  chartData: Array<{
+    date: string;
+    earnings: number;
+    transactions: number;
+    ownerEarnings: number;
+    pickupEarnings: number;
+    platformFees: number;
+    bonusPayments: number;
+  }>;
+  totalEarnings: number;
+  period: {
+    type: string;
+    limit: number;
+    startDate: string;
+    endDate: string;
+    filter: string;
+  };
+}
+
 class TransactionService {
   // Get monthly earnings summary for a partner
   async getMyMonthlyEarnings(): Promise<MonthlyEarnings> {
@@ -168,6 +188,31 @@ class TransactionService {
       return response.data;
     } catch (error) {
       console.error('Error fetching monthly total revenue:', error);
+      throw error;
+    }
+  }
+
+  // Get platform revenue chart data with filtering (admin only)
+  async getPlatformRevenueChart(params: {
+    period: 'day' | 'week' | 'month';
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+    filter?: 'all' | 'platform_fee' | 'owner_earnings' | 'pickup_earnings' | 'partner_earnings';
+  }): Promise<PlatformRevenueChart> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('period', params.period);
+      
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+      if (params.filter) queryParams.append('filter', params.filter);
+
+      const response = await apiUtils.get(`/transactions/platform/revenue-chart?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching platform revenue chart:', error);
       throw error;
     }
   }

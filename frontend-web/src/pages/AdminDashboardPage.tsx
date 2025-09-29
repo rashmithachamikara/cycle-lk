@@ -9,7 +9,7 @@ import SupportTab from '../components/AdminDashboard/SupportTab';
 import ReportsTab from '../components/AdminDashboard/ReportsTab';
 import SettingsTab from '../components/AdminDashboard/SettingsTab';
 import { partnerService, Partner } from '../services/partnerService';
-import transactionService, { MonthlyTotalRevenue } from '../services/transactionService';
+import transactionService, { MonthlyTotalRevenue, PlatformRevenueChart } from '../services/transactionService';
 import { 
   Settings,
   BarChart3,
@@ -31,6 +31,10 @@ const AdminDashboardPage = () => {
   // Monthly total revenue state
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyTotalRevenue | null>(null);
   const [isLoadingRevenue, setIsLoadingRevenue] = useState(true);
+  
+  // Platform revenue chart state
+  const [revenueChartData, setRevenueChartData] = useState<PlatformRevenueChart | null>(null);
+  const [isLoadingChart, setIsLoadingChart] = useState(true);
 
   // Mock data
   const users = [
@@ -160,6 +164,40 @@ const AdminDashboardPage = () => {
     fetchMonthlyRevenue();
   }, []);
 
+  // Fetch platform revenue chart data (last 7 days)
+  useEffect(() => {
+    const fetchRevenueChart = async () => {
+      try {
+        setIsLoadingChart(true);
+        
+        const chartData = await transactionService.getPlatformRevenueChart({
+          period: 'day',
+          limit: 7,
+          filter: 'all'
+        });
+        setRevenueChartData(chartData);
+      } catch (error) {
+        console.error('Error fetching platform revenue chart:', error);
+        // Set fallback chart data if fetch fails
+        setRevenueChartData({
+          chartData: [],
+          totalEarnings: 0,
+          period: {
+            type: 'day',
+            limit: 7,
+            startDate: '',
+            endDate: '',
+            filter: 'all'
+          }
+        });
+      } finally {
+        setIsLoadingChart(false);
+      }
+    };
+
+    fetchRevenueChart();
+  }, []);
+
   // Handle tab switching from URL parameters
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -184,7 +222,14 @@ const AdminDashboardPage = () => {
     totalBikes: partners.reduce((sum, partner) => sum + (partner.bikeCount || 0), 0),
     totalRevenue: monthlyRevenue?.totalRevenue || 0,
     pendingApprovals: pendingPartners.length,
-    isLoadingRevenue
+    isLoadingRevenue,
+    revenueChartData,
+    isLoadingChart,
+    monthlyRevenueBreakdown: monthlyRevenue ? {
+      platformFees: monthlyRevenue.platformFees || 0,
+      ownerEarnings: monthlyRevenue.ownerEarnings || 0,
+      pickupEarnings: monthlyRevenue.pickupEarnings || 0
+    } : null
   };
 
   // Handle partner approval

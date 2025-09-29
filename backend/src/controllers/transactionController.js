@@ -992,3 +992,167 @@ exports.getMyRevenueChart = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Get platform revenue chart with flexible period grouping and filtering (for admins)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPlatformRevenueChart = async (req, res) => {
+  try {
+    // Only admins can access platform charts
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+
+    const { period = 'day', limit, startDate, endDate, filter = 'all' } = req.query;
+    const limitNum = limit ? parseInt(limit) : 7;
+
+    // Parse dates
+    let startDateObj, endDateObj;
+
+    if (startDate && endDate) {
+      startDateObj = new Date(startDate);
+      endDateObj = new Date(endDate);
+      endDateObj.setHours(23, 59, 59, 999);
+    } else {
+      // Default to last N periods from today
+      const now = new Date();
+      endDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      if (period === 'day') {
+        startDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (limitNum - 1), 0, 0, 0, 0);
+      } else if (period === 'week') {
+        const weeksAgo = new Date(now);
+        weeksAgo.setDate(now.getDate() - (limitNum * 7) + 1);
+        startDateObj = new Date(weeksAgo.getFullYear(), weeksAgo.getMonth(), weeksAgo.getDate(), 0, 0, 0, 0);
+      } else if (period === 'month') {
+        startDateObj = new Date(now.getFullYear(), now.getMonth() - (limitNum - 1), 1, 0, 0, 0, 0);
+      }
+    }
+
+    // Build match criteria based on filter
+    let matchCriteria = {
+      category: 'earning',
+      createdAt: {
+        $gte: startDateObj,
+        $lte: endDateObj
+      }
+    };
+
+    // Apply filter for transaction types
+    if (filter === 'platform_fee') {
+      matchCriteria.type = 'platform_fee';
+    } else if (filter === 'owner_earnings') {
+      matchCriteria.type = 'owner_earnings';
+    } else if (filter === 'pickup_earnings') {
+      matchCriteria.type = 'pickup_earnings';
+    } else if (filter === 'partner_earnings') {
+      matchCriteria.type = { $in: ['owner_earnings', 'pickup_earnings'] };
+    }
+    // 'all' includes all earning transaction types
+
+    // Build aggregation pipeline based on period
+    let groupByFormat;
+
+    if (period === 'day') {
+      groupByFormat = '%Y-%m-%d';
+    } else if (period === 'week') {
+      groupByFormat = '%Y-%U'; // Year-week format (Sunday as start of week)
+    } else if (period === 'month') {
+      groupByFormat = '%Y-%m';
+    }
+
+    const revenueData = await Transaction.aggregate([
+      {
+        $match: matchCriteria
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: groupByFormat, date: '$createdAt' }
+          },
+          earnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 },
+          ownerEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'owner_earnings'] }, '$amount', 0]
+            }
+          },
+          pickupEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'pickup_earnings'] }, '$amount', 0]
+            }
+          },
+          platformFees: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'platform_fee'] }, '$amount', 0]
+            }
+          },
+          bonusPayments: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'bonus_payment'] }, '$amount', 0]
+            }
+          }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Generate all periods in the range and fill missing ones with zero
+    const chartData = [];
+    const currentDate = new Date(startDateObj);
+
+    while (currentDate <= endDateObj) {
+      let periodKey;
+
+      if (period === 'day') {
+        periodKey = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      } else if (period === 'week') {
+        const year = currentDate.getFullYear();
+        const weekNum = Math.ceil(((currentDate - new Date(year, 0, 1)) / 86400000 + 1) / 7);
+        periodKey = `${year}-${String(weekNum).padStart(2, '0')}`;
+      } else if (period === 'month') {
+        periodKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      }
+
+      const periodData = revenueData.find(d => d._id === periodKey);
+
+      chartData.push({
+        date: periodKey,
+        earnings: periodData ? periodData.earnings : 0,
+        transactions: periodData ? periodData.transactionCount : 0,
+        ownerEarnings: periodData ? periodData.ownerEarnings : 0,
+        pickupEarnings: periodData ? periodData.pickupEarnings : 0,
+        platformFees: periodData ? periodData.platformFees : 0,
+        bonusPayments: periodData ? periodData.bonusPayments : 0
+      });
+
+      // Increment date based on period
+      if (period === 'day') {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (period === 'week') {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (period === 'month') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+    }
+
+    res.json({
+      chartData,
+      totalEarnings: chartData.reduce((sum, item) => sum + item.earnings, 0),
+      period: {
+        type: period,
+        limit: limitNum,
+        startDate: startDateObj,
+        endDate: endDateObj,
+        filter
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching platform revenue chart:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
