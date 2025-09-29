@@ -69,7 +69,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ systemStats, onTabChange }) =
               <CreditCard className="h-6 w-6 text-amber-600" />
             </div>
             <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">${(systemStats.totalRevenue/1000).toFixed(1)}k</div>
+              <div className="text-2xl font-bold text-gray-900">LKR{(systemStats.totalRevenue/1000).toFixed(1)}k</div>
               <div className="text-sm text-gray-600">Total Revenue</div>
             </div>
           </div>
