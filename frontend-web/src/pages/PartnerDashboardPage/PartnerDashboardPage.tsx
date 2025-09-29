@@ -29,6 +29,8 @@ import { partnerService, Partner } from '../../services/partnerService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerRealtimeEvents } from '../../hooks/useRealtimeEvents';
 import notificationIntegrationService from '../../services/notificationIntegrationService';
+import transactionService, { MonthlyEarnings, Last7DaysRevenueChart } from '../../services/transactionService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const PartnerDashboardPage = () => {
   const { user } = useAuth();
@@ -38,13 +40,45 @@ const PartnerDashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
   const [partnerLoading, setPartnerLoading] = useState(true);
+  const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarnings | null>(null);
+  const [revenueChart, setRevenueChart] = useState<Last7DaysRevenueChart | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(true);
   
   // Real-time events hook for partner
   const { 
     newBookingRequests, 
-    isConnected: realtimeConnected,
+    isConnected,
     clearProcessedRequests 
   } = usePartnerRealtimeEvents();
+  
+  // Fetch earnings data
+  const fetchEarnings = async () => {
+    try {
+      setEarningsLoading(true);
+      const earningsData = await transactionService.getMyMonthlyEarnings();
+      setMonthlyEarnings(earningsData);
+    } catch (err) {
+      console.error('Error fetching earnings:', err);
+      // Don't set error state for earnings, just use default values
+    } finally {
+      setEarningsLoading(false);
+    }
+  };
+
+  // Fetch chart data separately
+  const fetchChartData = async () => {
+    try {
+      setChartLoading(true);
+      const chartData = await transactionService.getMyLast7DaysRevenueChart();
+      setRevenueChart(chartData);
+    } catch (err) {
+      console.error('Error fetching chart data:', err);
+      // Don't set error state for chart, just use default values
+    } finally {
+      setChartLoading(false);
+    }
+  };
 
   // Fetch bookings for the partner
   const fetchBookings = async () => {
@@ -87,6 +121,8 @@ const PartnerDashboardPage = () => {
     if (user && user.role === 'partner') {
       console.log('[PartnerDashboard] Initializing for partner user:', user.id);
       fetchBookings();
+      fetchEarnings();
+      fetchChartData();
       
       // Initialize notification integration service
       notificationIntegrationService.initialize(user.id, 'partner')
@@ -114,7 +150,7 @@ const PartnerDashboardPage = () => {
   useEffect(() => {
     console.log('[PartnerDashboard] Real-time events state:', {
       newBookingRequestsCount: newBookingRequests.length,
-      realtimeConnected,
+      isConnected,
       events: newBookingRequests.map(req => ({
         id: req.id,
         type: req.type,
@@ -144,7 +180,7 @@ const PartnerDashboardPage = () => {
 
       refreshBookings();
     }
-  }, [newBookingRequests, clearProcessedRequests, realtimeConnected]);
+  }, [newBookingRequests, clearProcessedRequests, isConnected]);
 
   useEffect(() => {
     // Fetch partner profile for approval status
@@ -224,7 +260,7 @@ const PartnerDashboardPage = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
-        {!realtimeConnected && (
+        {!isConnected && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
             <div className="text-yellow-800 text-sm">
               ⚠️ Real-time updates are not connected. You may not receive live booking requests.
@@ -330,7 +366,13 @@ const PartnerDashboardPage = () => {
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">LKR 12,450</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {earningsLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                    ) : (
+                      `LKR ${monthlyEarnings?.totalEarnings?.toLocaleString() || '0'}`
+                    )}
+                  </div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
@@ -435,27 +477,49 @@ const PartnerDashboardPage = () => {
             {/* Revenue Chart */}
             <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 mt-8">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Revenue Overview (Last 7 Days)</h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-green-600 font-medium flex items-center">
                     <TrendingUp className="h-4 w-4 mr-1" />
-                    +12.5% from last month
+                    Last 7 days
                   </span>
                 </div>
               </div>
               
-              <div className="h-60 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg flex items-end justify-between p-4">
-                {[35, 55, 40, 65, 45, 75, 60].map((height, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div 
-                      className="w-8 bg-gradient-to-t from-blue-500 to-indigo-600 rounded-t-md" 
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <div className="text-xs text-gray-600 mt-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
-                    </div>
+              <div className="h-60">
+                {chartLoading ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
                   </div>
-                ))}
+                ) : revenueChart?.chartData && revenueChart.chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={revenueChart.chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(dateStr) => {
+                          const date = new Date(dateStr);
+                          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        }}
+                      />
+                      <YAxis 
+                        tickFormatter={(value) => `LKR ${value.toLocaleString()}`}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Earnings']}
+                        labelFormatter={(dateStr) => {
+                          const date = new Date(dateStr);
+                          return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                        }}
+                      />
+                      <Bar dataKey="earnings" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    No revenue data available for the last 7 days
+                  </div>
+                )}
               </div>
             </div>
           </div>
