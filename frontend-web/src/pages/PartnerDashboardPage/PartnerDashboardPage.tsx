@@ -331,7 +331,7 @@ const PartnerDashboardPage = () => {
                     <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <div className="text-2xl font-bold text-gray-900">LKR 12,000</div>
+                    <div className="text-2xl font-bold text-gray-900">LKR 12,450</div>
                     <div className="text-sm text-gray-600">Monthly Revenue</div>
                   </div>
                 </div>
