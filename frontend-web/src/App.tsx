@@ -74,6 +74,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './contexts/AuthContext';
+import { ChatWidget } from './components/ChatWidget';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import DashboardPage from './pages/DashboardPage';
@@ -110,6 +111,7 @@ import InventoryPage from './pages/PartnerDashboardPage/InventoryPage';
 import DropBikePage from './pages/PartnerDashboardPage/DropBikePage';
 import ReviewPartnerDetailsPage from './pages/ReviewPartnerDetailsPage';
 import PartnerPublicProfilePage from './pages/PartnerPublicProfilePage';
+import ChatbotDemo from './pages/ChatbotDemo';
 
 // Protected route component with support for multiple roles
 const ProtectedRoute = ({ 
@@ -213,6 +215,9 @@ function App() {
       {/* Public partner profile route */}
       <Route path="/partners/:partnerId" element={<PartnerPublicProfilePage />} />
       
+      {/* Chatbot Demo Page */}
+      <Route path="/chatbot-demo" element={<ChatbotDemo />} />
+      
       {/* Test routes - accessible by both admin and partner roles */}
     
     </Routes>
@@ -239,6 +244,13 @@ function App() {
           },
         },
       }}
+    />
+    
+    {/* AI Chatbot Widget */}
+    <ChatWidget
+      position="bottom-right"
+      theme="light"
+      showWelcomeMessage={true}
     />
     </>
   );
