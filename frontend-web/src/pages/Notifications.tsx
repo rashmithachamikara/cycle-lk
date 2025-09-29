@@ -217,7 +217,7 @@ const NotificationsPage: React.FC = () => {
       <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
                     <div className="animate-pulse">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
@@ -246,7 +246,7 @@ const NotificationsPage: React.FC = () => {
     <>
       <Header />
       <div className="min-h-screen  pb-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  mt-28">
           {/* Header */}
           <div className="flex items-center justify-between my-8">
             <div>
