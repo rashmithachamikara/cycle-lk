@@ -146,7 +146,7 @@ const HomePage = () => {
           <div className="absolute inset-0 bg-black/50"></div>
           
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-            <div className="w-full text-white space-y-8">
+            <div className="w-full text-white space-y-8 mt-20">
               {/* <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30 hover:border-teal-400 hover:bg-teal-400/20 transition-all duration-300">
                 <CheckCircle className="h-5 w-5 text-teal-300 mr-2" />
                 <span className="text-sm font-medium">Trusted by 10,000+ travelers</span>
@@ -154,6 +154,7 @@ const HomePage = () => {
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
                 Explore
+                <br className='md:hidden' />
                 <span className="bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent"> Sri Lanka</span>
                 <br />
                 Your Way
@@ -165,10 +166,10 @@ const HomePage = () => {
               </p>
 
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 max-w-md pt-2">
-                  <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-teal-400 flex-shrink-0" /><span>Island-wide pick-up</span></div>
-                  <div className="flex items-center gap-3"><Shield className="h-5 w-5 text-teal-400 flex-shrink-0" /><span>Safe & insured rides</span></div>
-                  <div className="flex items-center gap-3"><Clock className="h-5 w-5 text-teal-400 flex-shrink-0" /><span>24/7 Support</span></div>
-                  <div className="flex items-center gap-3"><Globe className="h-5 w-5 text-teal-400 flex-shrink-0" /><span>Eco-friendly travel</span></div>
+                  <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-teal-400 flex-shrink-0" /><span className='text-sm md:text-base'>Island-wide pick-up</span></div>
+                  <div className="flex items-center gap-3"><Shield className="h-5 w-5 text-teal-400 flex-shrink-0" /><span className='text-sm md:text-base'>Safe & insured rides</span></div>
+                  <div className="flex items-center gap-3"><Clock className="h-5 w-5 text-teal-400 flex-shrink-0" /><span className='text-sm md:text-base'>24/7 Support</span></div>
+                  <div className="flex items-center gap-3"><Globe className="h-5 w-5 text-teal-400 flex-shrink-0" /><span className='text-sm md:text-base'>Eco-friendly travel</span></div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
