@@ -138,7 +138,7 @@ const HomePage = () => {
             playsInline
             preload="metadata"
             className="absolute inset-0 w-full h-full object-cover"
-            poster="https://res.cloudinary.com/di9vcyned/video/upload/f_auto,q_auto/v1755452159/Sri_lanka_Video_4_l3x1lu.jpg"
+            poster="https://res.cloudinary.com/di9vcyned/image/upload/v1759165607/video-ss_bjyccm.jpg"
           >
             <source src="https://res.cloudinary.com/di9vcyned/video/upload/v1757962213/Landing_Page_Vid_avjzt8.mp4" type="video/mp4" />
             Your browser does not support the video tag.
