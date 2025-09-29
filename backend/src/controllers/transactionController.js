@@ -399,3 +399,372 @@ exports.getTransactionById = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+/**
+ * Get monthly earnings for a partner
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPartnerMonthlyEarnings = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    const { year, month } = req.query;
+    
+    // Authorization check: partners can only access their own data, admins can access any
+    if (req.user.role === 'partner' && req.user.partnerId.toString() !== partnerId) {
+      return res.status(403).json({ message: 'Access denied. You can only view your own earnings.' });
+    }
+    
+    // Default to current month if not specified
+    const now = new Date();
+    const targetYear = year ? parseInt(year) : now.getFullYear();
+    const targetMonth = month ? parseInt(month) - 1 : now.getMonth(); // JS months are 0-based
+    
+    const startDate = new Date(targetYear, targetMonth, 1);
+    const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999); // Last day of month
+    
+    const aggregationResult = await Transaction.aggregate([
+      {
+        $match: {
+          partnerId: partnerId,
+          category: 'earning',
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalEarnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 },
+          ownerEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'owner_earnings'] }, '$amount', 0]
+            }
+          },
+          pickupEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'pickup_earnings'] }, '$amount', 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const earnings = aggregationResult[0] || {
+      totalEarnings: 0,
+      transactionCount: 0,
+      ownerEarnings: 0,
+      pickupEarnings: 0
+    };
+
+    res.json({
+      ...earnings,
+      period: {
+        year: targetYear,
+        month: targetMonth + 1,
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching partner monthly earnings:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get daily revenue data for current month chart
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getPartnerMonthlyRevenueChart = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    
+    // Authorization check: partners can only access their own data, admins can access any
+    if (req.user.role === 'partner' && req.user.partnerId.toString() !== partnerId) {
+      return res.status(403).json({ message: 'Access denied. You can only view your own revenue data.' });
+    }
+    
+    // Get current month
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const dailyRevenue = await Transaction.aggregate([
+      {
+        $match: {
+          partnerId: partnerId,
+          category: 'earning',
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          dailyEarnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Fill in missing days with zero earnings
+    const daysInMonth = endDate.getDate();
+    const chartData = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dayData = dailyRevenue.find(d => d._id === dateStr);
+      
+      chartData.push({
+        date: dateStr,
+        earnings: dayData ? dayData.dailyEarnings : 0,
+        transactions: dayData ? dayData.transactionCount : 0
+      });
+    }
+
+    res.json({
+      chartData,
+      period: {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching partner monthly revenue chart:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get current user's monthly earnings (for partners)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyMonthlyEarnings = async (req, res) => {
+  try {
+    // Only partners can access their own earnings
+    if (req.user.role !== 'partner') {
+      return res.status(403).json({ message: 'Access denied. Only partners can view their earnings.' });
+    }
+
+    const partnerId = req.user.partnerId;
+    const { year, month } = req.query;
+    
+    // Default to current month if not specified
+    const now = new Date();
+    const targetYear = year ? parseInt(year) : now.getFullYear();
+    const targetMonth = month ? parseInt(month) - 1 : now.getMonth(); // JS months are 0-based
+    
+    const startDate = new Date(targetYear, targetMonth, 1);
+    const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999); // Last day of month
+    
+    const aggregationResult = await Transaction.aggregate([
+      {
+        $match: {
+          partnerId: partnerId,
+          category: 'earning',
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalEarnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 },
+          ownerEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'owner_earnings'] }, '$amount', 0]
+            }
+          },
+          pickupEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'pickup_earnings'] }, '$amount', 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const earnings = aggregationResult[0] || {
+      totalEarnings: 0,
+      transactionCount: 0,
+      ownerEarnings: 0,
+      pickupEarnings: 0
+    };
+
+    res.json({
+      ...earnings,
+      period: {
+        year: targetYear,
+        month: targetMonth + 1,
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching my monthly earnings:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get current user's monthly revenue chart (for partners)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyMonthlyRevenueChart = async (req, res) => {
+  try {
+    // Only partners can access their own chart data
+    if (req.user.role !== 'partner') {
+      return res.status(403).json({ message: 'Access denied. Only partners can view their revenue chart.' });
+    }
+
+    const partnerId = req.user.partnerId;
+    
+    // Get current month
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const dailyRevenue = await Transaction.aggregate([
+      {
+        $match: {
+          partnerId: partnerId,
+          category: 'earning',
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          dailyEarnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Fill in missing days with zero earnings
+    const daysInMonth = endDate.getDate();
+    const chartData = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dayData = dailyRevenue.find(d => d._id === dateStr);
+      
+      chartData.push({
+        date: dateStr,
+        earnings: dayData ? dayData.dailyEarnings : 0,
+        transactions: dayData ? dayData.transactionCount : 0
+      });
+    }
+
+    res.json({
+      chartData,
+      period: {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching my monthly revenue chart:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get current user's last 7 days revenue chart (for partners)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getMyLast7DaysRevenueChart = async (req, res) => {
+  try {
+    // Only partners can access their own chart data
+    if (req.user.role !== 'partner') {
+      return res.status(403).json({ message: 'Access denied. Only partners can view their revenue chart.' });
+    }
+
+    const partnerId = req.user.partnerId;
+
+    // Get last 7 days
+    const now = new Date();
+    const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0); // 7 days ago
+
+    const dailyRevenue = await Transaction.aggregate([
+      {
+        $match: {
+          partnerId: partnerId,
+          category: 'earning',
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          dailyEarnings: { $sum: '$amount' },
+          transactionCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Fill in missing days with zero earnings for the last 7 days
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const dayData = dailyRevenue.find(d => d._id === dateStr);
+
+      chartData.push({
+        date: dateStr,
+        earnings: dayData ? dayData.dailyEarnings : 0,
+        transactions: dayData ? dayData.transactionCount : 0
+      });
+    }
+
+    res.json({
+      chartData,
+      period: {
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching my last 7 days revenue chart:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
