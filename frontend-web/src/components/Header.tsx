@@ -433,16 +433,18 @@ const Header = () => {
       const timeout = setTimeout(() => setShowMobileNav(false), 300);
       return () => clearTimeout(timeout);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMenuOpen]);
 
   return (
-    <header className="fixed w-full z-50 top-0 left-0 right-0 py-5 px-4 md:px-[60px] lg:px-[60px]">
-      <div
-        className={`relative flex justify-between items-center h-16 transition-all duration-300
-          bg-white/20 dark:bg-gray-500/50 backdrop-blur-md rounded-full border border-white/80 dark:border-gray-500/20 shadow-md
-          ${isMenuOpen ? 'rounded-b-none' : ''}
-        `}
-      >
+    <header className="fixed w-full z-50 top-0 left-0 right-0 py-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className={`relative flex justify-between items-center h-16 transition-all duration-300
+            bg-white/20 dark:bg-gray-500/50 backdrop-blur-md rounded-lg border border-white/80 dark:border-gray-500/20 shadow-md
+            ${isMenuOpen ? 'rounded-b-none' : ''}
+          `}
+        >
         {/* Logo Section */}
         <div className="logo-section flex items-center">
           <Link to="/" className="flex items-center">
@@ -626,14 +628,15 @@ const Header = () => {
 
       {/* Mobile Navigation */}
       {showMobileNav && (
-        <div
-          className={`lg:hidden fixed left-4 right-4 top-[72px] z-40 w-auto
-            py-4 bg-white/20 dark:bg-gray-500/50 backdrop-blur-md rounded-b-xl border border-white/30 dark:border-gray-500/20 border-t-0 shadow-lg
-            transition-all duration-300 ease-out
-            ${isMenuOpen ? 'animate-navbar-slide' : 'animate-navbar-slide-reverse'}
-          `}
-          style={{ left: 'max(1rem, 60px)', right: 'max(1rem, 60px)' }}
-        >
+        <div className="fixed inset-x-0 top-[82px] z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div
+              className={`lg:hidden w-full
+                py-4 bg-white/20 dark:bg-gray-500/50 backdrop-blur-md rounded-b-xl border border-white/30 dark:border-gray-500/20 border-t-0 shadow-lg
+                transition-all duration-300 ease-out
+                ${isMenuOpen ? 'animate-navbar-slide' : 'animate-navbar-slide-reverse'}
+              `}
+            >
           <nav className="flex flex-col space-y-1 px-2">
             <Link
               to="/"
@@ -779,7 +782,10 @@ const Header = () => {
             )}
           </nav>
         </div>
+        </div>
+        </div>
       )}
+    </div>
     </header>
   );
 };
