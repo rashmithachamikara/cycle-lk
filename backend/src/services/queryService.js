@@ -769,38 +769,10 @@ class QueryService {
     try {
       const { PAYMENT_METHODS } = require('../config/systemInfo').SYSTEM_INFO;
       
-      // Format the payment methods information
-      let message = "We accept the following payment methods:\n\n";
-      
-      // Add accepted payment methods
-      message += "💳 **Accepted Payments:**\n";
-      PAYMENT_METHODS.accepted.forEach(method => {
-        message += `• ${method}\n`;
-      });
-      
-      // Add supported currencies
-      message += "\n💰 **Supported Currencies:**\n";
-      PAYMENT_METHODS.currencies.forEach(currency => {
-        message += `• ${currency}\n`;
-      });
-      
-      // Add key policies
-      message += "\n📋 **Important Policies:**\n";
-      const keyPolicies = [
-        "Security deposit required for all rentals",
-        "Full payment due at booking confirmation", 
-        "Full refund if cancelled 24+ hours before pickup",
-        "All transactions secured with 256-bit SSL encryption"
-      ];
-      keyPolicies.forEach(policy => {
-        message += `• ${policy}\n`;
-      });
-      
-      message += "\nNeed help with booking? I'm here to assist you! 😊";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'payment_methods',
         data: {
           paymentMethods: PAYMENT_METHODS,
           quickInfo: {
@@ -826,35 +798,18 @@ class QueryService {
     try {
       const { SAFETY_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = "🛡️ **Your Safety is Our Priority!**\n\n";
-      
-      // Add safety equipment
-      message += "🎒 **Safety Equipment Provided:**\n";
-      SAFETY_FEATURES.equipment.slice(0, 6).forEach(item => {
-        message += `• ${item}\n`;
-      });
-      
-      // Add safety measures
-      message += "\n🔒 **Safety Measures:**\n";
-      SAFETY_FEATURES.measures.slice(0, 5).forEach(measure => {
-        message += `• ${measure}\n`;
-      });
-      
-      // Add key guidelines
-      message += "\n⚠️ **Important Safety Guidelines:**\n";
-      SAFETY_FEATURES.guidelines.slice(0, 5).forEach(guideline => {
-        message += `• ${guideline}\n`;
-      });
-      
-      message += "\n🆘 **24/7 Emergency Support:** +94 77 911 9999\n";
-      message += "\nRide safe and enjoy your adventure! 🚴‍♂️";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'safety_info',
         data: {
           safetyFeatures: SAFETY_FEATURES,
-          emergencyContact: "+94 77 911 9999"
+          emergencyContact: "+94 77 911 9999",
+          quickSummary: {
+            equipment: SAFETY_FEATURES.equipment.slice(0, 6),
+            measures: SAFETY_FEATURES.measures.slice(0, 5),
+            guidelines: SAFETY_FEATURES.guidelines.slice(0, 5)
+          }
         },
         suggestions: ['Book a bike', 'Payment methods', 'Find locations', 'Booking help']
       };
@@ -872,34 +827,16 @@ class QueryService {
     try {
       const { BOOKING_PROCESS } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = "📋 **How to Book Your Bike - Easy Steps!**\n\n";
-      
-      // Add main booking steps
-      message += "🔢 **Booking Steps:**\n";
-      BOOKING_PROCESS.steps.slice(0, 8).forEach(step => {
-        message += `${step}\n`;
-      });
-      
-      // Add requirements
-      message += "\n📄 **What You'll Need:**\n";
-      BOOKING_PROCESS.requirements.forEach(req => {
-        message += `• ${req}\n`;
-      });
-      
-      // Add helpful tips
-      message += "\n💡 **Helpful Tips:**\n";
-      BOOKING_PROCESS.tips.slice(0, 4).forEach(tip => {
-        message += `• ${tip}\n`;
-      });
-      
-      message += "\n✨ Ready to start your bike adventure? Let me help you find the perfect bike!";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'booking_process',
         data: {
           bookingProcess: BOOKING_PROCESS,
-          quickSummary: "Search → Select → Documents → Payment → Confirmation → Enjoy!"
+          quickSummary: "Search → Select → Documents → Payment → Confirmation → Enjoy!",
+          stepCount: BOOKING_PROCESS.steps.length,
+          requirements: BOOKING_PROCESS.requirements,
+          tips: BOOKING_PROCESS.tips
         },
         suggestions: ['Find bikes', 'Payment methods', 'Safety features', 'Check availability']
       };
@@ -917,39 +854,24 @@ class QueryService {
     try {
       const { SUPPORT_INFO, PLATFORM_NAME } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = `📞 **Get in Touch with ${PLATFORM_NAME}**\n\n`;
-      
-      message += "💬 **Contact Methods:**\n";
-      message += "• **Phone Support:** +94 77 123 4567 (24/7)\n";
-      message += "• **Email:** support@cycle.lk (2-4 hour response)\n";
-      message += "• **WhatsApp:** +94 77 123 4567 (24/7)\n";
-      message += "• **Live Chat:** You're using it right now! 😊\n\n";
-      
-      message += "🚨 **Emergency Support:**\n";
-      message += "• **Breakdown/Emergency:** +94 77 911 9999 (24/7)\n";
-      message += "• Available for bike breakdowns, accidents, and urgent assistance\n\n";
-      
-      message += "📧 **Email Support Categories:**\n";
-      message += "• General inquiries: support@cycle.lk\n";
-      message += "• Booking issues: bookings@cycle.lk\n";
-      message += "• Partnership inquiries: partners@cycle.lk\n";
-      message += "• Feedback: feedback@cycle.lk\n\n";
-      
-      message += `⏰ **Support Availability:** ${SUPPORT_INFO.available}\n`;
-      message += `📋 **Available Channels:** ${SUPPORT_INFO.channels.join(', ')}\n\n`;
-      
-      message += "How can I help you today? I'm here to assist with any questions! 🤝";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'contact_support',
         data: {
+          platformName: PLATFORM_NAME,
           supportInfo: SUPPORT_INFO,
           contactDetails: {
             phone: "+94 77 123 4567",
             email: "support@cycle.lk", 
             whatsapp: "+94 77 123 4567",
             emergency: "+94 77 911 9999"
+          },
+          emailCategories: {
+            general: "support@cycle.lk",
+            bookings: "bookings@cycle.lk",
+            partnerships: "partners@cycle.lk",
+            feedback: "feedback@cycle.lk"
           }
         },
         suggestions: ['Find bikes', 'Check availability', 'Payment methods', 'Safety features']
@@ -968,22 +890,18 @@ class QueryService {
     try {
       const { BIKE_TYPES } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = "🚴‍♂️ **Available Bike Types at Cycle.LK**\n\n";
-      
-      BIKE_TYPES.forEach((bike, index) => {
-        message += `${index + 1}. **${bike.name}**\n`;
-        message += `   ${bike.description}\n`;
-        message += `   Perfect for: ${bike.suitableFor.join(', ')}\n\n`;
-      });
-      
-      message += "Which type of bike adventure are you planning? Let me help you find the perfect match! 🎯";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'bike_types',
         data: {
           bikeTypes: BIKE_TYPES,
-          totalTypes: BIKE_TYPES.length
+          totalTypes: BIKE_TYPES.length,
+          categories: BIKE_TYPES.map(bike => ({
+            name: bike.name,
+            description: bike.description,
+            suitableFor: bike.suitableFor
+          }))
         },
         suggestions: ['Find bikes', 'Check availability', 'Search by location', 'Safety features']
       };
@@ -1001,27 +919,17 @@ class QueryService {
     try {
       const { PLATFORM_NAME, PLATFORM_DESCRIPTION, MAJOR_CITIES, PLATFORM_FEATURES } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = `🌟 **Welcome to ${PLATFORM_NAME}!**\n\n`;
-      message += `${PLATFORM_DESCRIPTION}\n\n`;
-      
-      message += "🏙️ **Service Coverage:**\n";
-      message += `We operate in ${MAJOR_CITIES.length} major cities: ${MAJOR_CITIES.join(', ')}\n\n`;
-      
-      message += "✨ **Platform Features:**\n";
-      PLATFORM_FEATURES.slice(0, 6).forEach(feature => {
-        message += `• ${feature}\n`;
-      });
-      
-      message += "\n🎯 Ready to explore Sri Lanka on two wheels? Let's find you the perfect bike!";
-      
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'platform_info',
         data: {
           platformName: PLATFORM_NAME,
           description: PLATFORM_DESCRIPTION,
           cities: MAJOR_CITIES,
-          features: PLATFORM_FEATURES
+          cityCount: MAJOR_CITIES.length,
+          features: PLATFORM_FEATURES,
+          featureCount: PLATFORM_FEATURES.length
         },
         suggestions: ['Find bikes', 'Bike types', 'Service areas', 'Safety features']
       };
@@ -1039,47 +947,37 @@ class QueryService {
     try {
       const { SERVICE_AREAS, MAJOR_CITIES } = require('../config/systemInfo').SYSTEM_INFO;
       
-      let message = "🗺️ **Our Service Areas in Sri Lanka**\n\n";
-      
-      // If user specified a particular city, show details for that city
       const requestedCity = entities.location || entities.city;
+      let specificCityInfo = null;
+      
       if (requestedCity) {
         const cityKey = Object.keys(SERVICE_AREAS).find(city => 
           city.toLowerCase().includes(requestedCity.toLowerCase())
         );
         
         if (cityKey && SERVICE_AREAS[cityKey]) {
-          const cityInfo = SERVICE_AREAS[cityKey];
-          message += `📍 **${cityKey}**\n`;
-          message += `🎯 **Specialty:** ${cityInfo.specialty}\n\n`;
-          message += "🏛️ **Popular Highlights:**\n";
-          cityInfo.highlights.forEach(highlight => {
-            message += `• ${highlight}\n`;
-          });
-          message += `\nReady to explore ${cityKey}? Let me help you find bikes in this area! 🚴‍♂️`;
-        } else {
-          message += `I don't have specific information about ${requestedCity}. Here are our main service areas:\n\n`;
-          message += `🏙️ **Available Cities:** ${MAJOR_CITIES.join(', ')}\n\n`;
-          message += "Which city would you like to explore? I can provide detailed information about any of these locations! 😊";
+          specificCityInfo = {
+            name: cityKey,
+            ...SERVICE_AREAS[cityKey]
+          };
         }
-      } else {
-        // Show all service areas
-        Object.entries(SERVICE_AREAS).forEach(([city, info]) => {
-          message += `📍 **${city}**\n`;
-          message += `   ${info.specialty}\n`;
-          message += `   Highlights: ${info.highlights.slice(0, 2).join(', ')}\n\n`;
-        });
-        
-        message += "Which destination catches your interest? I can provide more detailed information about any of these amazing locations! 🌟";
       }
       
       return {
         success: true,
-        message: message,
+        type: 'system_info',
+        intent: 'service_areas',
         data: {
           serviceAreas: SERVICE_AREAS,
           majorCities: MAJOR_CITIES,
-          requestedCity: requestedCity
+          totalCities: MAJOR_CITIES.length,
+          requestedCity: requestedCity,
+          specificCityInfo: specificCityInfo,
+          allCityData: Object.entries(SERVICE_AREAS).map(([city, info]) => ({
+            name: city,
+            specialty: info.specialty,
+            highlights: info.highlights
+          }))
         },
         suggestions: ['Find bikes', 'Bike types', 'Check availability', 'Platform info']
       };
