@@ -3,7 +3,7 @@ const transactionController = require('./transactionController');
 const firebaseAdmin = require('../config/firebase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-const DOMAIN = 'http://localhost:5173'; // Replace with your frontend domain
+const DOMAIN = process.env.FRONTEND_DOMAIN || 'http://localhost:5173'; // Frontend domain from environment
 
 // Payment configuration
 const PAYMENT_CONFIG = {
