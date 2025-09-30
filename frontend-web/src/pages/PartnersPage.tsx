@@ -11,7 +11,7 @@ import {
 } from '../components/PartnersPage';
 
 import { Partner, partnerService } from '../services/partnerService';
-import { Loader, ErrorDisplay } from '../ui';
+import { ErrorDisplay } from '../ui';
 
 const PartnersPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -78,7 +78,7 @@ const PartnersPage = () => {
         {/* Hero Section */}
       <HeroSection />
         <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Loader message="Loading partners..." size="lg" />
+          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         </div>
         <Footer />
       </div>
@@ -90,7 +90,7 @@ const PartnersPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
           <ErrorDisplay 
             error={error} 
             onRetry={fetchPartners}

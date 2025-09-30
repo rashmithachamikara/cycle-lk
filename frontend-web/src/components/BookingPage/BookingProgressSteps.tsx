@@ -13,8 +13,8 @@ interface BookingProgressStepsProps {
 
 const BookingProgressSteps = ({ currentStep, steps }: BookingProgressStepsProps) => {
   return (
-    <div className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="bg-white shadow-sm border-b mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 ">
         {/* Desktop view */}
         <div className="hidden sm:flex items-start justify-between">
           {steps.map((step, index) => (

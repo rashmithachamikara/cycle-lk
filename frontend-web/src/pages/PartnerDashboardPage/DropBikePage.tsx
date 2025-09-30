@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Camera, CheckCircle, CreditCard, FileText, Bike as BikeIcon, ArrowLeft, Clock } from 'lucide-react';
 import Header from "../../components/Header";
-import { Loader } from "../../ui";
 import { Link } from "react-router-dom";
 import { bookingService, PartnerDashboardBooking } from "../../services/bookingService";
 import { bikeService } from "../../services/bikeService";
@@ -326,8 +325,8 @@ const DropBikePage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="flex items-center justify-center h-96">
-          <Loader />
+        <div className="flex items-center justify-center h-96 mt-20">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         </div>
       </div>
     );
@@ -337,9 +336,9 @@ const DropBikePage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
         {/* Header with Back Button */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex mb-8 flex-col">
           <div className="flex items-center">
             <Link 
               to="/partner-dashboard" 
@@ -348,11 +347,12 @@ const DropBikePage = () => {
               <ArrowLeft className="h-5 w-5 mr-1" />
               Back to Dashboard
             </Link>
-            <div>
+           
+          </div>
+           <div className="mt-5">
               <h1 className="text-3xl font-bold text-gray-900">Bike Drop-Off</h1>
               <p className="text-gray-600">Process customer bike returns for your dropoff location</p>
             </div>
-          </div>
         </div>
 
         {/* Progress Indicator */}

@@ -84,7 +84,7 @@ const PaymentSuccessPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -98,7 +98,7 @@ const PaymentSuccessPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <div className="text-red-600 mb-4">
               <h2 className="text-xl font-semibold">Error</h2>
@@ -121,7 +121,7 @@ const PaymentSuccessPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">

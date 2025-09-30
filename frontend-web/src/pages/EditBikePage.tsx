@@ -265,7 +265,7 @@ const EditBikePage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center mt-20">
           <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <h2 className="text-xl font-medium text-gray-700">Loading bike details...</h2>
         </div>

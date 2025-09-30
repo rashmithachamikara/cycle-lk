@@ -155,8 +155,8 @@ const SYSTEM_INFO = {
       "GBP (British Pound) - Online payments only"
     ],
     policies: [
-      "Security deposit required for all rentals (LKR 5,000-15,000 depending on bike type)",
-      "Full payment due at booking confirmation",
+      "Security deposit of 20% required for booking confirmation",
+      "Full payment due at dropoff",
       "Refund policy: Full refund if cancelled 24+ hours before pickup",
       "50% refund if cancelled 12-24 hours before pickup",
       "No refund for cancellations less than 12 hours before pickup",
