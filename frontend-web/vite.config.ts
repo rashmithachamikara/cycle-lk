@@ -46,7 +46,7 @@ export default defineConfig({
       }
     },
     target: 'esnext',
-    minify: 'terser'
+    minify: 'esbuild'
   },
   define: {
     // Fix Firebase build issues
