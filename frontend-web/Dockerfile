@@ -11,11 +11,16 @@ COPY package*.json ./
 # Install all dependencies (including dev dependencies needed for build)
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy configuration files first
+COPY vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
+COPY index.html ./
 
-# Build the application with increased memory limit and optimizations
-RUN NODE_OPTIONS="--max-old-space-size=6144 --gc-global" npm run build
+# Copy source code
+COPY src/ ./src/
+COPY public/ ./public/
+
+# Build the application using the optimized build script
+RUN npm run build:docker
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine AS production
