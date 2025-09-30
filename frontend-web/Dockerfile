@@ -5,22 +5,22 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Install dependencies for better caching
 COPY package*.json ./
-
-# Install all dependencies (including dev dependencies needed for build)
 RUN npm ci
 
-# Copy configuration files first
+# Copy configuration and environment files
 COPY vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
-COPY index.html ./
+COPY index.html .env ./
 
 # Copy source code
 COPY src/ ./src/
 COPY public/ ./public/
 
-# Build the application using the optimized build script
-RUN npm run build:docker
+# Set Node.js options and build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_ENV=production
+RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine AS production
