@@ -7,6 +7,8 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
     include: [
+      'react',
+      'react-dom',
       'firebase/app', 
       'firebase/messaging', 
       'firebase/firestore'
@@ -18,27 +20,27 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // Keep React and React-DOM together to avoid forwardRef issues
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-vendor';
+          }
           // Firebase packages
           if (id.includes('firebase')) {
             return 'firebase';
           }
-          // React packages
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'vendor';
-          }
-          // Router
+          // Router (depends on React, so separate chunk)
           if (id.includes('react-router')) {
             return 'router';
           }
-          // UI libraries
+          // UI libraries that depend on React
           if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('react-icons')) {
             return 'ui';
           }
-          // Utils
+          // Utils (non-React dependencies)
           if (id.includes('axios') || id.includes('react-hot-toast')) {
             return 'utils';
           }
-          // Large node_modules
+          // Other large node_modules
           if (id.includes('node_modules')) {
             return 'vendor-libs';
           }
@@ -56,6 +58,9 @@ export default defineConfig({
     alias: {
       // Ensure proper Firebase module resolution
       'firebase/compat/app': 'firebase/compat/app',
+      // Ensure consistent React imports
+      'react': 'react',
+      'react-dom': 'react-dom'
     }
   }
 });
