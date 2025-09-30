@@ -109,17 +109,12 @@ class QueryService {
    * Search for bikes based on criteria
    */
   async searchBikes(entities) {
-    let query = {};
-    const options = { limit: 5, sort: { rating: -1 } };
+    let query = { 'availability.status': { $in: ['available', true] } };
+    const options = { limit: 10, sort: { rating: -1, 'pricing.perDay': 1 } };
     
     // Location filter - need to search by partner location
     if (entities.location) {
       try {
-        // First, find partners that match the location
-        const Partner = require('../models/Partner');
-        const Location = require('../models/Location');
-        
-        // Search in partner's mapLocation.name, mapLocation.address, or referenced Location
         const locationRegex = new RegExp(entities.location, 'i');
         
         console.log('Searching for partners with location:', entities.location);
@@ -148,7 +143,10 @@ class QueryService {
         let locationPartnerIds = [];
         if (matchingLocations.length > 0) {
           const locationIds = matchingLocations.map(l => l._id);
-          const locationPartners = await Partner.find({ location: { $in: locationIds } }).select('_id');
+          const locationPartners = await Partner.find({ 
+            location: { $in: locationIds },
+            status: 'active'
+          }).select('_id');
           locationPartnerIds = locationPartners.map(p => p._id);
         }
         
@@ -157,28 +155,43 @@ class QueryService {
         console.log('Found matching partners:', allPartnerIds.length);
         
         if (allPartnerIds.length > 0) {
-          query.partnerId = { $in: allPartnerIds };
+          // Query bikes by currentPartnerId (where the bike is currently located)
+          // Also include bikes owned by these partners (partnerId) that don't have currentPartnerId set
+          query.$or = [
+            { currentPartnerId: { $in: allPartnerIds } }, // Bikes currently at these locations
+            { 
+              partnerId: { $in: allPartnerIds }, 
+              $or: [
+                { currentPartnerId: { $exists: false } },
+                { currentPartnerId: null }
+              ]
+            } // Bikes owned by these partners and not moved elsewhere
+          ];
         } else {
           // No matching partners found for this location
           return {
             success: true,
-            message: `I couldn't find any bikes available in ${entities.location}. Let me suggest some popular locations:`,
+            message: `I couldn't find any bikes available in ${entities.location}. Here are some suggestions:`,
             data: [],
             suggestions: [
-              "Try searching for bikes in Colombo, Kandy, or Galle",
-              "Check out all available locations", 
-              "Browse bikes by type instead"
+              `Try searching for bikes in popular areas like Colombo, Kandy, or Galle`,
+              `Check out all available locations`, 
+              `Browse bikes by type instead`
             ]
           };
         }
       } catch (error) {
         console.error('Error searching by location:', error);
-        // Continue without location filter if there's an error
+        return {
+          success: false,
+          message: "There was an error searching for bikes in that location. Please try again.",
+          suggestions: ['Browse all bikes', 'Try a different location', 'Contact support']
+        };
       }
     }
     
     // Bike type filter
-    if (entities.bikeType) {
+    if (entities.bikeType && entities.bikeType !== 'any type' && entities.bikeType !== 'any') {
       query.type = new RegExp(entities.bikeType, 'i');
     }
     
@@ -195,15 +208,20 @@ class QueryService {
       }
     }
     
-    // Availability filter - check for available status
-    query['availability.status'] = { $in: ['available', true] };
-    
     console.log('Final search query:', JSON.stringify(query, null, 2));
     
     const bikes = await Bike.find(query)
       .populate({
         path: 'partnerId',
-        select: 'companyName mapLocation location rating status',
+        select: 'companyName mapLocation location rating status phone',
+        populate: {
+          path: 'location',
+          select: 'name address coordinates'
+        }
+      })
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName mapLocation location rating status phone',
         populate: {
           path: 'location',
           select: 'name address coordinates'
@@ -212,29 +230,32 @@ class QueryService {
       .limit(options.limit)
       .sort(options.sort);
     
+    console.log(`Found ${bikes.length} bikes matching search criteria`);
+    
     if (bikes.length === 0) {
       return {
         success: true,
-        message: "I couldn't find any bikes matching your criteria. Let me suggest some alternatives:",
+        message: "I couldn't find any bikes matching your criteria. Here are some suggestions:",
         data: [],
-        suggestions: ['Browse all bikes', 'Search different location', 'Check other bike types']
+        suggestions: [
+          'Browse all available bikes', 
+          'Try a different location', 
+          'Check other bike types',
+          'Contact support for assistance'
+        ]
       };
     }
     
     return {
       success: true,
       message: `I found ${bikes.length} bikes that match your criteria:`,
-      data: bikes.map(bike => ({
-        id: bike._id,
-        name: bike.name,
-        type: bike.type,
-        location: bike.location,
-        dailyPrice: bike.pricing.perDay,
-        partner: bike.partnerId?.companyName,
-        rating: bike.rating,
-        images: bike.images?.slice(0, 2) || []
-      })),
-      count: bikes.length
+      data: bikes.map(bike => this.formatBikeData(bike)),
+      searchParams: {
+        location: entities.location,
+        bikeType: entities.bikeType,
+        priceRange: entities.priceRange,
+        totalFound: bikes.length
+      }
     };
   }
 
@@ -266,19 +287,92 @@ class QueryService {
       }
     }
     
-    if (!bikeId && !location) {
-      return {
-        success: false,
-        message: "Please specify either a bike ID or location to check availability."
-      };
-    }
+    let query = { 'availability.status': { $in: ['available', true] } };
+    let partnerIds = [];
     
-    let query = { 'availability.status': true };
-    
+    // Handle bike ID query
     if (bikeId) {
       query._id = bikeId;
     } else if (location) {
-      query.location = new RegExp(location, 'i');
+      // Find partners by location first, then get bikes that are currently at those partners
+      try {
+        const locationRegex = new RegExp(location, 'i');
+        
+        console.log('Searching for partners with location:', location);
+        
+        // Find partners that match the location (these could be current locations)
+        const matchingPartners = await Partner.find({
+          $or: [
+            { 'mapLocation.name': locationRegex },
+            { 'mapLocation.address': locationRegex },
+            { 'companyName': locationRegex }
+          ],
+          status: 'active'
+        }).select('_id companyName mapLocation');
+        
+        // Also check referenced Location documents
+        const matchingLocations = await Location.find({
+          $or: [
+            { name: locationRegex },
+            { address: locationRegex }
+          ]
+        }).select('_id');
+        
+        partnerIds = matchingPartners.map(p => p._id);
+        
+        // Get partners that reference these locations
+        if (matchingLocations.length > 0) {
+          const locationIds = matchingLocations.map(l => l._id);
+          const locationPartners = await Partner.find({ 
+            location: { $in: locationIds },
+            status: 'active' 
+          }).select('_id');
+          partnerIds.push(...locationPartners.map(p => p._id));
+        }
+        
+        console.log('Found matching partners:', partnerIds.length);
+        
+        if (partnerIds.length > 0) {
+          // Query bikes by currentPartnerId (where the bike is currently located)
+          // Also include bikes owned by these partners (partnerId) that don't have currentPartnerId set
+          query.$or = [
+            { currentPartnerId: { $in: partnerIds } }, // Bikes currently at these locations
+            { 
+              partnerId: { $in: partnerIds }, 
+              $or: [
+                { currentPartnerId: { $exists: false } },
+                { currentPartnerId: null }
+              ]
+            } // Bikes owned by these partners and not moved elsewhere
+          ];
+        } else {
+          // No matching partners found for this location
+          return {
+            success: true,
+            message: `No bikes found in ${location}. Here are some suggestions:`,
+            data: [],
+            suggestions: [
+              `Try searching for bikes in popular areas like Colombo, Kandy, or Galle`,
+              `Check out all available locations`, 
+              `Browse bikes by type instead`
+            ],
+            searchParams: {
+              location,
+              bikeType,
+              startDate,
+              duration,
+              totalFound: 0
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Error searching by location:', error);
+        return {
+          success: false,
+          message: "There was an error searching for bikes in that location. Please try again.",
+          suggestions: ['Browse all bikes', 'Try a different location', 'Contact support']
+        };
+      }
     }
     
     // Add bike type filter if specified (and not "any type")
@@ -287,23 +381,48 @@ class QueryService {
     }
     
     console.log('Bike availability query:', query);
-    const bikes = await Bike.find(query).populate('partnerId', 'companyName phone');
+    
+    const bikes = await Bike.find(query)
+      .populate({
+        path: 'partnerId',
+        select: 'companyName phone mapLocation location rating',
+        populate: {
+          path: 'location',
+          select: 'name address'
+        }
+      })
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName phone mapLocation location rating',
+        populate: {
+          path: 'location',
+          select: 'name address'
+        }
+      })
+      .sort({ rating: -1, 'pricing.perDay': 1 })
+      .limit(10);
+      
     console.log(`Found ${bikes.length} bikes matching query`);
     
     if (bikes.length === 0) {
-      // Create sample data for demo purposes
-      const sampleBikes = this.generateSampleBikes(location, bikeType, startDate, duration);
-      
       return {
         success: true,
-        message: `Found ${sampleBikes.length} available bikes in ${location || 'your area'} for ${duration || 'your requested period'}.`,
-        data: sampleBikes,
+        message: location ? 
+          `No bikes available in ${location} at the moment.` : 
+          `No bikes match your criteria.`,
+        data: [],
+        suggestions: [
+          'Try a different location',
+          'Browse all available bikes',
+          'Check different bike types',
+          'Contact support for assistance'
+        ],
         searchParams: {
           location,
           bikeType,
           startDate,
           duration,
-          totalFound: sampleBikes.length
+          totalFound: 0
         }
       };
     }
@@ -326,27 +445,28 @@ class QueryService {
       
       return {
         success: true,
-        message: `Found ${availableBikes.length} available bikes for your selected dates.`,
-        data: availableBikes.map(bike => ({
-          id: bike._id,
-          name: bike.name,
-          location: bike.location,
-          partner: bike.partnerId?.companyName,
-          available: true
-        }))
+        message: `Found ${availableBikes.length} available bikes${location ? ` in ${location}` : ''} for your selected dates.`,
+        data: availableBikes.map(bike => this.formatBikeData(bike)),
+        searchParams: {
+          location,
+          bikeType,
+          startDate,
+          endDate,
+          duration,
+          totalFound: availableBikes.length
+        }
       };
     }
     
     return {
       success: true,
-      message: `Found ${bikes.length} bikes currently available.`,
-      data: bikes.map(bike => ({
-        id: bike._id,
-        name: bike.name,
-        location: bike.location,
-        partner: bike.partnerId?.companyName,
-        available: bike.availability.status
-      }))
+      message: `Found ${bikes.length} bikes currently available${location ? ` in ${location}` : ''}.`,
+      data: bikes.map(bike => this.formatBikeData(bike)),
+      searchParams: {
+        location,
+        bikeType,
+        totalFound: bikes.length
+      }
     };
   }
 
@@ -364,7 +484,22 @@ class QueryService {
     }
     
     const bike = await Bike.findById(bikeId)
-      .populate('partnerId', 'companyName location phone email rating')
+      .populate({
+        path: 'partnerId',
+        select: 'companyName mapLocation location phone email rating',
+        populate: {
+          path: 'location',
+          select: 'name address coordinates'
+        }
+      })
+      .populate({
+        path: 'currentPartnerId',
+        select: 'companyName mapLocation location phone email rating',
+        populate: {
+          path: 'location',
+          select: 'name address coordinates'
+        }
+      })
       .populate({
         path: 'reviews',
         populate: {
@@ -381,30 +516,13 @@ class QueryService {
       };
     }
     
+    const formattedBike = this.formatBikeData(bike);
+    
     return {
       success: true,
       message: `Here are the details for ${bike.name}:`,
       data: {
-        id: bike._id,
-        name: bike.name,
-        type: bike.type,
-        description: bike.description,
-        location: bike.location,
-        pricing: bike.pricing,
-        specifications: bike.specifications,
-        features: bike.features,
-        images: bike.images,
-        rating: bike.rating,
-        available: bike.availability.status,
-        partner: {
-          name: bike.partnerId?.companyName,
-          location: bike.partnerId?.location,
-          rating: bike.partnerId?.rating,
-          contact: {
-            phone: bike.partnerId?.phone,
-            email: bike.partnerId?.email
-          }
-        },
+        ...formattedBike,
         recentReviews: bike.reviews?.slice(0, 3).map(review => ({
           rating: review.rating,
           comment: review.comment,
@@ -710,59 +828,45 @@ class QueryService {
   }
 
   /**
-   * Generate sample bike data for demo purposes
+   * Format bike data for consistent response structure
    */
-  generateSampleBikes(location, bikeType, startDate, duration) {
-    console.log('Generating sample bikes for:', { location, bikeType, startDate, duration });
-    const locationName = location || 'Kandy';
-    const bikeTypes = ['Mountain', 'Road', 'City', 'Electric', 'Hybrid'];
-    const partners = [
-      'CycleRent Lanka', 
-      'Kandy Bike Hub', 
-      'Island Cycles', 
-      'Green Bike Rentals',
-      'Ceylon Cycle Co.'
-    ];
-
-    const sampleBikes = [];
+  formatBikeData(bike) {
+    const owner = bike.partnerId || {};
+    const currentPartner = bike.currentPartnerId || owner; // Use current partner if available, fallback to owner
+    const currentLocation = currentPartner.mapLocation || currentPartner.location || {};
     
-    // Generate 5-8 sample bikes
-    const bikeCount = Math.floor(Math.random() * 4) + 5;
-    
-    for (let i = 0; i < bikeCount; i++) {
-      const randomType = bikeTypes[Math.floor(Math.random() * bikeTypes.length)];
-      const randomPartner = partners[Math.floor(Math.random() * partners.length)];
-      const dailyRate = Math.floor(Math.random() * 3000) + 1500; // 1500-4500 LKR
-      
-      sampleBikes.push({
-        id: `bike_${i + 1}_${Date.now()}`,
-        name: `${randomType} Bike - ${locationName} ${i + 1}`,
-        type: randomType,
-        location: locationName,
-        dailyRate: dailyRate,
-        hourlyRate: Math.floor(dailyRate / 8),
-        partner: {
-          name: randomPartner,
-          phone: `+94 ${Math.floor(Math.random() * 900000000) + 700000000}`,
-          rating: (Math.random() * 2 + 3).toFixed(1) // 3.0-5.0 rating
-        },
-        features: [
-          'Well maintained',
-          'Safety gear included',
-          'GPS tracking',
-          'Insurance covered',
-          '24/7 support'
-        ].slice(0, Math.floor(Math.random() * 3) + 3),
-        availability: {
-          status: true,
-          nextAvailable: startDate || new Date().toISOString().split('T')[0]
-        },
-        images: [`https://example.com/bikes/${randomType.toLowerCase()}_${i + 1}.jpg`]
-      });
-    }
-
-    console.log(`Generated ${sampleBikes.length} sample bikes`);
-    return sampleBikes;
+    return {
+      id: bike._id,
+      name: bike.name,
+      type: bike.type,
+      description: bike.description,
+      location: currentLocation.name || currentLocation.address || 'Location not specified',
+      dailyRate: bike.pricing?.perDay || 0,
+      hourlyRate: bike.pricing?.perHour || Math.floor((bike.pricing?.perDay || 0) / 8),
+      weeklyRate: bike.pricing?.perWeek,
+      partner: {
+        id: currentPartner._id,
+        name: currentPartner.companyName || 'Unknown Partner',
+        phone: currentPartner.phone,
+        rating: currentPartner.rating || 0,
+        location: currentLocation.name || currentLocation.address
+      },
+      owner: bike.currentPartnerId ? {
+        id: owner._id,
+        name: owner.companyName || 'Unknown Owner',
+        phone: owner.phone
+      } : null, // Only show owner if bike is at a different location
+      features: bike.features || [],
+      specifications: bike.specifications || {},
+      availability: {
+        status: bike.availability?.status || 'unknown',
+        reason: bike.availability?.reason
+      },
+      condition: bike.condition,
+      rating: bike.rating || 0,
+      images: bike.images?.map(img => img.url).filter(Boolean) || [],
+      coordinates: bike.coordinates || currentPartner.coordinates || currentLocation.coordinates
+    };
   }
 
   async getPaymentMethods(entities) {
