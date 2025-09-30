@@ -18,34 +18,34 @@ export default defineConfig({
     // Reduce memory usage during build
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // Keep React and React-DOM together to avoid forwardRef issues
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'react-vendor';
-          }
-          // Firebase packages
-          if (id.includes('firebase')) {
-            return 'firebase';
-          }
-          // Router (depends on React, so separate chunk)
-          if (id.includes('react-router')) {
-            return 'router';
-          }
-          // UI libraries that depend on React
-          if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('react-icons')) {
-            return 'ui';
-          }
-          // Utils (non-React dependencies)
-          if (id.includes('axios') || id.includes('react-hot-toast')) {
-            return 'utils';
-          }
-          // Other large node_modules
-          if (id.includes('node_modules')) {
-            return 'vendor-libs';
-          }
-        }
-      }
+      // output: {
+      //   manualChunks: (id) => {
+      //     // Keep React and React-DOM together to avoid forwardRef issues
+      //     if (id.includes('react') || id.includes('react-dom')) {
+      //       return 'react-vendor';
+      //     }
+      //     // Firebase packages
+      //     if (id.includes('firebase')) {
+      //       return 'firebase';
+      //     }
+      //     // Router (depends on React, so separate chunk)
+      //     if (id.includes('react-router')) {
+      //       return 'router';
+      //     }
+      //     // UI libraries that depend on React
+      //     if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('react-icons')) {
+      //       return 'ui';
+      //     }
+      //     // Utils (non-React dependencies)
+      //     if (id.includes('axios') || id.includes('react-hot-toast')) {
+      //       return 'utils';
+      //     }
+      //     // Other large node_modules
+      //     if (id.includes('node_modules')) {
+      //       return 'vendor-libs';
+      //     }
+      //   }
+      // }
     },
     target: 'esnext',
     minify: 'esbuild'
