@@ -79,50 +79,22 @@ const userSchema = new mongoose.Schema({
       default: true
     }
   },
-  verificationStatus: {
-    email: {
-      type: Boolean,
-      default: false
-    },
-    phone: {
-      type: Boolean,
-      default: false
-    },
-    idDocument: {
-      isVerified: {
-        type: Boolean,
-        default: false
-      },
-      status: {
-        type: String,
-        enum: ['not_submitted', 'pending', 'approved', 'rejected'],
-        default: 'not_submitted'
-      },
-      documentType: {
-        type: String,
-        enum: ['national_id', 'passport', 'driving_license', 'other'],
-      },
-      documentNumber: {
-        type: String
-      },
-      documentImage: {
-        type: String // URL to stored document image
-      },
-      submittedAt: {
-        type: Date
-      },
-      verifiedAt: {
-        type: Date
-      },
-      approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      rejectionReason: {
-        type: String
-      }
-    }
-  },
+ verificationStatus: {
+  idDocument: {
+    isVerified: Boolean,
+    status: { type: String, enum: ['not_submitted', 'pending', 'approved', 'rejected'], default: 'not_submitted' },
+    documentType: String,
+    documentNumber: String,
+    documentImage: String,
+    submittedAt: Date,
+    verifiedAt: Date,
+    rejectionReason: String,
+    // NEW for Veriff
+    veriffSessionId: String,
+    veriffStatus: String, // "approved", "declined", "resubmission_requested"
+  }
+},
+
   createdAt: {
     type: Date,
     default: Date.now

@@ -326,7 +326,7 @@ const DropoffSelectionStep: React.FC<DropoffSelectionStepProps> = ({
                     <div className="flex-1 min-h-0 flex flex-col">
                       {partnersLoading ? (
                         <div className="flex items-center justify-center py-6 md:py-8 flex-1">
-                          <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-600"></div>
+                          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                           <span className="ml-2 text-gray-600 text-sm md:text-base">Loading partner locations...</span>
                         </div>
                       ) : (

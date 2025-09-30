@@ -94,7 +94,6 @@ const chatSessionSchema = new mongoose.Schema({
 
 // Indexes for performance
 chatSessionSchema.index({ userId: 1, createdAt: -1 });
-chatSessionSchema.index({ sessionId: 1 });
 chatSessionSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to update the updatedAt field

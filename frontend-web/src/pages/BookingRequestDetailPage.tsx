@@ -163,7 +163,7 @@ const BookingRequestDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96 mt-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
         <Footer />
@@ -175,7 +175,7 @@ const BookingRequestDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto px-4 py-8 mt-20">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Booking Not Found</h1>
             <Link
@@ -195,7 +195,7 @@ const BookingRequestDetailPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 mt-20">
         {/* Header */}
         <div className="mb-8">
           <Link

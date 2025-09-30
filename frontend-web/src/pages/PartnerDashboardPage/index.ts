@@ -5,3 +5,4 @@ export { default as CompletedRentalsPage } from './CompletedRentalsPage';
 export { default as PaymentRequestsPage } from './PaymentRequestsPage';
 export { default as BikeLocations } from './BikeLocations';
 export { default as DropBikePage } from './DropBikePage';
+export { default as RevenuePage } from './RevenuePage';

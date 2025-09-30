@@ -4,7 +4,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { auth, admin, userAccess } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-
+router.post('/verification/veriff/webhook', userController.veriffWebhook);
 /**
  * @route   GET /api/users
  * @desc    Get all users
@@ -92,6 +92,11 @@ router.put('/:id/verification/document/reject', auth(), admin, userController.re
  */
 router.delete('/:id', auth(), admin, userController.deleteUser);
 
-module.exports = router;
+router.post('/:id/verification/veriff/session', auth(), userController.createVeriffSession);
+router.get('/:id/verification/status', auth(), userController.getVerificationStatus);
+router.get('/:id/verification/check', auth(), userController.checkVerificationStatus);
+
 
 module.exports = router;
+
+

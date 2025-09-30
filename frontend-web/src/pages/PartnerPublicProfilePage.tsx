@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { partnerService, Partner, formatBusinessHours, isPartnerOpen } from '../services/partnerService';
+import { partnerService, Partner, isPartnerOpen } from '../services/partnerService';
 import {
   ArrowLeft,
   MapPin,
@@ -13,15 +13,12 @@ import {
   Building,
   Bike,
   AlertTriangle,
-  Globe,
   Loader,
   Image as ImageIcon,
   CheckCircle,
   Calendar,
   Users,
-  Award,
   MessageSquare,
-  ExternalLink,
   Heart,
   Share
 } from 'lucide-react';
@@ -105,7 +102,7 @@ const PartnerPublicProfilePage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
           <div className="flex justify-center items-center h-64">
             <Loader className="h-8 w-8 text-purple-600 animate-spin" />
             <span className="ml-2 text-gray-600">Loading partner profile...</span>
@@ -120,7 +117,7 @@ const PartnerPublicProfilePage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
           <div className="text-center py-16">
             <AlertTriangle className="h-16 w-16 text-red-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Available</h2>
