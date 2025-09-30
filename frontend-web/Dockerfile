@@ -14,8 +14,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with increased memory limit and optimizations
+RUN NODE_OPTIONS="--max-old-space-size=6144 --gc-global" npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine AS production
