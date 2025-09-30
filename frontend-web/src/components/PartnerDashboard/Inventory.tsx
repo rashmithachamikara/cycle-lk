@@ -191,7 +191,7 @@ const { user } = useAuth();
                         )}
                         <div>
                           <div className="text-sm font-medium text-gray-900">{bike.name}</div>
-                          <div className="text-sm text-gray-500">${bike.pricing.perDay}/day</div>
+                          <div className="text-sm text-gray-500">LKR {bike.pricing.perDay}/day</div>
                         </div>
                       </div>
                     </td>

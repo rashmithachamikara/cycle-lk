@@ -16,6 +16,7 @@ import {
   FinalConfirmationStep
 } from '../components/BookingPage';
 import { Button } from '../ui';
+import { userService } from '../services/authService';
 
 const BookingPage = () => {
   const navigate = useNavigate();
@@ -50,6 +51,52 @@ const BookingPage = () => {
     { number: 4, title: 'Drop-off Location', description: 'Select partner for drop-off' },
     { number: 5, title: 'Confirmation', description: 'Review and confirm booking' }
   ];
+
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+    dateOfBirth: '',
+    nationality: '',
+    address: '',
+    emergencyContact: '',
+    emergencyName: '',
+    isVerified: false,
+  });
+  useEffect(() => {
+      const fetchUserProfile = async () => {
+        if (user?.id) {
+          try {
+            setLoading(true);
+            setError(null);
+            const userData = await userService.getUserById(user.id);
+            setProfileData({
+              firstName: userData.firstName || '',
+              lastName: userData.lastName || '',
+              email: userData.email || '',
+              phone: userData.phone || '',
+              role: userData.role || '',
+              dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
+              nationality: userData.nationality || '',
+              address: userData.address || '',
+              emergencyName: userData.emergencyContact?.name || '',
+              emergencyContact: userData.emergencyContact?.phone || '',
+              isVerified: userData.verificationStatus?.idDocument?.isVerified || false
+            });
+          } catch (err) {
+            setError('Failed to fetch profile data. Please try again.');
+            console.error(err);
+          } finally {
+            setLoading(false);
+          }
+        }
+      };
+  
+      fetchUserProfile();
+    }, [user]);
+
 
   // Fetch bikes when locations are selected
   useEffect(() => {
@@ -511,6 +558,7 @@ const BookingPage = () => {
               onConfirmBooking={handleCreateBooking}
               isBooking={isBooking}
               isAuthenticated={isAuthenticated}
+              isVerified={profileData.isVerified}
             />
           </div>
         )}

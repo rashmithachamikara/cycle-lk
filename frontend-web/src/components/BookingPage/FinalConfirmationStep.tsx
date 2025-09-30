@@ -21,6 +21,7 @@ interface FinalConfirmationStepProps {
   onConfirmBooking: () => void;
   isBooking: boolean;
   isAuthenticated: boolean;
+  isVerified: boolean;
 }
 
 const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
@@ -36,7 +37,8 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
   onBack,
   onConfirmBooking,
   isBooking,
-  isAuthenticated
+  isAuthenticated,
+  isVerified
 }) => {
   const navigate = useNavigate();
 
@@ -250,6 +252,29 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
               </div>
             </div>
           )}
+
+          {/* Verification warning */}
+          {isAuthenticated && !isVerified && (
+            <div className="mt-4 p-6 bg-red-50 rounded-lg border-2 border-red-400">
+              <div className="flex items-start">
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">Account Verification Required</h3>
+                  <p className="text-sm text-red-700 mb-4">
+                    Your account needs to be verified before you can make bookings. Please complete the verification process to continue.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => navigate('/profile?tab=security')}
+                      className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Complete Verification
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar - Pricing Summary */}
@@ -315,7 +340,7 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
       </div>
 
       {/* Navigation Buttons */}
-      <div className={`grid ${!isAuthenticated ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 mt-8`}>
+      <div className={`grid ${!isAuthenticated || (isAuthenticated && !isVerified) ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 mt-8`}>
         <button
           onClick={onBack}
           className="flex items-center justify-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
@@ -333,12 +358,22 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             Login to Continue
           </button>
         )}
+
+        {isAuthenticated && !isVerified && (
+          <button
+            onClick={() => navigate('/profile?tab=security')}
+            className="flex items-center justify-center px-6 py-3 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors duration-200"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Complete Verification
+          </button>
+        )}
         
         <button
           onClick={onConfirmBooking}
-          disabled={isBooking || !isAuthenticated}
+          disabled={isBooking || !isAuthenticated || !isVerified}
           className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
-            isBooking || !isAuthenticated
+            isBooking || !isAuthenticated || !isVerified
               ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
               : 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
           }`}
@@ -352,6 +387,11 @@ const FinalConfirmationStep: React.FC<FinalConfirmationStepProps> = ({
             <>
               <CheckCircle className="h-4 w-4 mr-2" />
               Login Required to Confirm
+            </>
+          ) : !isVerified ? (
+            <>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Verification Required to Confirm
             </>
           ) : (
             <>
